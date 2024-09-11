@@ -6,6 +6,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { customDarkTheme } from './theme/temi'; // Importa i temi personalizzati
 import OnboardingScreen from './screens/OnboardingScreen';
+import LoginScreen from './screens/auth/LoginScreen';
 
 const Stack = createStackNavigator();
 
@@ -21,6 +22,11 @@ export default function App() {
               <Stack.Screen
                 name="Onboarding"
                 component={OnboardingScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="LoginScreen"
+                component={LoginScreen}
                 options={{ headerShown: false }}
               />
             </Stack.Navigator>
