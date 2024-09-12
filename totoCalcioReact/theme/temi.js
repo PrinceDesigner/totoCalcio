@@ -12,6 +12,7 @@ export const customDefaultTheme = {
     background: '#f5f5f5',
     surface: '#ffffff',
     text: '#333333',
+    
     // Altri colori personalizzabili
   },
 };
