@@ -2,12 +2,22 @@ import * as React from 'react';
 import { View, StyleSheet, Image, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
 import { Button, Text, TextInput, useTheme } from 'react-native-paper';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons'; // Aggiungi MaterialCommunityIcons
+import { useDispatch } from 'react-redux'; // Importa useDispatch per inviare azioni
+import { loginFailure, loginSuccess } from '../../redux/slice/authSlice';
+import { hideLoading, showLoading } from '../../redux/slice/uiSlice';
+
 
 export default function LoginScreen() {
     const { colors } = useTheme(); // Recupera i colori dal tema
+    const dispatch = useDispatch(); // Ottieni la funzione dispatch di Redux
+
     const [pressed, setPressed] = React.useState(false); // Stato per gestire l'opacità
     const [username, setUsername] = React.useState('');
     const [password, setPassword] = React.useState('');
+
+    // Stati per gestire gli errori
+    const [usernameError, setUsernameError] = React.useState('');
+    const [passwordError, setPasswordError] = React.useState('');
 
     const handleForgotPassword = () => {
         // Azione quando si clicca su "Dimenticato password?"
@@ -27,6 +37,66 @@ export default function LoginScreen() {
     const handleSignUp = () => {
         // Azione per la registrazione
         console.log('Vai alla registrazione');
+    };
+
+    // Funzione di validazione
+    const validateInputs = () => {
+        let valid = true;
+
+        // Reset degli errori
+        setUsernameError('');
+        setPasswordError('');
+
+        if (username.trim() === '') {
+            setUsernameError('Il campo username è obbligatorio');
+            valid = false;
+        }
+
+
+        // Validazione password
+        if (password.trim() === '') {
+            setPasswordError('Il campo password è obbligatorio');
+            valid = false;
+        }
+
+        return valid;
+    };
+
+    const resetInput = () => {
+        setUsernameError('');
+        setPasswordError('');
+    }
+
+    const onChangeUsername = (text) => {
+        resetInput();
+        setUsername(text);
+    }
+
+    const onChangePassword = (text) => {
+        resetInput();
+        setPassword(text);
+    }
+
+    const handleLogin = () => {
+
+        dispatch(showLoading()); // Mostra il caricamento
+
+        setTimeout(() => {
+            if (validateInputs()) {
+                // Simula la logica di autenticazione
+                if (username === 'test' && password === 'password') {
+                    // Esegui l'azione di login success
+                    dispatch(loginSuccess(new User(username)));
+                    console.log('Login riuscito');
+                } else {
+                    // Esegui l'azione di login failure
+                    dispatch(loginFailure('Credenziali errate'));
+                    console.log('Login fallito');
+                }
+                console.log('Login con', username, password);
+            }
+            dispatch(hideLoading()); // Nascondi il caricamento
+        }, 2000); // Simula un ritardo di 2 secondi
     };
 
     return (
@@ -49,12 +119,13 @@ export default function LoginScreen() {
                     <TextInput
                         label="Username"
                         value={username}
-                        onChangeText={text => setUsername(text)}
+                        onChangeText={text => onChangeUsername(text)}
                         mode="outlined"
                         style={styles.input}
                         theme={{ colors: { text: 'black', placeholder: 'gray' } }}
                     />
                 </View>
+                {usernameError ? <Text style={styles.errorText}>{usernameError}</Text> : null}
 
                 {/* Wrappa l'input per password e icona in una View */}
                 <View style={styles.inputContainer}>
@@ -62,13 +133,14 @@ export default function LoginScreen() {
                     <TextInput
                         label="Password"
                         value={password}
-                        onChangeText={text => setPassword(text)}
+                        onChangeText={text => onChangePassword(text)}
                         mode="outlined"
                         secureTextEntry
                         style={styles.input}
                         theme={{ colors: { text: 'black', placeholder: 'gray' } }}
                     />
                 </View>
+                {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
 
                 <View style={{ width: '100%' }}>
                     <TouchableOpacity onPress={handleForgotPassword}>
@@ -77,7 +149,7 @@ export default function LoginScreen() {
                 </View>
 
                 {/* Pulsante Login */}
-                <Button mode="contained" style={styles.authButton}>
+                <Button mode="contained" style={styles.authButton} onPress={handleLogin}>
                     Login
                 </Button>
 
@@ -94,7 +166,7 @@ export default function LoginScreen() {
                         mode="contained"
                         icon={() => <MaterialCommunityIcons name="google" size={24} color="white" />}
                         onPress={handleGoogleLogin}
-                        style={[styles.socialButtonGoogle, { opacity: pressed ? 0.5 : 1 }]} 
+                        style={[styles.socialButtonGoogle, { opacity: pressed ? 0.5 : 1 }]}
                     >
                         Google
                     </Button>
@@ -102,7 +174,7 @@ export default function LoginScreen() {
                         mode="contained"
                         icon={() => <MaterialCommunityIcons name="facebook" size={24} color="white" />}
                         onPress={handleFacebookLogin}
-                        style={[styles.socialButtonFacebook, { opacity: pressed ? 0.5 : 1 }]} 
+                        style={[styles.socialButtonFacebook, { opacity: pressed ? 0.5 : 1 }]}
                     >
                         Facebook
                     </Button>
@@ -138,7 +210,7 @@ const styles = StyleSheet.create({
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: 10,
         justifyContent: 'center',
         width: '100%',
     },
@@ -204,4 +276,11 @@ const styles = StyleSheet.create({
         marginTop: 20, // Spazio sopra la scritta
         textAlign: 'center', // Allinea il testo al centro
     },
+    errorText: {
+        color: 'red',
+        fontSize: 12,
+        textAlign: 'left',
+        width: '100%',
+        marginBottom: 10,
+    }
 });

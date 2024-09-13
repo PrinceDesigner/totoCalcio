@@ -14,8 +14,10 @@
     "@react-navigation/stack": "^6.4.1",
     "@reduxjs/toolkit": "^2.2.7",
     "expo": "~51.0.28",
+    "expo-asset": "~10.0.10",
     "expo-status-bar": "~1.12.1",
     "firebase": "^10.13.1",
+    "formik": "^2.4.6",
     "react": "18.2.0",
     "react-native": "0.74.5",
     "react-native-gesture-handler": "~2.16.1",
@@ -25,7 +27,7 @@
     "react-native-screens": "3.31.1",
     "react-native-vector-icons": "^10.1.0",
     "react-redux": "^9.1.2",
-    "expo-asset": "~10.0.10"
+    "yup": "^1.4.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
