@@ -1,27 +1,35 @@
-// screens/HomeScreen.js
-
 import * as React from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
 import { Button, useTheme } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
 
 const leagues = [
     { id: '1', name: 'Lega Serie A', description: 'Lega per gli appassionati della Serie A', image: require('../league2.png') },
     { id: '2', name: 'Lega Champions', description: 'Sfida per la Champions League', image: require('../league1.png') },
-    // Puoi aggiungere altre leghe qui
 ];
 
 export default function HomeScreen() {
     const { colors } = useTheme();
+    const navigation = useNavigation(); // Ottieni l'oggetto di navigazione
+
+    // Funzione per gestire il click su una lega
+    const handleLeaguePress = (league) => {
+        console.log('Lega selezionata:', league.name);
+        navigation.navigate('LeagueDetails', { league }); // Esempio di navigazione alla schermata dei dettagli della lega
+    };
 
     // Renderizza ogni lega nella FlatList
     const renderLeagueItem = ({ item }) => (
-        <View style={{ ...styles.leagueContainer, backgroundColor: colors.surface }}>
-            <Image source={item.image} style={{ ...styles.leagueImage }} />
-            <View style={styles.leagueTextContainer}>
-                <Text style={{ ...styles.leagueName, color: colors.primary }}>{item.name}</Text>
-                <Text style={styles.leagueDescription}>{item.description}</Text>
+        <TouchableOpacity onPress={() => handleLeaguePress(item)}>
+            <View style={{ ...styles.leagueContainer, backgroundColor: colors.surface }}>
+                <Image source={item.image} style={styles.leagueImage} />
+                <View style={styles.leagueTextContainer}>
+                    {/* Avvolgi i testi all'interno di <Text> */}
+                    <Text style={{ ...styles.leagueName, color: colors.primary }}>{item.name}</Text>
+                    <Text style={styles.leagueDescription}>{item.description}</Text>
+                </View>
             </View>
-        </View>
+        </TouchableOpacity>
     );
 
     return (
@@ -62,7 +70,7 @@ const styles = StyleSheet.create({
     headerText: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: 'white'
+        color: 'white',
     },
     leagueContainer: {
         flexDirection: 'row',
