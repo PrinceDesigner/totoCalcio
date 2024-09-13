@@ -1,13 +1,15 @@
 import * as React from 'react';
 import { View, StyleSheet, Image, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
+
+import { useDispatch } from 'react-redux'; // Importa useDispatch per inviare azioni
 import { Button, Text, TextInput, useTheme } from 'react-native-paper';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons'; // Aggiungi MaterialCommunityIcons
-import { useDispatch } from 'react-redux'; // Importa useDispatch per inviare azioni
+
 import { loginFailure, loginSuccess } from '../../redux/slice/authSlice';
 import { hideLoading, showLoading } from '../../redux/slice/uiSlice';
 
 
-export default function LoginScreen() {
+export default function LoginScreen({ navigation }) {
     const { colors } = useTheme(); // Recupera i colori dal tema
     const dispatch = useDispatch(); // Ottieni la funzione dispatch di Redux
 
@@ -86,8 +88,9 @@ export default function LoginScreen() {
                 // Simula la logica di autenticazione
                 if (username === 'test' && password === 'password') {
                     // Esegui l'azione di login success
-                    dispatch(loginSuccess(new User(username)));
-                    console.log('Login riuscito');
+                    dispatch(loginSuccess(username));
+                    navigation.navigate('Home'); // Usa l'oggetto navigation per andare alla schermata Home
+
                 } else {
                     // Esegui l'azione di login failure
                     dispatch(loginFailure('Credenziali errate'));
