@@ -13,6 +13,7 @@ import LoginScreen from './screens/auth/LoginScreen';
 import HomeScreen from './screens/HomeScreen'; // Aggiungi la schermata Home
 import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons'; // Importa l'icona dell'hamburger menu
+import CustomDrawerContent from './components/CustomDrawerContent';
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator(); // Crea un Drawer Navigator
@@ -66,10 +67,11 @@ function CustomHeader({ navigation }) {
   };
 }
 
-// Configura il Drawer Navigation con il colore personalizzato
+// Configura il Drawer Navigation con Custom Drawer Content
 function DrawerNavigator() {
   return (
     <Drawer.Navigator
+      drawerContent={(props) => <CustomDrawerContent {...props} />} // Usa il CustomDrawerContent
       screenOptions={({ navigation }) => ({
         ...CustomHeader({ navigation }), // Applica l'header personalizzato a ogni schermata
         drawerStyle: {
