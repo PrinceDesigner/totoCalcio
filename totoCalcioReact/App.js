@@ -14,6 +14,7 @@ import HomeScreen from './screens/HomeScreen'; // Aggiungi la schermata Home
 import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons'; // Importa l'icona dell'hamburger menu
 import CustomDrawerContent from './components/CustomDrawerContent';
+import LeagueStackNavigator from './navigation/LeagueStackNavigator';
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator(); // Crea un Drawer Navigator
@@ -39,17 +40,17 @@ function CustomHeader({ navigation }) {
 
   return {
     headerLeft: () => (
-      <Avatar.Image 
-        source={{ uri: userPhoto }} 
-        size={36} 
+      <Avatar.Image
+        source={{ uri: userPhoto }}
+        size={36}
         style={{ marginLeft: 15 }} // Posiziona la foto profilo a sinistra
       />
     ),
     headerRight: () => (
       <TouchableOpacity onPress={() => navigation.toggleDrawer()}>
-        <MaterialIcons 
-          name="menu" 
-          size={28} 
+        <MaterialIcons
+          name="menu"
+          size={28}
           color="#FFFFFF" // Colore dell'icona hamburger (bianco)
           style={{ marginRight: 15 }} // Posiziona l'hamburger menu a destra
         />
@@ -83,10 +84,10 @@ function DrawerNavigator() {
       })}
       initialRouteName="Home"
     >
-      <Drawer.Screen 
-        name="Home" 
-        component={HomeScreen} 
-        options={{ title: 'Le mie leghe' }} 
+      <Drawer.Screen
+        name="Home1"
+        component={HomeScreen}
+        options={{ title: 'Le mie leghe' }}
       />
       {/* Aggiungi altre schermate nel Drawer qui, come "Profilo", "Impostazioni", ecc. */}
     </Drawer.Navigator>
@@ -118,6 +119,11 @@ export default function App() {
                 name="Home"
                 component={DrawerNavigator}
                 options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="LeagueDetailsStack"
+                component={LeagueStackNavigator}
+                options={{ headerShown: false }} // Nascondi l'header per LeagueStackNavigator
               />
             </Stack.Navigator>
             <GlobalLoadingIndicator />

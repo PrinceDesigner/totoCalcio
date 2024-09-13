@@ -15,7 +15,7 @@ export default function HomeScreen() {
     // Funzione per gestire il click su una lega
     const handleLeaguePress = (league) => {
         console.log('Lega selezionata:', league.name);
-        navigation.navigate('LeagueDetails', { league }); // Esempio di navigazione alla schermata dei dettagli della lega
+        navigation.navigate('LeagueDetailsStack', { league }); // Esempio di navigazione alla schermata dei dettagli della lega
     };
 
     // Renderizza ogni lega nella FlatList
