@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text, View } from 'react-native';
-import { useNavigation, useTheme } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import LeagueDetails from '../../screens/LeagueDetails';
 
 const Tab = createBottomTabNavigator();
@@ -16,7 +16,6 @@ function ParticipantsScreen() {
 }
 
 export default function LeagueDetailsTabs() {
-    const { colors } = useTheme();
     const navigation = useNavigation(); // Ottieni l'oggetto di navigazione
 
     return (
@@ -45,7 +44,7 @@ export default function LeagueDetailsTabs() {
             <Tab.Screen name="Partecipanti" component={ParticipantsScreen} />
             {/* Tab per tornare direttamente alla schermata Home */}
             <Tab.Screen
-                name="Home"
+                name="Leghe"
                 component={LeagueDetails} // Può essere qualsiasi componente, ma non verrà caricato
                 listeners={{
                     tabPress: (e) => {

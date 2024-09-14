@@ -58,6 +58,9 @@ export default function LeagueDetails({ route, navigation }) {
                         <Text style={{...styles.countdownNumber, color: colors.primary}}>{countdown.seconds}</Text>
                         <Text style={styles.countdownLabel}>sec</Text>
                     </View>
+                    <Text style={styles.insertEsitiText}>
+                        Clicca per inserire gli esiti {matchdayNumber}
+                    </Text>
                 </Card>
             </TouchableOpacity>
 
@@ -130,6 +133,12 @@ const styles = StyleSheet.create({
     },
     countdownText: {
         fontSize: 18,
+        fontWeight: '600',
+        textAlign: 'center',
+        color: 'white'
+    },
+    insertEsitiText: {
+        fontSize: 10,
         fontWeight: '600',
         textAlign: 'center',
         color: 'white'

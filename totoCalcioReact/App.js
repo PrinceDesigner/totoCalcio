@@ -1,7 +1,6 @@
-// App.js
-
 import * as React from 'react';
 import { Provider, useSelector } from 'react-redux';
+import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import store from './redux/store'; // Importa lo store di Redux
 import { ActivityIndicator, Provider as PaperProvider, useTheme, Avatar } from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
@@ -11,10 +10,12 @@ import { customDarkTheme } from './theme/temi'; // Importa i temi personalizzati
 import OnboardingScreen from './screens/OnboardingScreen';
 import LoginScreen from './screens/auth/LoginScreen';
 import HomeScreen from './screens/HomeScreen'; // Aggiungi la schermata Home
-import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons'; // Importa l'icona dell'hamburger menu
 import CustomDrawerContent from './components/CustomDrawerContent';
 import LeagueStackNavigator from './navigation/LeagueStackNavigator';
+import CreateLeagueScreen from './screens/CreateLeagueScreen';
+import { CreateLeagueHeader, CustomHeader } from './navigation/customHeader/customHeader';
+import JoinLeagueScreen from './screens/joinLeagueScreen';
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator(); // Crea un Drawer Navigator
@@ -34,39 +35,6 @@ function GlobalLoadingIndicator() {
   );
 }
 
-// Funzione per generare l'header personalizzato
-function CustomHeader({ navigation }) {
-  const userPhoto = 'https://via.placeholder.com/150'; // Puoi sostituirlo con l'URL della foto utente dal tuo backend o Redux
-
-  return {
-    headerLeft: () => (
-      <Avatar.Image
-        source={{ uri: userPhoto }}
-        size={36}
-        style={{ marginLeft: 15 }} // Posiziona la foto profilo a sinistra
-      />
-    ),
-    headerRight: () => (
-      <TouchableOpacity onPress={() => navigation.toggleDrawer()}>
-        <MaterialIcons
-          name="menu"
-          size={28}
-          color="#FFFFFF" // Colore dell'icona hamburger (bianco)
-          style={{ marginRight: 15 }} // Posiziona l'hamburger menu a destra
-        />
-      </TouchableOpacity>
-    ),
-    headerStyle: {
-      backgroundColor: '#323232', // Colore di sfondo dell'header
-      borderBottomColor: '#e5e7eb', // Colore del bordo inferiore
-      borderBottomWidth: 1, // Spessore del bordo inferiore
-    },
-    headerTintColor: '#FFFFFF', // Colore del testo (bianco)
-    headerTitleStyle: {
-      fontWeight: 'bold', // Stile del testo nell'header
-    },
-  };
-}
 
 // Configura il Drawer Navigation con Custom Drawer Content
 function DrawerNavigator() {
@@ -89,7 +57,25 @@ function DrawerNavigator() {
         component={HomeScreen}
         options={{ title: 'Le mie leghe' }}
       />
-      {/* Aggiungi altre schermate nel Drawer qui, come "Profilo", "Impostazioni", ecc. */}
+      <Drawer.Screen
+        name="CreateLeague"
+        component={CreateLeagueScreen}
+        options={({ navigation }) => ({
+          title: 'Crea una nuova lega',
+          headerShown: true, // Mostra l'header solo per questa schermata
+          ...CreateLeagueHeader({ navigation }), // Applica l'header personalizzato con Go Back
+        })}
+      />
+      <Drawer.Screen
+        name="JoinLeague"
+        component={JoinLeagueScreen}
+        options={({ navigation }) => ({
+          title: 'Unisciti ad una lega',
+          headerShown: true, // Mostra l'header solo per questa schermata
+          ...CreateLeagueHeader({ navigation }), // Applica l'header personalizzato con Go Back
+        })}
+      />
+      {/* Aggiungi altre schermate nel Drawer qui */}
     </Drawer.Navigator>
   );
 }

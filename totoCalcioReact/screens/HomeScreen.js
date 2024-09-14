@@ -37,7 +37,7 @@ export default function HomeScreen() {
             {/* Intestazione con "Le mie leghe" e "Crea Lega" */}
             <View style={styles.headerContainer}>
                 <Text style={styles.headerText}>Le mie leghe</Text>
-                <Button mode="contained" onPress={() => console.log('Crea Lega')}>Crea Lega</Button>
+                <Button mode="contained" onPress={() => navigation.navigate('CreateLeague')}>Crea Lega</Button>
             </View>
 
             {/* Lista delle leghe */}
@@ -49,7 +49,7 @@ export default function HomeScreen() {
             />
 
             {/* Pulsante "Unisciti alla lega" */}
-            <Button mode="contained" onPress={() => console.log('Unisciti alla Lega')} style={styles.joinButton}>
+            <Button mode="contained" onPress={() => navigation.navigate('JoinLeague')} style={styles.joinButton}>
                 Unisciti alla Lega
             </Button>
         </View>
