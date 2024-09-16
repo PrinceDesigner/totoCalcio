@@ -1,32 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView } from 'react-native';
-import { Card, useTheme, Badge } from 'react-native-paper';
-import { MaterialIcons } from '@expo/vector-icons'; // Icona campanella
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { Card, Badge, useTheme, Button } from 'react-native-paper';
 
-// Funzione per simulare il countdown
-const calculateCountdown = (deadline) => {
-    const now = new Date().getTime();
-    const distance = deadline - now;
-    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((distance % (1000)) / 1000);
-    return { hours, minutes, seconds };
-};
+const formatTime = (time) => (time < 10 ? `0${time}` : time);
 
-export default function LeagueDetails({ route, navigation }) {
-    const { colors } = useTheme(); // Ottieni i colori dal tema
+export default function LeagueDetails({ navigation }) {
+    const { colors } = useTheme();
     const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
+    const matchdayNumber = 12;
     const deadline = new Date().getTime() + 3600000; // Simuliamo una scadenza a 1 ora da adesso
-    const matchdayNumber = 12; // Simula il numero della giornata
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCountdown(calculateCountdown(deadline));
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [deadline]);
-
-    // Simuliamo la classifica provvisoria
     const provisionalRanking = [
         { id: '1', name: 'Giocatore 1', points: 50 },
         { id: '2', name: 'Giocatore 2', points: 45 },
@@ -36,76 +19,88 @@ export default function LeagueDetails({ route, navigation }) {
         { id: '6', name: 'Giocatore 6', points: 25 },
     ];
 
-    // Simuliamo lo schema delle partite
     const matches = [
         { id: '1', home: 'Squadra A', away: 'Squadra B', time: '18:00' },
         { id: '2', home: 'Squadra C', away: 'Squadra D', time: '20:45' },
         { id: '3', home: 'Squadra E', away: 'Squadra F', time: '21:00' },
     ];
 
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const now = new Date().getTime();
+            const distance = deadline - now;
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % 60000) / 1000);
+            setCountdown({ hours, minutes, seconds });
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [deadline]);
+
     return (
-        <ScrollView style={{ ...styles.container, backgroundColor: colors.background }}>
-            {/* Countdown */}
-            <TouchableOpacity onPress={() => navigation.navigate('InsertResults')}>
-                <Card style={styles.section}>
-                    <Text style={styles.countdownText}>
-                        Giornata {matchdayNumber}
-                    </Text>
-                    <View style={styles.countdownContainer}>
-                        <Text style={{ ...styles.countdownNumber, color: colors.primary }}>{countdown.hours}</Text>
-                        <Text style={styles.countdownLabel}>ore</Text>
-                        <Text style={{ ...styles.countdownNumber, color: colors.primary }}>{countdown.minutes}</Text>
-                        <Text style={styles.countdownLabel}>min</Text>
-                        <Text style={{ ...styles.countdownNumber, color: colors.primary }}>{countdown.seconds}</Text>
-                        <Text style={styles.countdownLabel}>sec</Text>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }}>
+            {/* Countdown Section */}
+            <View style={{ ...styles.sectionCountDown, backgroundColor: colors.surface }}>
+                <View style={styles.countdownHeader}>
+                    {/* Badge compatto */}
+                    <View style={styles.leagueBadgeCountDown}>
+                        <Badge style={{ backgroundColor: colors.primary }}>Serie A</Badge>
                     </View>
-                    <Text style={styles.insertEsitiText}>
-                        Clicca per inserire gli esiti {matchdayNumber}
+
+                    {/* Numero di giornata */}
+                    <Text style={styles.matchdayText}>Giornata {matchdayNumber}</Text>
+                </View>
+
+                {/* Countdown visual nello stile "10:10:10" */}
+                <View style={styles.compactCountdownContainer}>
+                    <Text style={styles.countdownNumber}>
+                        {formatTime(countdown.hours)}:{formatTime(countdown.minutes)}:{formatTime(countdown.seconds)}
                     </Text>
-                </Card>
-            </TouchableOpacity>
+                </View>
 
-            {/* Classifica Provvisoria */}
-            <TouchableOpacity onPress={() => navigation.navigate('ProvisionalRanking')}>
-                <Card style={{...styles.section, marginBottom: 0}}>
-                    <Text style={{ ...styles.sectionTitle, color: 'white' }}>Top 6</Text>
-                    <FlatList
-                        data={provisionalRanking.slice(0, 6)} // Mostra solo i primi 6
-                        keyExtractor={item => item.id}
-                        renderItem={({ item }) => (
-                            <View style={styles.rankItem}>
-                                <Text style={styles.rankName}>{item.name}</Text>
-                                <Text style={{ ...styles.rankPoints, color: 'white' }}>{item.points} punti</Text>
+                {/* Bottone "Inserisci Esiti" */}
+                <Button
+                    mode="contained"
+                    onPress={() => navigation.navigate('InsertResults')}
+                    style={styles.insertButton}
+                >
+                    Inserisci Esiti
+                </Button>
+            </View>
+
+            <ScrollView style={{ ...styles.container, backgroundColor: colors.background }}>
+                {/* Classifica Provvisoria */}
+                <TouchableOpacity onPress={() => navigation.navigate('ProvisionalRanking')}>
+                    <Card style={{ ...styles.section, marginBottom: 0 }}>
+                        <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica Provvisoria</Text>
+                        {provisionalRanking.map((player) => (
+                            <View key={player.id} style={styles.rankItem}>
+                                <Text style={styles.rankName}>{player.name}</Text>
+                                <Text style={{ ...styles.rankPoints, color: 'white' }}>{player.points} punti</Text>
                             </View>
-                        )}
-                        scrollEnabled={false} // Impedisce lo scorrimento all'interno di FlatList
-                    />
-                </Card>
-            </TouchableOpacity>
+                        ))}
+                    </Card>
+                </TouchableOpacity>
 
-            {/* Schema delle Partite */}
-            <TouchableOpacity onPress={() => navigation.navigate('MatchSchedule')}>
-                <Card style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginTop: 30 }}>
-                    {matches.map((match) => (
-                        <View key={match.id} style={styles.matchItem}>
-
-                            {/* Dettaglio del match */}
-                            <View style={styles.matchDetails}>
-                                <View style={styles.leagueBadgeContainer}>
-                                    {/* Badge con nome della lega */}
-                                    <Badge style={styles.leagueBadge}>Serie A</Badge>
+                {/* Schema delle Partite */}
+                <TouchableOpacity onPress={() => navigation.navigate('MatchSchedule')}>
+                    <Card style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginTop: 10 }}>
+                        {matches.map((match) => (
+                            <View key={match.id} style={styles.matchItem}>
+                                {/* Dettaglio del match */}
+                                <View style={styles.matchDetails}>
+                                    <View style={styles.leagueBadgeContainer}>
+                                        <Badge style={{ backgroundColor: colors.primary }}>Serie A</Badge>
+                                    </View>
+                                    <Text style={styles.matchText}>{match.home} vs {match.away}</Text>
+                                    <Text style={styles.matchTime}>{match.time}</Text>
                                 </View>
-                                <Text style={styles.matchText}>{match.home} vs {match.away}</Text>
-                                <Text style={styles.matchTime}>{match.time}</Text>
                             </View>
-
-                            {/* Icona campanella */}
-                            <MaterialIcons name="notifications" size={24} color={colors.primary} style={styles.bellIcon} />
-                        </View>
-                    ))}
-                </Card>
-            </TouchableOpacity>
-        </ScrollView>
+                        ))}
+                    </Card>
+                </TouchableOpacity>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
@@ -114,6 +109,37 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingHorizontal: 20,
         paddingTop: 20,
+    },
+    sectionCountDown: {
+        padding: 20,
+        borderRadius: 0,
+    },
+    countdownHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    leagueBadgeCountDown: {
+        marginBottom: 5,
+        padding: 5,
+        borderRadius: 12,
+        backgroundColor: '#a21fec',
+    },
+    matchdayText: {
+        fontSize: 14,
+        color: 'white',
+    },
+    compactCountdownContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+    },
+    countdownNumber: {
+        fontSize: 40,
+        fontWeight: 'bold',
+        color: 'white',
+    },
+    insertButton: {
+        marginTop: 10,
     },
     section: {
         marginBottom: 30,
@@ -129,46 +155,17 @@ const styles = StyleSheet.create({
         fontSize: 20,
         marginBottom: 15,
     },
-    countdownContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 10,
-    },
-    countdownText: {
-        fontSize: 18,
-        fontWeight: '600',
-        textAlign: 'center',
-        color: 'white',
-    },
-    insertEsitiText: {
-        fontSize: 10,
-        fontWeight: '600',
-        textAlign: 'center',
-        color: 'white',
-    },
-    countdownNumber: {
-        fontSize: 36,
-        fontWeight: 'bold',
-        marginHorizontal: 5,
-    },
-    countdownLabel: {
-        fontSize: 16,
-        color: 'white',
-        marginRight: 10,
-    },
     rankItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         paddingVertical: 10,
         borderBottomColor: '#ddd',
         borderBottomWidth: 1,
-        color: 'white',
     },
     rankName: {
         fontSize: 16,
         color: 'white',
-        fontWeight: 'bold'
+        fontWeight: 'bold',
     },
     rankPoints: {
         fontSize: 16,
@@ -181,11 +178,10 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
     },
     leagueBadgeContainer: {
-        marginBottom: 10, // Aggiungi margine per separare badge e testo
-    },
-    leagueBadge: {
-        backgroundColor: '#6200ea', // Cambia questo colore come desideri
-        color: 'white',
+        marginBottom: 10,
+        padding: 5,
+        borderRadius: 12,
+        backgroundColor: '#a21fec',
     },
     matchDetails: {
         justifyContent: 'flex-start',
@@ -200,8 +196,5 @@ const styles = StyleSheet.create({
     matchTime: {
         fontSize: 14,
         color: '#aaa',
-    },
-    bellIcon: {
-        alignSelf: 'center',
     },
 });

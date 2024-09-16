@@ -40,7 +40,7 @@ export default function LeagueDetailsTabs() {
                 fontWeight: 'bold', // Grassetto per le etichette
             }
         }}>
-            <Tab.Screen name="Dettagli" component={LeagueDetails} />
+            <Tab.Screen name="Dettagli" component={LeagueDetails} options={{ headerShown: false }}  />
             <Tab.Screen name="Partecipanti" component={ParticipantsScreen} />
             {/* Tab per tornare direttamente alla schermata Home */}
             <Tab.Screen
