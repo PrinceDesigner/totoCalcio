@@ -11,13 +11,14 @@ export default function LeagueDetails({ navigation }) {
     const deadline = new Date().getTime() + 3600000; // Simuliamo una scadenza a 1 ora da adesso
 
     const provisionalRanking = [
-        { id: '1', name: 'Giocatore 1', points: 50 },
-        { id: '2', name: 'Giocatore 2', points: 45 },
-        { id: '3', name: 'Giocatore 3', points: 40 },
-        { id: '4', name: 'Giocatore 4', points: 35 },
-        { id: '5', name: 'Giocatore 5', points: 30 },
-        { id: '6', name: 'Giocatore 6', points: 25 },
+        { id: '1', name: 'Mario Rossi', points: 150 },
+        { id: '2', name: 'Luigi Bianchi', points: 140 },
+        { id: '3', name: 'Giovanni Verdi', points: 130 },
+        { id: '4', name: 'Francesco Neri', points: 120 },
+        { id: '5', name: 'Carlo Blu', points: 110 },
+        { id: '6', name: 'Alessandro Gialli', points: 100 },
     ];
+
 
     const matches = [
         { id: '1', home: 'Juventus', away: 'Inter', time: '18:00' },
@@ -31,7 +32,7 @@ export default function LeagueDetails({ navigation }) {
         { id: '9', home: 'Genoa', away: 'Frosinone', time: '21:00' },
         { id: '10', home: 'Empoli', away: 'Salernitana', time: '21:00' },
     ];
-    
+
     useEffect(() => {
         const interval = setInterval(() => {
             const now = new Date().getTime();
@@ -55,7 +56,9 @@ export default function LeagueDetails({ navigation }) {
                     </View>
 
                     {/* Numero di giornata */}
-                    <Text style={styles.matchdayText}>Giornata {matchdayNumber}</Text>
+                    <View style={styles.leagueBadgeCountDown}>
+                        <Badge style={{ backgroundColor: colors.primary }}> Giornata {matchdayNumber}</Badge>
+                    </View>
                 </View>
 
                 {/* Countdown visual nello stile "10:10:10" */}
@@ -81,9 +84,9 @@ export default function LeagueDetails({ navigation }) {
                     <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica Provvisoria</Text>
                     {provisionalRanking.map((player, index) => (
                         <View key={player.id} style={styles.rankItem}>
-                            <View style={{display: 'flex', flexDirection: 'row'}}>
-                            <Text style={styles.rankPosition}>{index + 1}</Text>
-                            <Text style={styles.rankName}>{player.name}</Text>
+                            <View style={{ display: 'flex', flexDirection: 'row' }}>
+                                <Text style={styles.rankPosition}>{index + 1}</Text>
+                                <Text style={styles.rankName}>{player.name}</Text>
                             </View>
                             <Text style={{ ...styles.rankPoints, color: 'white' }}>{player.points} punti</Text>
                         </View>
@@ -101,6 +104,7 @@ export default function LeagueDetails({ navigation }) {
 
                 {/* Schema delle Partite */}
                 <Card style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginTop: 10 }}>
+                    <Text style={{ color: 'white', fontSize: 25 }}>Partite Giornata 12</Text>
                     {matches.map((match) => (
                         <View key={match.id} style={styles.matchItem}>
                             {/* Dettaglio del match */}

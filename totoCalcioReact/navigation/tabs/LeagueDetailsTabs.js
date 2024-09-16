@@ -1,50 +1,64 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, View } from 'react-native';
+import { Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons'; // Usa Ionicons per le icone
 import LeagueDetails from '../../screens/LeagueDetails';
+import ParticipantsListScreen from '../../screens/ParticipantsListScreen';
 
 const Tab = createBottomTabNavigator();
 
-// Schermata Partecipanti
-function ParticipantsScreen() {
-    return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text>Partecipanti della Lega</Text>
-        </View>
-    );
-}
 
 export default function LeagueDetailsTabs() {
     const navigation = useNavigation(); // Ottieni l'oggetto di navigazione
 
+
     return (
-        <Tab.Navigator screenOptions={{
-            headerStyle: {
-                backgroundColor: '#323232', // Colore di sfondo dell'header
-                borderBottomColor: '#e5e7eb', // Colore del bordo inferiore
-                borderBottomWidth: 1, // Spessore del bordo inferiore
-            },
-            headerTintColor: '#FFFFFF', // Colore del testo (bianco)
-            headerTitleStyle: {
-                fontWeight: 'bold', // Stile del testo nell'header
-            },
-            tabBarStyle: {
-                backgroundColor: '#323232', // Sfondo della tab bar
-                borderTopColor: '#e5e7eb', // Colore del bordo superiore della tab bar
-            },
-            tabBarActiveTintColor: '#FFFFFF', // Colore delle icone e del testo quando attivi
-            tabBarInactiveTintColor: '#888888', // Colore delle icone e del testo quando inattivi
-            tabBarLabelStyle: {
-                fontSize: 12, // Dimensione del testo delle etichette
-                fontWeight: 'bold', // Grassetto per le etichette
-            }
-        }}>
-            <Tab.Screen name="Dettagli" component={LeagueDetails} options={{ headerShown: false }}  />
-            <Tab.Screen name="Partecipanti" component={ParticipantsScreen} />
-            {/* Tab per tornare direttamente alla schermata Home */}
+        <Tab.Navigator
+        initialRouteName="Home Lega"
+            screenOptions={({ route }) => ({
+                headerStyle: {
+                    backgroundColor: '#323232', // Colore di sfondo dell'header
+                    borderBottomColor: '#e5e7eb', // Colore del bordo inferiore
+                    borderBottomWidth: 1, // Spessore del bordo inferiore
+                },
+                headerTintColor: '#FFFFFF', // Colore del testo (bianco)
+                headerTitleStyle: {
+                    fontWeight: 'bold', // Stile del testo nell'header
+                },
+                tabBarStyle: {
+                    backgroundColor: '#323232', // Sfondo della tab bar
+                    borderTopColor: '#e5e7eb', // Colore del bordo superiore della tab bar
+                },
+                tabBarActiveTintColor: '#FFFFFF', // Colore delle icone e del testo quando attivi
+                tabBarInactiveTintColor: '#888888', // Colore delle icone e del testo quando inattivi
+                tabBarLabelStyle: {
+                    fontSize: 12, // Dimensione del testo delle etichette
+                    fontWeight: 'bold', // Grassetto per le etichette
+                },
+                tabBarIcon: ({ color, size }) => {
+                    let iconName;
+
+                    if (route.name === 'Home Lega') {
+                        iconName = 'home';
+                    } else if (route.name === 'Partecipanti') {
+                        iconName = 'people';
+                    } else if (route.name === 'Le Mie Leghe') {
+                        iconName = 'list';
+                    }
+
+                    return <Ionicons name={iconName} size={size} color={color} />;
+                },
+            })}
+        >
             <Tab.Screen
-                name="Leghe"
+                name="Home Lega"
+                component={LeagueDetails}
+                options={{ headerShown: false }}
+            />
+            <Tab.Screen name="Partecipanti" component={ParticipantsListScreen} />
+            <Tab.Screen
+                name="Le Mie Leghe"
                 component={LeagueDetails} // Può essere qualsiasi componente, ma non verrà caricato
                 listeners={{
                     tabPress: (e) => {
