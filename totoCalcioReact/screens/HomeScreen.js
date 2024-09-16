@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl } from 'react-native';
 import { Button, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 
@@ -11,6 +11,20 @@ const leagues = [
 export default function HomeScreen() {
     const { colors } = useTheme();
     const navigation = useNavigation(); // Ottieni l'oggetto di navigazione
+
+    const [refreshing, setRefreshing] = useState(false); // Stato per gestire il refresh
+
+    // Funzione di refresh
+    const onRefresh = () => {
+        setRefreshing(true);
+        console.log('Eseguo il refresh dei dati...');
+
+        // Simula una richiesta di aggiornamento dati (es. da un server)
+        setTimeout(() => {
+            setRefreshing(false);
+            console.log('Dati aggiornati');
+        }, 1000); // Simulazione di un delay di 2 secondi
+    };
 
     // Funzione per gestire il click su una lega
     const handleLeaguePress = (league) => {
@@ -24,7 +38,6 @@ export default function HomeScreen() {
             <View style={{ ...styles.leagueContainer, backgroundColor: colors.surface }}>
                 <Image source={item.image} style={styles.leagueImage} />
                 <View style={styles.leagueTextContainer}>
-                    {/* Avvolgi i testi all'interno di <Text> */}
                     <Text style={{ ...styles.leagueName, color: colors.primary }}>{item.name}</Text>
                     <Text style={styles.leagueDescription}>{item.description}</Text>
                 </View>
@@ -40,12 +53,20 @@ export default function HomeScreen() {
                 <Button mode="contained" onPress={() => navigation.navigate('CreateLeague')}>Crea Lega</Button>
             </View>
 
-            {/* Lista delle leghe */}
+            {/* Lista delle leghe con RefreshControl */}
             <FlatList
                 data={leagues}
                 renderItem={renderLeagueItem}
                 keyExtractor={item => item.id}
                 contentContainerStyle={styles.listContainer}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor={colors.primary} // Colore dell'animazione su iOS
+                        colors={[colors.primary]} // Colori dell'animazione su Android
+                    />
+                }
             />
 
             {/* Pulsante "Unisciti alla lega" */}

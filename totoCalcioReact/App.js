@@ -10,12 +10,14 @@ import { customDarkTheme } from './theme/temi'; // Importa i temi personalizzati
 import OnboardingScreen from './screens/OnboardingScreen';
 import LoginScreen from './screens/auth/LoginScreen';
 import HomeScreen from './screens/HomeScreen'; // Aggiungi la schermata Home
+import JoinLeagueScreen from './screens/JoinLeagueScreen'; // Aggiungi la schermata Home
 import { MaterialIcons } from '@expo/vector-icons'; // Importa l'icona dell'hamburger menu
 import CustomDrawerContent from './components/CustomDrawerContent';
 import LeagueStackNavigator from './navigation/LeagueStackNavigator';
 import CreateLeagueScreen from './screens/CreateLeagueScreen';
 import { CreateLeagueHeader, CustomHeader } from './navigation/customHeader/customHeader';
-import JoinLeagueScreen from './screens/joinLeagueScreen';
+
+import ProfileScreen from './screens/ProfileScreen';
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator(); // Crea un Drawer Navigator
@@ -71,6 +73,15 @@ function DrawerNavigator() {
         component={JoinLeagueScreen}
         options={({ navigation }) => ({
           title: 'Unisciti ad una lega',
+          headerShown: true, // Mostra l'header solo per questa schermata
+          ...CreateLeagueHeader({ navigation }), // Applica l'header personalizzato con Go Back
+        })}
+      />
+      <Drawer.Screen
+        name="ProfileScreen"
+        component={ProfileScreen}
+        options={({ navigation }) => ({
+          title: 'Profilo',
           headerShown: true, // Mostra l'header solo per questa schermata
           ...CreateLeagueHeader({ navigation }), // Applica l'header personalizzato con Go Back
         })}
