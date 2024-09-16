@@ -20,11 +20,18 @@ export default function LeagueDetails({ navigation }) {
     ];
 
     const matches = [
-        { id: '1', home: 'Squadra A', away: 'Squadra B', time: '18:00' },
-        { id: '2', home: 'Squadra C', away: 'Squadra D', time: '20:45' },
-        { id: '3', home: 'Squadra E', away: 'Squadra F', time: '21:00' },
+        { id: '1', home: 'Juventus', away: 'Inter', time: '18:00' },
+        { id: '2', home: 'Milan', away: 'Napoli', time: '20:45' },
+        { id: '3', home: 'Roma', away: 'Lazio', time: '21:00' },
+        { id: '4', home: 'Atalanta', away: 'Fiorentina', time: '18:00' },
+        { id: '5', home: 'Bologna', away: 'Torino', time: '20:45' },
+        { id: '6', home: 'Sassuolo', away: 'Cagliari', time: '21:00' },
+        { id: '7', home: 'Udinese', away: 'Monza', time: '18:00' },
+        { id: '8', home: 'Lecce', away: 'Verona', time: '20:45' },
+        { id: '9', home: 'Genoa', away: 'Frosinone', time: '21:00' },
+        { id: '10', home: 'Empoli', away: 'Salernitana', time: '21:00' },
     ];
-
+    
     useEffect(() => {
         const interval = setInterval(() => {
             const now = new Date().getTime();
@@ -70,35 +77,43 @@ export default function LeagueDetails({ navigation }) {
 
             <ScrollView style={{ ...styles.container, backgroundColor: colors.background }}>
                 {/* Classifica Provvisoria */}
-                <TouchableOpacity onPress={() => navigation.navigate('ProvisionalRanking')}>
-                    <Card style={{ ...styles.section, marginBottom: 0 }}>
-                        <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica Provvisoria</Text>
-                        {provisionalRanking.map((player) => (
-                            <View key={player.id} style={styles.rankItem}>
-                                <Text style={styles.rankName}>{player.name}</Text>
-                                <Text style={{ ...styles.rankPoints, color: 'white' }}>{player.points} punti</Text>
+                <Card style={{ ...styles.section, marginBottom: 0 }}>
+                    <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica Provvisoria</Text>
+                    {provisionalRanking.map((player, index) => (
+                        <View key={player.id} style={styles.rankItem}>
+                            <View style={{display: 'flex', flexDirection: 'row'}}>
+                            <Text style={styles.rankPosition}>{index + 1}</Text>
+                            <Text style={styles.rankName}>{player.name}</Text>
                             </View>
-                        ))}
-                    </Card>
-                </TouchableOpacity>
+                            <Text style={{ ...styles.rankPoints, color: 'white' }}>{player.points} punti</Text>
+                        </View>
+                    ))}
+
+                    {/* Bottone per vedere la classifica completa */}
+                    <Button
+                        mode="contained"
+                        onPress={() => navigation.navigate('FullParticipantsRankingScreen')}
+                        style={styles.fullRankingButton}
+                    >
+                        Classifica Completa
+                    </Button>
+                </Card>
 
                 {/* Schema delle Partite */}
-                <TouchableOpacity onPress={() => navigation.navigate('MatchSchedule')}>
-                    <Card style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginTop: 10 }}>
-                        {matches.map((match) => (
-                            <View key={match.id} style={styles.matchItem}>
-                                {/* Dettaglio del match */}
-                                <View style={styles.matchDetails}>
-                                    <View style={styles.leagueBadgeContainer}>
-                                        <Badge style={{ backgroundColor: colors.primary }}>Serie A</Badge>
-                                    </View>
-                                    <Text style={styles.matchText}>{match.home} vs {match.away}</Text>
-                                    <Text style={styles.matchTime}>{match.time}</Text>
+                <Card style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginTop: 10 }}>
+                    {matches.map((match) => (
+                        <View key={match.id} style={styles.matchItem}>
+                            {/* Dettaglio del match */}
+                            <View style={styles.matchDetails}>
+                                <View style={styles.leagueBadgeContainer}>
+                                    <Badge style={{ backgroundColor: colors.primary }}>Serie A</Badge>
                                 </View>
+                                <Text style={styles.matchText}>{match.home} vs {match.away}</Text>
+                                <Text style={styles.matchTime}>{match.time}</Text>
                             </View>
-                        ))}
-                    </Card>
-                </TouchableOpacity>
+                        </View>
+                    ))}
+                </Card>
             </ScrollView>
         </SafeAreaView>
     );
@@ -162,6 +177,12 @@ const styles = StyleSheet.create({
         borderBottomColor: '#ddd',
         borderBottomWidth: 1,
     },
+    rankPosition: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: 'white',
+        marginRight: 10,
+    },
     rankName: {
         fontSize: 16,
         color: 'white',
@@ -169,6 +190,9 @@ const styles = StyleSheet.create({
     },
     rankPoints: {
         fontSize: 16,
+    },
+    fullRankingButton: {
+        marginTop: 10,
     },
     matchItem: {
         flexDirection: 'row',
@@ -198,3 +222,4 @@ const styles = StyleSheet.create({
         color: '#aaa',
     },
 });
+
