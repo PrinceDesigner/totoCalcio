@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, ScrollView } from 'react-native';
-import { Card, useTheme } from 'react-native-paper'; // Importa il hook useTheme
+import { Card, useTheme, Badge } from 'react-native-paper';
+import { MaterialIcons } from '@expo/vector-icons'; // Icona campanella
 
 // Funzione per simulare il countdown
 const calculateCountdown = (deadline) => {
@@ -37,9 +38,9 @@ export default function LeagueDetails({ route, navigation }) {
 
     // Simuliamo lo schema delle partite
     const matches = [
-        { id: '1', home: 'Squadra A', away: 'Squadra B' },
-        { id: '2', home: 'Squadra C', away: 'Squadra D' },
-        { id: '3', home: 'Squadra E', away: 'Squadra F' },
+        { id: '1', home: 'Squadra A', away: 'Squadra B', time: '18:00' },
+        { id: '2', home: 'Squadra C', away: 'Squadra D', time: '20:45' },
+        { id: '3', home: 'Squadra E', away: 'Squadra F', time: '21:00' },
     ];
 
     return (
@@ -51,11 +52,11 @@ export default function LeagueDetails({ route, navigation }) {
                         Giornata {matchdayNumber}
                     </Text>
                     <View style={styles.countdownContainer}>
-                        <Text style={{...styles.countdownNumber, color: colors.primary}}>{countdown.hours}</Text>
+                        <Text style={{ ...styles.countdownNumber, color: colors.primary }}>{countdown.hours}</Text>
                         <Text style={styles.countdownLabel}>ore</Text>
-                        <Text style={{...styles.countdownNumber, color: colors.primary}}>{countdown.minutes}</Text>
+                        <Text style={{ ...styles.countdownNumber, color: colors.primary }}>{countdown.minutes}</Text>
                         <Text style={styles.countdownLabel}>min</Text>
-                        <Text style={{...styles.countdownNumber, color: colors.primary}}>{countdown.seconds}</Text>
+                        <Text style={{ ...styles.countdownNumber, color: colors.primary }}>{countdown.seconds}</Text>
                         <Text style={styles.countdownLabel}>sec</Text>
                     </View>
                     <Text style={styles.insertEsitiText}>
@@ -66,15 +67,15 @@ export default function LeagueDetails({ route, navigation }) {
 
             {/* Classifica Provvisoria */}
             <TouchableOpacity onPress={() => navigation.navigate('ProvisionalRanking')}>
-                <Card style={styles.section}>
-                    <Text style={{...styles.sectionTitle, color: colors.primary}}>Top 6</Text>
+                <Card style={{...styles.section, marginBottom: 0}}>
+                    <Text style={{ ...styles.sectionTitle, color: 'white' }}>Top 6</Text>
                     <FlatList
                         data={provisionalRanking.slice(0, 6)} // Mostra solo i primi 6
                         keyExtractor={item => item.id}
                         renderItem={({ item }) => (
                             <View style={styles.rankItem}>
                                 <Text style={styles.rankName}>{item.name}</Text>
-                                <Text style={{...styles.rankPoints}}>{item.points} punti</Text>
+                                <Text style={{ ...styles.rankPoints, color: 'white' }}>{item.points} punti</Text>
                             </View>
                         )}
                         scrollEnabled={false} // Impedisce lo scorrimento all'interno di FlatList
@@ -84,20 +85,24 @@ export default function LeagueDetails({ route, navigation }) {
 
             {/* Schema delle Partite */}
             <TouchableOpacity onPress={() => navigation.navigate('MatchSchedule')}>
-                <Card style={styles.section}>
-                    <Text style={{...styles.sectionTitle, color: colors.primary}}>Schema delle Partite</Text>
-                    <FlatList
-                        data={matches}
-                        keyExtractor={item => item.id}
-                        renderItem={({ item }) => (
-                            <View style={styles.matchItem}>
-                                <Text style={styles.team}>{item.home}</Text>
-                                <Text style={styles.vs}>vs</Text>
-                                <Text style={styles.team}>{item.away}</Text>
+                <Card style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginTop: 30 }}>
+                    {matches.map((match) => (
+                        <View key={match.id} style={styles.matchItem}>
+
+                            {/* Dettaglio del match */}
+                            <View style={styles.matchDetails}>
+                                <View style={styles.leagueBadgeContainer}>
+                                    {/* Badge con nome della lega */}
+                                    <Badge style={styles.leagueBadge}>Serie A</Badge>
+                                </View>
+                                <Text style={styles.matchText}>{match.home} vs {match.away}</Text>
+                                <Text style={styles.matchTime}>{match.time}</Text>
                             </View>
-                        )}
-                        scrollEnabled={false} // Impedisce lo scorrimento all'interno di FlatList
-                    />
+
+                            {/* Icona campanella */}
+                            <MaterialIcons name="notifications" size={24} color={colors.primary} style={styles.bellIcon} />
+                        </View>
+                    ))}
                 </Card>
             </TouchableOpacity>
         </ScrollView>
@@ -108,7 +113,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         paddingHorizontal: 20,
-        paddingTop: 20
+        paddingTop: 20,
     },
     section: {
         marginBottom: 30,
@@ -122,7 +127,6 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: 20,
-        fontWeight: 'bold',
         marginBottom: 15,
     },
     countdownContainer: {
@@ -135,13 +139,13 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '600',
         textAlign: 'center',
-        color: 'white'
+        color: 'white',
     },
     insertEsitiText: {
         fontSize: 10,
         fontWeight: '600',
         textAlign: 'center',
-        color: 'white'
+        color: 'white',
     },
     countdownNumber: {
         fontSize: 36,
@@ -159,30 +163,45 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderBottomColor: '#ddd',
         borderBottomWidth: 1,
-        color: 'white'
+        color: 'white',
     },
     rankName: {
         fontSize: 16,
-        color: 'white'
-
+        color: 'white',
+        fontWeight: 'bold'
     },
     rankPoints: {
         fontSize: 16,
-        fontWeight: 'bold',
     },
     matchItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingVertical: 10,
+        paddingVertical: 15,
         borderBottomColor: '#ddd',
         borderBottomWidth: 1,
     },
-    team: {
+    leagueBadgeContainer: {
+        marginBottom: 10, // Aggiungi margine per separare badge e testo
+    },
+    leagueBadge: {
+        backgroundColor: '#6200ea', // Cambia questo colore come desideri
+        color: 'white',
+    },
+    matchDetails: {
+        justifyContent: 'flex-start',
+        alignItems: 'flex-start',
+        flex: 1,
+    },
+    matchText: {
         fontSize: 16,
         fontWeight: 'bold',
         color: 'white',
     },
-    vs: {
-        fontSize: 16,
+    matchTime: {
+        fontSize: 14,
+        color: '#aaa',
+    },
+    bellIcon: {
+        alignSelf: 'center',
     },
 });
