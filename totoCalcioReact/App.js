@@ -19,6 +19,7 @@ import { CreateLeagueHeader, CustomHeader } from './navigation/customHeader/cust
 
 import ProfileScreen from './screens/ProfileScreen';
 import SignupScreen from './screens/auth/SignupScreen';
+import SplashScreen from './screens/SplashScreen';
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator(); // Crea un Drawer Navigator
@@ -101,7 +102,12 @@ export default function App() {
       <Provider store={store}>
         <NavigationContainer>
           <View style={{ flex: 1 }}>
-            <Stack.Navigator initialRouteName="Onboarding">
+            <Stack.Navigator initialRouteName="SplashScreen">
+              <Stack.Screen
+                name="SplashScreen"
+                component={SplashScreen}
+                options={{ headerShown: false }}
+              />
               <Stack.Screen
                 name="Onboarding"
                 component={OnboardingScreen}

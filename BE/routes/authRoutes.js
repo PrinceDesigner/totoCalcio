@@ -2,6 +2,8 @@
 const express = require('express');
 const router = express.Router();
 const { admin, firestore } = require('../firebaseAdmin');
+const jwt = require('jsonwebtoken'); // Importa jsonwebtoken
+
 
 // const { OAuth2Client } = require('google-auth-library');
 // const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -25,8 +27,24 @@ router.post('/signup', async (req, res) => {
             uid: userRecord.uid,
         });
 
+        // Genera un token JWT
+        const payload = {
+            userId: userRecord.uid,
+            email: userRecord.email,
+            displayName: displayName,
+        };
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3h' }); // Genera il token JWT con scadenza 3 ora
+
         // Se tutto è andato bene, restituisci un messaggio di successo
-        return res.status(201).json({ message: 'User created and saved in Firestore', user: { userId: userRecord.uid, fullName: displayName, email } });
+        return res.status(201).json({
+            message: 'User created and saved in Firestore',
+            user: {
+                userId: userRecord.uid,
+                fullName: displayName,
+                email
+            },
+            token
+        });
 
     } catch (error) {
         // Gestisci diversi tipi di errori

@@ -6,6 +6,7 @@ import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons'; // A
 import { signupFailure, signupSuccess } from '../../redux/slice/authSlice';
 import { hideLoading, showLoading } from '../../redux/slice/uiSlice';
 import { signup } from '../../services/authServices';
+import { saveToken } from '../../AsyncStorage/AsyncStorage';
 
 export default function SignupScreen({ navigation }) {
     const { colors } = useTheme();
@@ -57,8 +58,10 @@ export default function SignupScreen({ navigation }) {
                 dispatch(showLoading());
                 const response = await signup(email, password, fullName); // Chiama la funzione di signup
                 console.log('Registrazione avvenuta con successo:', response);
-    
-                dispatch(signupSuccess(response.user));
+                
+                await saveToken(response.token);
+
+                dispatch(signupSuccess(response));
                 navigation.navigate('Home'); // Dopo la registrazione, vai alla schermata di login
             } catch (error) {
                 if (error.response) {
