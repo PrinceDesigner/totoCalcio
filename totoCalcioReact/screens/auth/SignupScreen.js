@@ -1,12 +1,15 @@
+
 import * as React from 'react';
 import { View, StyleSheet, Image, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
-import { useDispatch } from 'react-redux'; // Importa useDispatch per inviare azioni
+import { useDispatch } from 'react-redux';
 import { Button, Text, TextInput, useTheme } from 'react-native-paper';
-import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons'; // Aggiungi MaterialCommunityIcons
+import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { signupFailure, signupSuccess } from '../../redux/slice/authSlice';
 import { hideLoading, showLoading } from '../../redux/slice/uiSlice';
-import { signup } from '../../services/authServices';
 import { saveToken } from '../../AsyncStorage/AsyncStorage';
+import { auth, firestore } from '../../firebaseConfig'; // Importa la configurazione di Firebase
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'; // Firebase Auth SDK
+import { doc, setDoc } from 'firebase/firestore'; // Firebase Firestore SDK
 
 export default function SignupScreen({ navigation }) {
     const { colors } = useTheme();
@@ -56,16 +59,44 @@ export default function SignupScreen({ navigation }) {
         if (validateInputs()) {
             try {
                 dispatch(showLoading());
-                const response = await signup(email, password, fullName); // Chiama la funzione di signup
-                console.log('Registrazione avvenuta con successo:', response);
-                
-                await saveToken(response.token);
 
-                dispatch(signupSuccess(response));
-                navigation.navigate('Home'); // Dopo la registrazione, vai alla schermata di login
+                // Crea un nuovo utente con Firebase Authentication
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Aggiorna il displayName dell'utente
+                await updateProfile(user, { displayName: fullName });
+
+                // Ottieni il token JWT generato da Firebase
+                const token = await user.getIdToken();
+
+                // Salva l'utente in Firestore
+                await setDoc(doc(firestore, 'users', user.uid), {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: fullName,
+                });
+
+                // Salva il token JWT in AsyncStorage
+                await saveToken(token);
+
+                // Dispatch dell'azione signupSuccess con le informazioni dell'utente
+                dispatch(signupSuccess({
+                    user: {
+                        userId: user.uid,
+                        email: user.email,
+                        fullName
+                    },
+                    token,
+                }));
+
+                // Naviga alla schermata principale
+                navigation.navigate('Home');
             } catch (error) {
+                console.error('Errore durante la registrazione:', error);
+                dispatch(signupFailure('Errore nella registrazione'));
+
                 if (error.response) {
-                    // Accedi al messaggio di errore dal server
                     console.error('Errore durante la registrazione:', error.response.data.message);
                     dispatch(signupFailure(error.response.data.message));
                 } else {
@@ -77,6 +108,9 @@ export default function SignupScreen({ navigation }) {
             }
         }
     };
+
+
+
     // Funzione per il signup con Google
     const handleGoogleSignup = async () => {
 

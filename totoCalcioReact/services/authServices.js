@@ -19,3 +19,19 @@ export const signup = async (email, password, displayName) => {
     throw error;
   }
 };
+
+
+// Funzione per il login
+export const login = async (email, password) => {
+  try {
+    console.log(`${API_URL}/login`);
+    const response = await axios.post(`${API_URL}/login`, {
+      email,
+      password,
+    });
+    return response.data; // Restituisce il token e i dati dell'utente
+  } catch (error) {
+    console.error('Errore durante il login:', error);
+    throw error;
+  }
+};

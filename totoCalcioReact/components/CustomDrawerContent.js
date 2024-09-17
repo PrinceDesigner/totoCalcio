@@ -1,39 +1,52 @@
-// CustomDrawerContent.js
-
-import * as React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
-import { Button, useTheme } from 'react-native-paper';
 import { useDispatch } from 'react-redux';
 import { logout } from '../redux/slice/authSlice';
+import { removeToken } from '../AsyncStorage/AsyncStorage';
+import { hideLoading, showLoading } from '../redux/slice/uiSlice';
+import { getAuth, signOut } from 'firebase/auth'; // Importa signOut da Firebase
 
 export default function CustomDrawerContent(props) {
   const dispatch = useDispatch();
-  const { colors } = useTheme();
+  const [pressed, setPressed] = useState(false);
 
-  const handleLogout = () => {
-    // Dispatch del logout
-    dispatch(logout());
-    // Puoi anche fare altre azioni come navigare alla pagina di login se necessario
-    props.navigation.replace('LoginScreen'); // Naviga alla schermata di login
+  const handleLogout = async () => {
+    dispatch(showLoading()); // Imposta lo stato di caricamento su true
+    const auth = getAuth(); // Ottieni l'istanza di Firebase Auth
+
+    try {
+      // Esegui il logout da Firebase
+      await signOut(auth);
+
+      // Rimuovi il token da AsyncStorage
+      await removeToken(); 
+
+      // Dispatch del logout per aggiornare lo stato di Redux
+      dispatch(logout());
+
+      // Naviga alla schermata di login
+      props.navigation.replace('LoginScreen');
+    } catch (error) {
+      console.error('Errore durante il logout:', error);
+    } finally {
+      dispatch(hideLoading()); // Nascondi l'indicatore di caricamento
+    }
   };
 
   return (
     <View style={{ flex: 1 }}>
       <DrawerContentScrollView {...props}>
-        {/* Renderizza le voci di menu */}
         <DrawerItemList {...props} />
       </DrawerContentScrollView>
 
-      {/* Aggiungi il pulsante di logout in fondo */}
       <View style={styles.logoutContainer}>
-        <Button
-          mode="contained"
+        <TouchableOpacity
           onPress={handleLogout}
           style={styles.logoutButton}
         >
-          Logout
-        </Button>
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -46,8 +59,13 @@ const styles = StyleSheet.create({
     borderTopColor: '#e5e7eb',
   },
   logoutButton: {
-    backgroundColor: '#a21fec', // Colore di sfondo del pulsante di logout
+    backgroundColor: '#a21fec',
     borderRadius: 5,
     paddingVertical: 10,
+    alignItems: 'center',
+  },
+  logoutText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });

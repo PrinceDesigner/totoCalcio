@@ -1,62 +1,53 @@
-import * as React from 'react';
+import React from 'react';
 import { View, StyleSheet, Image, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
-
-import { useDispatch } from 'react-redux'; // Importa useDispatch per inviare azioni
+import { useDispatch } from 'react-redux';
 import { Button, Text, TextInput, useTheme } from 'react-native-paper';
-import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons'; // Aggiungi MaterialCommunityIcons
-
+import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { loginFailure, loginSuccess } from '../../redux/slice/authSlice';
 import { hideLoading, showLoading } from '../../redux/slice/uiSlice';
-
+import { signInWithEmailAndPassword, getAuth } from 'firebase/auth'; // Firebase auth
+import { saveToken } from '../../AsyncStorage/AsyncStorage'; // Salva il token JWT
+import {jwtDecode} from 'jwt-decode'; // Decodifica JWT se necessario
 
 export default function LoginScreen({ navigation }) {
-    const { colors } = useTheme(); // Recupera i colori dal tema
-    const dispatch = useDispatch(); // Ottieni la funzione dispatch di Redux
+    const { colors } = useTheme();
+    const dispatch = useDispatch();
+    const auth = getAuth(); // Ottieni l'istanza di Firebase Auth
+    const [pressed, setPressed] = React.useState(false);
 
-    const [pressed, setPressed] = React.useState(false); // Stato per gestire l'opacità
-    const [username, setUsername] = React.useState('');
+    const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
 
-    // Stati per gestire gli errori
-    const [usernameError, setUsernameError] = React.useState('');
+    const [emailError, setEmailError] = React.useState('');
     const [passwordError, setPasswordError] = React.useState('');
 
     const handleForgotPassword = () => {
-        // Azione quando si clicca su "Dimenticato password?"
         console.log('Password dimenticata');
     };
 
     const handleGoogleLogin = () => {
-        // Azione per il login con Google
         console.log('Login con Google');
     };
 
     const handleFacebookLogin = () => {
-        // Azione per il login con Facebook
         console.log('Login con Facebook');
     };
 
     const handleSignUp = () => {
-        // Azione per la registrazione
-        navigation.navigate('SignupScreen')
-        console.log('Vai alla registrazione');
+        navigation.navigate('SignupScreen');
     };
 
     // Funzione di validazione
     const validateInputs = () => {
         let valid = true;
-
-        // Reset degli errori
-        setUsernameError('');
+        setEmailError('');
         setPasswordError('');
 
-        if (username.trim() === '') {
-            setUsernameError('Il campo username è obbligatorio');
+        if (email.trim() === '') {
+            setEmailError('Il campo email è obbligatorio');
             valid = false;
         }
 
-
-        // Validazione password
         if (password.trim() === '') {
             setPasswordError('Il campo password è obbligatorio');
             valid = false;
@@ -65,49 +56,48 @@ export default function LoginScreen({ navigation }) {
         return valid;
     };
 
-    const resetInput = () => {
-        setUsernameError('');
-        setPasswordError('');
-    }
+    const handleLogin = async () => {
+        if (validateInputs()) {
+            try {
+                dispatch(showLoading());
 
-    const onChangeUsername = (text) => {
-        resetInput();
-        setUsername(text);
-    }
+                // Effettua il login con Firebase Auth
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
 
-    const onChangePassword = (text) => {
-        resetInput();
-        setPassword(text);
-    }
+                // Ottieni il token JWT
+                const token = await user.getIdToken();
+                const decodedToken = jwtDecode(token); // Decodifica il token se necessario
 
-    const handleLogin = () => {
+                // Salva il token in AsyncStorage
+                await saveToken(token);
 
-        dispatch(showLoading()); // Mostra il caricamento
+                // Dispatch del loginSuccess con le informazioni dell'utente
+                dispatch(loginSuccess({
+                    user: {
+                        userId: user.uid,
+                        email: user.email,
+                        fullName: user.displayName || decodedToken.name, // Usa il nome dal token decodificato se disponibile
+                    },
+                    token, // Salva il token JWT nello stato Redux
+                }));
 
-        setTimeout(() => {
-            if (validateInputs()) {
-                // Simula la logica di autenticazione
-                if (username === 'test' && password === 'password') {
-                    // Esegui l'azione di login success
-                    dispatch(loginSuccess(username));
-                    navigation.navigate('Home'); // Usa l'oggetto navigation per andare alla schermata Home
-
-                } else {
-                    // Esegui l'azione di login failure
-                    dispatch(loginFailure('Credenziali errate'));
-                    console.log('Login fallito');
-                }
-                console.log('Login con', username, password);
+                // Naviga alla schermata Home
+                navigation.navigate('Home');
+            } catch (error) {
+                console.error('Errore durante il login:', error);
+                dispatch(loginFailure('Credenziali errate o problema di rete'));
+            } finally {
+                dispatch(hideLoading());
             }
-            dispatch(hideLoading()); // Nascondi il caricamento
-        }, 2000); // Simula un ritardo di 2 secondi
+        }
     };
 
     return (
         <KeyboardAvoidingView
             style={{ flex: 1, backgroundColor: colors.background }}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0} // Offset per iOS per evitare che la tastiera copra il contenuto
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
         >
             <ScrollView contentContainerStyle={{ ...styles.container, backgroundColor: colors.background }}>
                 <Image
@@ -117,27 +107,25 @@ export default function LoginScreen({ navigation }) {
 
                 <Text style={styles.title}>Accedi o Registrati</Text>
 
-                {/* Wrappa l'input per username e icona in una View */}
                 <View style={styles.inputContainer}>
-                    <MaterialIcons name="person" size={24} color={colors.primary} style={styles.icon} />
+                    <MaterialIcons name="email" size={24} color={colors.primary} style={styles.icon} />
                     <TextInput
-                        label="Username"
-                        value={username}
-                        onChangeText={text => onChangeUsername(text)}
+                        label="Email"
+                        value={email}
+                        onChangeText={setEmail}
                         mode="outlined"
                         style={styles.input}
                         theme={{ colors: { text: 'black', placeholder: 'gray' } }}
                     />
                 </View>
-                {usernameError ? <Text style={styles.errorText}>{usernameError}</Text> : null}
+                {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
-                {/* Wrappa l'input per password e icona in una View */}
                 <View style={styles.inputContainer}>
                     <MaterialIcons name="lock" size={24} color={colors.primary} style={styles.icon} />
                     <TextInput
                         label="Password"
                         value={password}
-                        onChangeText={text => onChangePassword(text)}
+                        onChangeText={setPassword}
                         mode="outlined"
                         secureTextEntry
                         style={styles.input}
@@ -277,8 +265,8 @@ const styles = StyleSheet.create({
     },
     signUpText: {
         fontSize: 14,
-        marginTop: 20, // Spazio sopra la scritta
-        textAlign: 'center', // Allinea il testo al centro
+        marginTop: 20,
+        textAlign: 'center',
     },
     errorText: {
         color: 'red',

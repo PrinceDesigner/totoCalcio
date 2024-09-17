@@ -1,54 +1,58 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { useDispatch } from 'react-redux';
-import { jwtDecode } from 'jwt-decode'
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { loginSuccess, logout } from '../redux/slice/authSlice';
-import { getToken } from '../AsyncStorage/AsyncStorage';
+import { saveToken, removeToken } from '../AsyncStorage/AsyncStorage';
 import { useTheme } from 'react-native-paper';
 
 const SplashScreen = ({ navigation }) => {
     const dispatch = useDispatch();
-    const { colors } = useTheme(); // Recupera i colori dal tema
-
+    const { colors } = useTheme();
+    const auth = getAuth(); // Ottieni l'istanza di Firebase Auth
 
     useEffect(() => {
-        const checkAuth = async () => {
-            const token = await getToken();
-            if (token) {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
                 try {
-                    console.log('token-preso', token);
-                    const decodedToken = jwtDecode(token)
-                    const currentTime = Date.now() / 1000;
+                    // L'utente è autenticato, recupera il token JWT
+                    const token = await user.getIdToken(true); // Recupera il token ID di Firebase
 
-                    if (decodedToken.exp > currentTime) {
-                        // Popola Redux con le informazioni utente
-                        dispatch(loginSuccess({
-                            userId: decodedToken.userId,
-                            fullName: decodedToken.displayName,
-                            email: decodedToken.email,
-                        }));
-                        navigation.navigate('Home'); // Naviga alla schermata principale
-                    } else {
-                        // Se il token è scaduto, fai il logout
-                        dispatch(logout());
-                        navigation.navigate('LoginScreen');
-                    }
+                    // Salva il token JWT in AsyncStorage
+                    await saveToken(token);
+
+                    // Popola il Redux store con i dati dell'utente
+                    dispatch(loginSuccess({
+                        user: {
+                            userId: user.uid,
+                            email: user.email,
+                            fullName: user.displayName || 'Utente', // Puoi usare user.displayName se esiste
+                        },
+                        token,
+                    }));
+
+                    // Naviga alla schermata Home
+                    navigation.replace('Home');
                 } catch (error) {
-                    console.error('Errore durante la decodifica del token:', error);
+                    console.error('Errore durante il recupero del token:', error);
+                    await removeToken(); // Se fallisce, rimuovi il token
                     dispatch(logout());
-                    navigation.navigate('Onboarding');
+                    navigation.replace('LoginScreen');
                 }
             } else {
-                // Se il token non esiste, vai alla schermata di Onboarding
-                navigation.navigate('Onboarding');
+                // L'utente non è autenticato, reindirizza alla schermata di login
+                await removeToken();
+                dispatch(logout());
+                navigation.replace('LoginScreen');
             }
-        };
+        });
 
-        checkAuth();
-    }, []);
+        // Cleanup del listener quando il componente viene smontato
+        return () => unsubscribe();
+    }, [auth, dispatch, navigation]);
 
     return (
-        <View style={{...styles.container, backgroundColor: colors.background }}>
+        <View style={{ ...styles.container, backgroundColor: colors.background }}>
             {/* Logo o immagine splash */}
             <Image
                 source={require('../league1.png')} // Cambia con il tuo logo
@@ -56,7 +60,7 @@ const SplashScreen = ({ navigation }) => {
             />
 
             <Text style={styles.title}>Benvenuto in TotoCalcio</Text>
-            
+
             {/* Spinner di caricamento */}
             <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
         </View>

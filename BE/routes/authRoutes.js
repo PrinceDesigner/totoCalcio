@@ -64,16 +64,44 @@ router.post('/signup', async (req, res) => {
 // Rotta per il login
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
-
+    console.log(email);
     try {
+        // Verifica l'email dell'utente in Firebase Authentication
         const userRecord = await admin.auth().getUserByEmail(email);
-        const token = await admin.auth().createCustomToken(userRecord.uid);
-        res.status(200).json({ message: 'Login successful', token });
+        
+        // Verifica che la password sia corretta (devi gestire la logica di controllo della password, ad esempio utilizzando Firebase Authentication)
+        const user = await admin.auth().verifyPassword(email, password); // Gestisci correttamente il controllo della password qui
+
+        // Genera il token JWT
+        const payload = {
+            userId: userRecord.uid,
+            email: userRecord.email,
+            displayName: userRecord.displayName,
+        };
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3h' }); // Genera il token JWT con scadenza di 3 ore
+
+        // Restituisci il token e i dati dell'utente
+        return res.status(200).json({
+            message: 'Login successful',
+            user: {
+                userId: userRecord.uid,
+                fullName: userRecord.displayName,
+                email: userRecord.email,
+            },
+            token
+        });
     } catch (error) {
         console.error('Error logging in:', error);
-        res.status(500).json({ message: 'Error logging in', error });
+        if (error.code === 'auth/user-not-found') {
+            return res.status(400).json({ message: 'User not found' });
+        }
+        if (error.code === 'auth/wrong-password') {
+            return res.status(400).json({ message: 'Incorrect password' });
+        }
+        return res.status(500).json({ message: 'Internal server error', error });
     }
 });
+
 
 // Login con Google
 // router.post('/google', async (req, res) => {
