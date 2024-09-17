@@ -18,6 +18,7 @@ import CreateLeagueScreen from './screens/CreateLeagueScreen';
 import { CreateLeagueHeader, CustomHeader } from './navigation/customHeader/customHeader';
 
 import ProfileScreen from './screens/ProfileScreen';
+import SignupScreen from './screens/auth/SignupScreen';
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator(); // Crea un Drawer Navigator
@@ -109,6 +110,11 @@ export default function App() {
               <Stack.Screen
                 name="LoginScreen"
                 component={LoginScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="SignupScreen"
+                component={SignupScreen}
                 options={{ headerShown: false }}
               />
               {/* Usa il DrawerNavigator una volta loggato */}

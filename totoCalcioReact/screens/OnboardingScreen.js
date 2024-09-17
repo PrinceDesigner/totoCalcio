@@ -19,7 +19,7 @@ export default function OnboardingScreen({ navigation }) {
             </Text>
             <Button
                 mode="contained"
-                onPress={() => navigation.navigate('LeagueDetailsStack')}
+                onPress={() => navigation.navigate('LoginScreen')}
                 style={styles.joinButton}
             >
                 Join

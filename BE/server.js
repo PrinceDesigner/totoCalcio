@@ -1,8 +1,13 @@
 // server.js
 const express = require('express');
-const app = express();
+const cors = require('cors'); // Importa CORS
 const authRoutes = require('./routes/authRoutes');
 require('dotenv').config();
+
+const app = express(); // Crea l'app Express
+
+// Usa il middleware CORS
+app.use(cors());
 
 // Middleware per logging delle richieste
 app.use((req, res, next) => {

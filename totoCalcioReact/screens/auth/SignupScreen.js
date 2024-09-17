@@ -1,60 +1,46 @@
 import * as React from 'react';
 import { View, StyleSheet, Image, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
-
 import { useDispatch } from 'react-redux'; // Importa useDispatch per inviare azioni
 import { Button, Text, TextInput, useTheme } from 'react-native-paper';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons'; // Aggiungi MaterialCommunityIcons
-
-import { loginFailure, loginSuccess } from '../../redux/slice/authSlice';
+import { signupFailure, signupSuccess } from '../../redux/slice/authSlice';
 import { hideLoading, showLoading } from '../../redux/slice/uiSlice';
+import { signup } from '../../services/authServices';
 
-
-export default function LoginScreen({ navigation }) {
-    const { colors } = useTheme(); // Recupera i colori dal tema
-    const dispatch = useDispatch(); // Ottieni la funzione dispatch di Redux
+export default function SignupScreen({ navigation }) {
+    const { colors } = useTheme();
+    const dispatch = useDispatch();
 
     const [pressed, setPressed] = React.useState(false); // Stato per gestire l'opacità
-    const [username, setUsername] = React.useState('');
+    const [fullName, setFullName] = React.useState('');
+    const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
 
     // Stati per gestire gli errori
-    const [usernameError, setUsernameError] = React.useState('');
+    const [fullNameError, setFullNameError] = React.useState('');
+    const [emailError, setEmailError] = React.useState('');
     const [passwordError, setPasswordError] = React.useState('');
-
-    const handleForgotPassword = () => {
-        // Azione quando si clicca su "Dimenticato password?"
-        console.log('Password dimenticata');
-    };
-
-    const handleGoogleLogin = () => {
-        // Azione per il login con Google
-        console.log('Login con Google');
-    };
-
-    const handleFacebookLogin = () => {
-        // Azione per il login con Facebook
-        console.log('Login con Facebook');
-    };
-
-    const handleSignUp = () => {
-        // Azione per la registrazione
-        navigation.navigate('SignupScreen')
-        console.log('Vai alla registrazione');
-    };
 
     // Funzione di validazione
     const validateInputs = () => {
         let valid = true;
 
         // Reset degli errori
-        setUsernameError('');
+        setFullNameError('');
+        setEmailError('');
         setPasswordError('');
 
-        if (username.trim() === '') {
-            setUsernameError('Il campo username è obbligatorio');
+        if (fullName.trim() === '') {
+            setFullNameError('Il campo nome completo è obbligatorio');
             valid = false;
         }
 
+        // Validazione email
+        const emailRegex = /\S+@\S+\.\S+/;
+        if (!emailRegex.test(email)) {
+            setEmailError('Inserisci un indirizzo email valido');
+            valid = false;
+        }
 
         // Validazione password
         if (password.trim() === '') {
@@ -65,42 +51,37 @@ export default function LoginScreen({ navigation }) {
         return valid;
     };
 
-    const resetInput = () => {
-        setUsernameError('');
-        setPasswordError('');
-    }
-
-    const onChangeUsername = (text) => {
-        resetInput();
-        setUsername(text);
-    }
-
-    const onChangePassword = (text) => {
-        resetInput();
-        setPassword(text);
-    }
-
-    const handleLogin = () => {
-
-        dispatch(showLoading()); // Mostra il caricamento
-
-        setTimeout(() => {
-            if (validateInputs()) {
-                // Simula la logica di autenticazione
-                if (username === 'test' && password === 'password') {
-                    // Esegui l'azione di login success
-                    dispatch(loginSuccess(username));
-                    navigation.navigate('Home'); // Usa l'oggetto navigation per andare alla schermata Home
-
+    const handleSignUp = async () => {
+        if (validateInputs()) {
+            try {
+                dispatch(showLoading());
+                const response = await signup(email, password, fullName); // Chiama la funzione di signup
+                console.log('Registrazione avvenuta con successo:', response);
+    
+                dispatch(signupSuccess(response.user));
+                navigation.navigate('LeagueDetailsStack'); // Dopo la registrazione, vai alla schermata di login
+            } catch (error) {
+                if (error.response) {
+                    // Accedi al messaggio di errore dal server
+                    console.error('Errore durante la registrazione:', error.response.data.message);
+                    dispatch(signupFailure(error.response.data.message));
                 } else {
-                    // Esegui l'azione di login failure
-                    dispatch(loginFailure('Credenziali errate'));
-                    console.log('Login fallito');
+                    console.error('Errore durante la registrazione:', error.message);
+                    dispatch(signupFailure('Errore nella registrazione'));
                 }
-                console.log('Login con', username, password);
+            } finally {
+                dispatch(hideLoading());
             }
-            dispatch(hideLoading()); // Nascondi il caricamento
-        }, 2000); // Simula un ritardo di 2 secondi
+        }
+    };
+    // Funzione per il signup con Google
+    const handleGoogleSignup = async () => {
+
+    };
+
+    // Funzione per il signup con Facebook
+    const handleFacebookSignup = async () => {
+
     };
 
     return (
@@ -110,34 +91,45 @@ export default function LoginScreen({ navigation }) {
             keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0} // Offset per iOS per evitare che la tastiera copra il contenuto
         >
             <ScrollView contentContainerStyle={{ ...styles.container, backgroundColor: colors.background }}>
-                <Image
-                    source={require('../../image.png')}
-                    style={styles.logo}
-                />
+                <Image source={require('../../image.png')} style={styles.logo} />
 
-                <Text style={styles.title}>Accedi o Registrati</Text>
+                <Text style={styles.title}>Crea il tuo Account</Text>
 
-                {/* Wrappa l'input per username e icona in una View */}
+                {/* Nome Completo */}
                 <View style={styles.inputContainer}>
                     <MaterialIcons name="person" size={24} color={colors.primary} style={styles.icon} />
                     <TextInput
-                        label="Username"
-                        value={username}
-                        onChangeText={text => onChangeUsername(text)}
+                        label="Nome Completo"
+                        value={fullName}
+                        onChangeText={text => setFullName(text)}
                         mode="outlined"
                         style={styles.input}
                         theme={{ colors: { text: 'black', placeholder: 'gray' } }}
                     />
                 </View>
-                {usernameError ? <Text style={styles.errorText}>{usernameError}</Text> : null}
+                {fullNameError ? <Text style={styles.errorText}>{fullNameError}</Text> : null}
 
-                {/* Wrappa l'input per password e icona in una View */}
+                {/* Email */}
+                <View style={styles.inputContainer}>
+                    <MaterialIcons name="email" size={24} color={colors.primary} style={styles.icon} />
+                    <TextInput
+                        label="Email"
+                        value={email}
+                        onChangeText={text => setEmail(text)}
+                        mode="outlined"
+                        style={styles.input}
+                        theme={{ colors: { text: 'black', placeholder: 'gray' } }}
+                    />
+                </View>
+                {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+
+                {/* Password */}
                 <View style={styles.inputContainer}>
                     <MaterialIcons name="lock" size={24} color={colors.primary} style={styles.icon} />
                     <TextInput
                         label="Password"
                         value={password}
-                        onChangeText={text => onChangePassword(text)}
+                        onChangeText={text => setPassword(text)}
                         mode="outlined"
                         secureTextEntry
                         style={styles.input}
@@ -146,15 +138,9 @@ export default function LoginScreen({ navigation }) {
                 </View>
                 {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
 
-                <View style={{ width: '100%' }}>
-                    <TouchableOpacity onPress={handleForgotPassword}>
-                        <Text style={styles.forgotPassword}>Dimenticato password?</Text>
-                    </TouchableOpacity>
-                </View>
-
-                {/* Pulsante Login */}
-                <Button mode="contained" style={styles.authButton} onPress={handleLogin}>
-                    Login
+                {/* Pulsante di registrazione */}
+                <Button mode="contained" style={styles.authButton} onPress={handleSignUp}>
+                    Registrati
                 </Button>
 
                 {/* Separator Line with "or" */}
@@ -169,7 +155,7 @@ export default function LoginScreen({ navigation }) {
                     <Button
                         mode="contained"
                         icon={() => <MaterialCommunityIcons name="google" size={24} color="white" />}
-                        onPress={handleGoogleLogin}
+                        onPress={handleGoogleSignup}
                         style={[styles.socialButtonGoogle, { opacity: pressed ? 0.5 : 1 }]}
                     >
                         Google
@@ -177,16 +163,16 @@ export default function LoginScreen({ navigation }) {
                     <Button
                         mode="contained"
                         icon={() => <MaterialCommunityIcons name="facebook" size={24} color="white" />}
-                        onPress={handleFacebookLogin}
+                        onPress={handleFacebookSignup}
                         style={[styles.socialButtonFacebook, { opacity: pressed ? 0.5 : 1 }]}
                     >
                         Facebook
                     </Button>
                 </View>
 
-                {/* Scritta "Creare un account? Registrati" */}
-                <TouchableOpacity onPress={handleSignUp}>
-                    <Text style={styles.signUpText}>Creare un account? Registrati</Text>
+                {/* Scritta "Hai già un account? Accedi" */}
+                <TouchableOpacity onPress={() => navigation.navigate('LoginScreen')}>
+                    <Text style={styles.signUpText}>Hai già un account? Accedi</Text>
                 </TouchableOpacity>
             </ScrollView>
         </KeyboardAvoidingView>
@@ -225,12 +211,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#d3d3d3',
         outline: 'none',
-    },
-    forgotPassword: {
-        fontSize: 14,
-        color: 'white',
-        marginBottom: 20,
-        textAlign: 'right',
     },
     authButton: {
         height: 48,
@@ -277,8 +257,8 @@ const styles = StyleSheet.create({
     },
     signUpText: {
         fontSize: 14,
-        marginTop: 20, // Spazio sopra la scritta
-        textAlign: 'center', // Allinea il testo al centro
+        marginTop: 20,
+        textAlign: 'center',
     },
     errorText: {
         color: 'red',
