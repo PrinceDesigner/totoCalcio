@@ -29,6 +29,7 @@ const authSlice = createSlice({
     signupSuccess: (state, action) => {
       state.isAuthenticated = true; // Potresti voler mantenere l'utente autenticato dopo il signup
       state.user = action.payload; // Imposta i dati dell'utente (es: email, displayName, ecc.)
+      state.token = action.payload.token; // Imposta i dati dell'utente (es: email, displayName, ecc.)
       state.error = null;
     },
     // Azione per registrazione fallita

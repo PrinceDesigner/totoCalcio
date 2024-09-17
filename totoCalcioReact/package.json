@@ -32,6 +32,7 @@
     "react-redux": "^9.1.2",
     "redux": "^5.0.1",
     "redux-devtools-extension": "^2.13.9",
+    "remote-redux-devtools": "^0.5.16",
     "yup": "^1.4.0"
   },
   "devDependencies": {

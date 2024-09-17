@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl } from 'react-native';
 import { Button, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
+import { useSelector } from 'react-redux'; // Importa useSelector per accedere allo stato Redux
 
 const leagues = [
     { id: '1', name: 'Lega Serie A', description: 'Lega per gli appassionati della Serie A', image: require('../league2.png') },
@@ -9,8 +10,17 @@ const leagues = [
 ];
 
 export default function HomeScreen() {
+
+    
     const { colors } = useTheme();
     const navigation = useNavigation(); // Ottieni l'oggetto di navigazione
+
+    const authState = useSelector((state) => state.auth); // Usa useSelector per ottenere lo stato di auth
+    const uiState = useSelector((state) => state.ui); // Se vuoi accedere anche allo stato UI
+
+    // Stampa lo stato Redux nella console
+    console.log('Auth State:', authState);
+    console.log('UI State:', uiState);
 
     const [refreshing, setRefreshing] = useState(false); // Stato per gestire il refresh
 

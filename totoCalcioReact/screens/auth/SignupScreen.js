@@ -59,7 +59,7 @@ export default function SignupScreen({ navigation }) {
                 console.log('Registrazione avvenuta con successo:', response);
     
                 dispatch(signupSuccess(response.user));
-                navigation.navigate('LeagueDetailsStack'); // Dopo la registrazione, vai alla schermata di login
+                navigation.navigate('Home'); // Dopo la registrazione, vai alla schermata di login
             } catch (error) {
                 if (error.response) {
                     // Accedi al messaggio di errore dal server
