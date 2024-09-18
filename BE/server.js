@@ -2,6 +2,8 @@
 const express = require('express');
 const cors = require('cors'); // Importa CORS
 const authRoutes = require('./routes/authRoutes');
+const leagueRoutes = require('./routes/leaguesRoutes'); // Importa le route delle leghe
+
 require('dotenv').config();
 
 const app = express(); // Crea l'app Express
@@ -15,11 +17,19 @@ app.use((req, res, next) => {
     next();
 });
 
+
 // Middleware per parsing del JSON
 app.use(express.json());
 
 // Rotte di autenticazione
 app.use('/api/auth', authRoutes);
+app.use('/api', leagueRoutes);
+
+// Middleware per la gestione degli errori (deve essere l'ultimo middleware)
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ message: 'Something went wrong!' });
+});
 
 const PORT = process.env.PORT || 5000;
 

@@ -33,7 +33,7 @@ router.post('/signup', async (req, res) => {
             email: userRecord.email,
             displayName: displayName,
         };
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3h' }); // Genera il token JWT con scadenza 3 ora
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' }); // Genera il token JWT con scadenza 3 ora
 
         // Se tutto è andato bene, restituisci un messaggio di successo
         return res.status(201).json({
@@ -78,7 +78,7 @@ router.post('/login', async (req, res) => {
             email: userRecord.email,
             displayName: userRecord.displayName,
         };
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3h' }); // Genera il token JWT con scadenza di 3 ore
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' }); // Genera il token JWT con scadenza di 3 ore
 
         // Restituisci il token e i dati dell'utente
         return res.status(200).json({
