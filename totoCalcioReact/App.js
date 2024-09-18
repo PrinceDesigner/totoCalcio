@@ -20,6 +20,7 @@ import { CreateLeagueHeader, CustomHeader } from './navigation/customHeader/cust
 import ProfileScreen from './screens/ProfileScreen';
 import SignupScreen from './screens/auth/SignupScreen';
 import SplashScreen from './screens/SplashScreen';
+import { COLORJS } from './theme/themeColor';
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator(); // Crea un Drawer Navigator
@@ -48,11 +49,11 @@ function DrawerNavigator() {
       screenOptions={({ navigation }) => ({
         ...CustomHeader({ navigation }), // Applica l'header personalizzato a ogni schermata
         drawerStyle: {
-          backgroundColor: '#161616', // Sfondo del drawer
+          backgroundColor: COLORJS.background, // Sfondo del drawer
         },
-        drawerActiveBackgroundColor: '#323232', // Colore di sfondo della voce attiva
-        drawerActiveTintColor: '#a21fec', // Colore del testo della voce attiva
-        drawerInactiveTintColor: '#a21fec', // Colore del testo delle voci inattive
+        drawerActiveBackgroundColor: COLORJS.surface, // Colore di sfondo della voce attiva
+        drawerActiveTintColor: COLORJS.primary, // Colore del testo della voce attiva
+        drawerInactiveTintColor: COLORJS.primary, // Colore del testo delle voci inattive
       })}
       initialRouteName="Home"
     >

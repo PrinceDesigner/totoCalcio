@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import { Card, Badge, useTheme, Button } from 'react-native-paper';
+import { COLORJS } from '../theme/themeColor';
 
 const formatTime = (time) => (time < 10 ? `0${time}` : time);
 
@@ -142,7 +143,7 @@ const styles = StyleSheet.create({
         marginBottom: 5,
         padding: 5,
         borderRadius: 12,
-        backgroundColor: '#a21fec',
+        backgroundColor: COLORJS.primary,
     },
     matchdayText: {
         fontSize: 14,
@@ -209,7 +210,7 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         padding: 5,
         borderRadius: 12,
-        backgroundColor: '#a21fec',
+        backgroundColor: COLORJS.primary,
     },
     matchDetails: {
         justifyContent: 'flex-start',

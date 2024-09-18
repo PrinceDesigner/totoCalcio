@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons'; // Usa Ionicons per le icone
 import LeagueDetails from '../../screens/LeagueDetails';
 import ParticipantsListScreen from '../../screens/ParticipantsListScreen';
+import { COLORJS } from '../../theme/themeColor';
 
 const Tab = createBottomTabNavigator();
 
@@ -18,7 +19,7 @@ export default function LeagueDetailsTabs() {
         initialRouteName="Home Lega"
             screenOptions={({ route }) => ({
                 headerStyle: {
-                    backgroundColor: '#323232', // Colore di sfondo dell'header
+                    backgroundColor: COLORJS.surface, // Colore di sfondo dell'header
                     borderBottomColor: '#e5e7eb', // Colore del bordo inferiore
                     borderBottomWidth: 1, // Spessore del bordo inferiore
                 },
@@ -27,7 +28,7 @@ export default function LeagueDetailsTabs() {
                     fontWeight: 'bold', // Stile del testo nell'header
                 },
                 tabBarStyle: {
-                    backgroundColor: '#323232', // Sfondo della tab bar
+                    backgroundColor: COLORJS.primary, // Sfondo della tab bar
                     borderTopColor: '#e5e7eb', // Colore del bordo superiore della tab bar
                 },
                 tabBarActiveTintColor: '#FFFFFF', // Colore delle icone e del testo quando attivi

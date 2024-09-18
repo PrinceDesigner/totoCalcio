@@ -2,6 +2,7 @@ import React from 'react';
 import { TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Avatar } from 'react-native-paper';
+import { COLORJS } from '../../theme/themeColor';
 
 // Funzione per generare l'header personalizzato
 export function CustomHeader({ navigation }) {
@@ -28,7 +29,7 @@ export function CustomHeader({ navigation }) {
       </TouchableOpacity>
     ),
     headerStyle: {
-      backgroundColor: '#323232', // Colore di sfondo dell'header
+      backgroundColor: COLORJS.surface, // Colore di sfondo dell'header
       borderBottomColor: '#e5e7eb', // Colore del bordo inferiore
       borderBottomWidth: 1, // Spessore del bordo inferiore
     },
@@ -53,7 +54,7 @@ export function CreateLeagueHeader({ navigation }) {
       </TouchableOpacity>
     ),
     headerStyle: {
-      backgroundColor: '#323232', // Sfondo dell'header
+      backgroundColor: COLORJS.surface, // Sfondo dell'header
     },
     headerTintColor: '#FFFFFF', // Colore del testo e delle icone
     headerTitleStyle: {
