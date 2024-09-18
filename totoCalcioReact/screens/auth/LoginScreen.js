@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet, Image, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Image, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { Button, Text, TextInput, useTheme } from 'react-native-paper';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -7,7 +7,8 @@ import { loginFailure, loginSuccess } from '../../redux/slice/authSlice';
 import { hideLoading, showLoading } from '../../redux/slice/uiSlice';
 import { signInWithEmailAndPassword, getAuth } from 'firebase/auth'; // Firebase auth
 import { saveToken } from '../../AsyncStorage/AsyncStorage'; // Salva il token JWT
-import {jwtDecode} from 'jwt-decode'; // Decodifica JWT se necessario
+import { jwtDecode } from 'jwt-decode'; // Decodifica JWT se necessario
+import AuthErrors from '../../AuthErrorFirebase';
 
 export default function LoginScreen({ navigation }) {
     const { colors } = useTheme();
@@ -18,8 +19,13 @@ export default function LoginScreen({ navigation }) {
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
 
+    // Stati per gestire gli errori
     const [emailError, setEmailError] = React.useState('');
     const [passwordError, setPasswordError] = React.useState('');
+
+    // Stato per la modale di errore
+    const [errorModalVisible, setErrorModalVisible] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
     const handleForgotPassword = () => {
         console.log('Password dimenticata');
@@ -85,8 +91,12 @@ export default function LoginScreen({ navigation }) {
                 // Naviga alla schermata Home
                 navigation.navigate('Home');
             } catch (error) {
-                console.error('Errore durante il login:', error);
+                console.error('Errore durante il login:', error.code);
                 dispatch(loginFailure('Credenziali errate o problema di rete'));
+
+                // Mostra la modale di errore
+                setErrorMessage(AuthErrors[error.code] || 'Errore durante il login.');
+                setErrorModalVisible(true);
             } finally {
                 dispatch(hideLoading());
             }
@@ -176,6 +186,29 @@ export default function LoginScreen({ navigation }) {
                 <TouchableOpacity onPress={handleSignUp}>
                     <Text style={styles.signUpText}>Creare un account? Registrati</Text>
                 </TouchableOpacity>
+
+                {/* Modale di errore */}
+                <Modal
+                    animationType="fade"
+                    transparent={true}
+                    visible={errorModalVisible}
+                    onRequestClose={() => {
+                        setErrorModalVisible(!errorModalVisible);
+                    }}
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                            <Text style={styles.modalTitle}>Errore</Text>
+                            <Text style={styles.modalMessage}>{errorMessage}</Text>
+                            <Pressable
+                                style={styles.modalButton}
+                                onPress={() => setErrorModalVisible(false)}
+                            >
+                                <Text style={styles.modalButtonText}>OK</Text>
+                            </Pressable>
+                        </View>
+                    </View>
+                </Modal>
             </ScrollView>
         </KeyboardAvoidingView>
     );
@@ -274,5 +307,49 @@ const styles = StyleSheet.create({
         textAlign: 'left',
         width: '100%',
         marginBottom: 10,
-    }
+    },
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Sfondo semi-trasparente
+    },
+    modalContent: {
+        width: 320,
+        padding: 25,
+        backgroundColor: 'white',
+        borderRadius: 15,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 8, // Per dare l'effetto di ombra su Android
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        color: '#ff4c4c', // Colore per il titolo di errore
+    },
+    modalMessage: {
+        fontSize: 16,
+        textAlign: 'center',
+        marginBottom: 20,
+        color: '#333', // Colore del messaggio
+    },
+    modalButton: {
+        paddingVertical: 12,
+        paddingHorizontal: 30,
+        backgroundColor: '#ff4c4c', // Colore per il pulsante OK
+        borderRadius: 8,
+    },
+    modalButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
 });

@@ -1,6 +1,5 @@
-
-import * as React from 'react';
-import { View, StyleSheet, Image, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Image, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { Button, Text, TextInput, useTheme } from 'react-native-paper';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -10,26 +9,29 @@ import { saveToken } from '../../AsyncStorage/AsyncStorage';
 import { auth, firestore } from '../../firebaseConfig'; // Importa la configurazione di Firebase
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'; // Firebase Auth SDK
 import { doc, setDoc } from 'firebase/firestore'; // Firebase Firestore SDK
+import AuthErrors from '../../AuthErrorFirebase';
 
 export default function SignupScreen({ navigation }) {
     const { colors } = useTheme();
     const dispatch = useDispatch();
 
-    const [pressed, setPressed] = React.useState(false); // Stato per gestire l'opacità
-    const [fullName, setFullName] = React.useState('');
-    const [email, setEmail] = React.useState('');
-    const [password, setPassword] = React.useState('');
+    const [pressed, setPressed] = useState(false);
+    const [fullName, setFullName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
 
-    // Stati per gestire gli errori
-    const [fullNameError, setFullNameError] = React.useState('');
-    const [emailError, setEmailError] = React.useState('');
-    const [passwordError, setPasswordError] = React.useState('');
+    // Stati per gli errori di input
+    const [fullNameError, setFullNameError] = useState('');
+    const [emailError, setEmailError] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+
+    // Stati per la modale di errore
+    const [errorModalVisible, setErrorModalVisible] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
     // Funzione di validazione
     const validateInputs = () => {
         let valid = true;
-
-        // Reset degli errori
         setFullNameError('');
         setEmailError('');
         setPasswordError('');
@@ -39,14 +41,12 @@ export default function SignupScreen({ navigation }) {
             valid = false;
         }
 
-        // Validazione email
         const emailRegex = /\S+@\S+\.\S+/;
         if (!emailRegex.test(email)) {
             setEmailError('Inserisci un indirizzo email valido');
             valid = false;
         }
 
-        // Validazione password
         if (password.trim() === '') {
             setPasswordError('Il campo password è obbligatorio');
             valid = false;
@@ -93,39 +93,30 @@ export default function SignupScreen({ navigation }) {
                 // Naviga alla schermata principale
                 navigation.navigate('Home');
             } catch (error) {
-                console.error('Errore durante la registrazione:', error);
-                dispatch(signupFailure('Errore nella registrazione'));
+                console.error('Errore durante la registrazione:', error.code);
+                console.log(AuthErrors[error.code])
+                // Mostra la modale di errore
+                setErrorMessage(AuthErrors[error.code] || 'Errore durante la registrazione.');
+                setErrorModalVisible(true);
 
-                if (error.response) {
-                    console.error('Errore durante la registrazione:', error.response.data.message);
-                    dispatch(signupFailure(error.response.data.message));
-                } else {
-                    console.error('Errore durante la registrazione:', error.message);
-                    dispatch(signupFailure('Errore nella registrazione'));
-                }
+                dispatch(signupFailure('Errore nella registrazione'));
             } finally {
                 dispatch(hideLoading());
             }
         }
     };
 
-
-
     // Funzione per il signup con Google
-    const handleGoogleSignup = async () => {
-
-    };
+    const handleGoogleSignup = async () => { /* Da implementare */ };
 
     // Funzione per il signup con Facebook
-    const handleFacebookSignup = async () => {
-
-    };
+    const handleFacebookSignup = async () => { /* Da implementare */ };
 
     return (
         <KeyboardAvoidingView
             style={{ flex: 1, backgroundColor: colors.background }}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0} // Offset per iOS per evitare che la tastiera copra il contenuto
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
         >
             <ScrollView contentContainerStyle={{ ...styles.container, backgroundColor: colors.background }}>
                 <Image source={require('../../image.png')} style={styles.logo} />
@@ -138,7 +129,7 @@ export default function SignupScreen({ navigation }) {
                     <TextInput
                         label="Nome Completo"
                         value={fullName}
-                        onChangeText={text => setFullName(text)}
+                        onChangeText={setFullName}
                         mode="outlined"
                         style={styles.input}
                         theme={{ colors: { text: 'black', placeholder: 'gray' } }}
@@ -152,7 +143,7 @@ export default function SignupScreen({ navigation }) {
                     <TextInput
                         label="Email"
                         value={email}
-                        onChangeText={text => setEmail(text)}
+                        onChangeText={setEmail}
                         mode="outlined"
                         style={styles.input}
                         theme={{ colors: { text: 'black', placeholder: 'gray' } }}
@@ -166,7 +157,7 @@ export default function SignupScreen({ navigation }) {
                     <TextInput
                         label="Password"
                         value={password}
-                        onChangeText={text => setPassword(text)}
+                        onChangeText={setPassword}
                         mode="outlined"
                         secureTextEntry
                         style={styles.input}
@@ -211,6 +202,29 @@ export default function SignupScreen({ navigation }) {
                 <TouchableOpacity onPress={() => navigation.navigate('LoginScreen')}>
                     <Text style={styles.signUpText}>Hai già un account? Accedi</Text>
                 </TouchableOpacity>
+
+                {/* Modale di errore */}
+                <Modal
+                    animationType="fade"
+                    transparent={true}
+                    visible={errorModalVisible}
+                    onRequestClose={() => {
+                        setErrorModalVisible(!errorModalVisible);
+                    }}
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                            <Text style={styles.modalTitle}>Errore</Text>
+                            <Text style={styles.modalMessage}>{errorMessage}</Text>
+                            <Pressable
+                                style={styles.modalButton}
+                                onPress={() => setErrorModalVisible(false)}
+                            >
+                                <Text style={styles.modalButtonText}>OK</Text>
+                            </Pressable>
+                        </View>
+                    </View>
+                </Modal>
             </ScrollView>
         </KeyboardAvoidingView>
     );
@@ -303,5 +317,49 @@ const styles = StyleSheet.create({
         textAlign: 'left',
         width: '100%',
         marginBottom: 10,
-    }
+    },
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Sfondo semi-trasparente
+    },
+    modalContent: {
+        width: 320,
+        padding: 25,
+        backgroundColor: 'white',
+        borderRadius: 15,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 8, // Effetto ombra per Android
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        color: '#ff4c4c', // Colore per il titolo di errore
+    },
+    modalMessage: {
+        fontSize: 16,
+        textAlign: 'center',
+        marginBottom: 20,
+        color: '#333',
+    },
+    modalButton: {
+        paddingVertical: 12,
+        paddingHorizontal: 30,
+        backgroundColor: '#ff4c4c', // Colore per il pulsante OK
+        borderRadius: 8,
+    },
+    modalButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
 });
