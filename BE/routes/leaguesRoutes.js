@@ -20,7 +20,7 @@ router.post('/leagues', authMiddleware, async (req, res) => {
 
     const league = await leagueRef.get();
 
-    res.status(201).json({ message: 'Lega creata con successo', leagueId: league.id, leagueData: league.data() });
+    res.status(201).json({ message: 'Lega creata con successo', leagueData: { ...league.data(), id: league.id } });
   } catch (error) {
     console.error('Errore durante la creazione della lega:', error);
     res.status(500).json({ message: 'Errore durante la creazione della lega' });
@@ -56,7 +56,13 @@ router.post('/leagues/join', authMiddleware, async (req, res) => {
       members: FieldValue.arrayUnion(userId),
     });
 
-    res.status(200).json({ message: 'Partecipazione avvenuta con successo' });
+    // Ritorna la lega aggiornata insieme al messaggio di successo
+    const updatedLeague = await leagueRef.get();
+
+    res.status(200).json({
+      message: 'Partecipazione avvenuta con successo',
+      leagueData: {...updatedLeague.data(), id: updatedLeague.id}, // Restituisci i dettagli della lega
+    });
   } catch (error) {
     console.error('Errore durante la partecipazione alla lega:', error);
     res.status(500).json({ message: 'Errore durante la partecipazione alla lega' });

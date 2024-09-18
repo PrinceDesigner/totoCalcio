@@ -1,18 +1,34 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { Button, TextInput, useTheme } from 'react-native-paper'; // Importiamo TextInput da React Native Paper
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import { Button, TextInput, useTheme } from 'react-native-paper'; 
+import { useDispatch, useSelector } from 'react-redux';
+import { joinLeagueThunk } from '../redux/slice/leaguesSlice'; 
+import { showLoading, hideLoading } from '../redux/slice/uiSlice';
 
 export default function JoinLeagueScreen({ navigation }) {
-  const [leagueCode, setLeagueCode] = useState(''); // Stato per il codice della lega
+  const [leagueCode, setLeagueCode] = useState('');
   const { colors } = useTheme();
+  const dispatch = useDispatch();
 
-  const handleJoinLeague = () => {
+  const loading = useSelector((state) => state.ui.loading);
+  const error = useSelector((state) => state.leagues.error);
+
+  const handleJoinLeague = async () => {
     if (leagueCode.trim()) {
-      console.log(`Unito alla lega con codice: ${leagueCode}`);
-      // Puoi aggiungere logica aggiuntiva qui, ad esempio inviare il codice della lega a un server
-      navigation.goBack(); // Torna indietro o naviga verso un'altra schermata
+      dispatch(showLoading());
+      try {
+        await dispatch(joinLeagueThunk(leagueCode)).unwrap();
+        Alert.alert('Successo', 'Ti sei unito alla lega con successo');
+        navigation.goBack();
+      } catch (error) {
+        // Controlla se l'errore è un oggetto e visualizza il messaggio correttamente
+        const errorMessage = error.message || 'Si è verificato un errore'; 
+        Alert.alert('Errore', errorMessage);
+      } finally {
+        dispatch(hideLoading());
+      }
     } else {
-      console.log('Il codice della lega non può essere vuoto.');
+      Alert.alert('Errore', 'Il codice della lega non può essere vuoto.');
     }
   };
 
@@ -25,23 +41,25 @@ export default function JoinLeagueScreen({ navigation }) {
         <View style={{ ...styles.container, backgroundColor: colors.background }}>
           <Text style={styles.title}>Inserisci il codice della lega</Text>
 
-          {/* Campo di input per il codice della lega usando React Native Paper */}
           <TextInput
             label="Codice della lega"
             value={leagueCode}
             onChangeText={setLeagueCode}
-            mode="outlined" // Stile dell'input (outlined o flat)
+            mode="outlined"
             style={styles.input}
+            disabled={loading}
           />
 
-          {/* Bottone per unirsi alla lega */}
           <Button
             mode="contained"
             onPress={handleJoinLeague}
             style={styles.button}
+            loading={loading}
+            disabled={loading}
           >
-            Unisciti alla Lega
+          Unisciti alla Lega
           </Button>
+
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -51,9 +69,9 @@ export default function JoinLeagueScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center', // Centra verticalmente
-    alignItems: 'center', // Centra orizzontalmente
-    backgroundColor: '#f5f5f5', // Sfondo leggero
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
   },
   title: {
     fontSize: 24,
@@ -62,13 +80,18 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   input: {
-    width: '80%', // Larghezza dell'input
+    width: '80%',
     marginBottom: 20,
   },
   button: {
     width: '80%',
     height: 50,
-    justifyContent: 'center', // Centra il testo del bottone
+    justifyContent: 'center',
     borderRadius: 10,
+  },
+  errorText: {
+    marginTop: 10,
+    color: 'red',
+    fontSize: 14,
   },
 });

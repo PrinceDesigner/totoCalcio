@@ -17,7 +17,7 @@ const SplashScreen = ({ navigation }) => {
                 try {
                     // L'utente è autenticato, recupera il token JWT
                     const token = await user.getIdToken(true); // Recupera il token ID di Firebase
-
+                    console.log(token);
                     // Salva il token JWT in AsyncStorage
                     await saveToken(token);
 

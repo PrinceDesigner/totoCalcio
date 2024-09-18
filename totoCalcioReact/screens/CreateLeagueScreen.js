@@ -1,18 +1,33 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { Button, TextInput, useTheme } from 'react-native-paper'; // Importiamo TextInput da React Native Paper
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import { Button, TextInput, useTheme } from 'react-native-paper';
+import { useDispatch } from 'react-redux'; // Per dispatchare azioni
+import { createLeagueThunk } from '../redux/slice/leaguesSlice'; // Importa il thunk
+import { showLoading, hideLoading } from '../redux/slice/uiSlice'; // Importa per mostrare/nascondere caricamento
 
 export default function CreateLeagueScreen({ navigation }) {
   const [leagueName, setLeagueName] = useState(''); // Stato per il nome della lega
   const { colors } = useTheme();
+  const dispatch = useDispatch(); // Usa dispatch per inviare l'azione Redux
 
-  const handleCreateLeague = () => {
+  const handleCreateLeague = async () => {
     if (leagueName.trim()) {
-      console.log(`Lega creata: ${leagueName}`);
-      // Puoi aggiungere logica aggiuntiva qui, ad esempio inviare il nome della lega a un server
-      navigation.goBack(); // Torna indietro o naviga verso un'altra schermata
+      try {
+        dispatch(showLoading()); // Mostra il caricamento
+
+        // Dispatcha il thunk per creare la lega
+        await dispatch(createLeagueThunk(leagueName)).unwrap();
+
+        Alert.alert('Successo', `Lega "${leagueName}" creata con successo!`);
+        navigation.goBack(); // Torna indietro o naviga verso un'altra schermata
+      } catch (error) {
+        Alert.alert('Errore', 'Errore durante la creazione della lega.');
+        console.error('Errore durante la creazione della lega:', error);
+      } finally {
+        dispatch(hideLoading()); // Nascondi il caricamento
+      }
     } else {
-      console.log('Nome della lega non può essere vuoto.');
+      Alert.alert('Errore', 'Il nome della lega non può essere vuoto.');
     }
   };
 
@@ -25,12 +40,12 @@ export default function CreateLeagueScreen({ navigation }) {
         <View style={{ ...styles.container, backgroundColor: colors.background }}>
           <Text style={styles.title}>Nome della tua nuova lega</Text>
 
-          {/* Campo di input per il nome della lega usando React Native Paper */}
+          {/* Campo di input per il nome della lega */}
           <TextInput
             label="Nome della lega"
             value={leagueName}
             onChangeText={setLeagueName}
-            mode="outlined" // Stile dell'input (outlined o flat)
+            mode="outlined"
             style={styles.input}
           />
 
@@ -51,9 +66,9 @@ export default function CreateLeagueScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center', // Centra verticalmente
-    alignItems: 'center', // Centra orizzontalmente
-    backgroundColor: '#f5f5f5', // Sfondo leggero
+    justifyContent: 'center', 
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5', 
   },
   title: {
     fontSize: 24,
@@ -62,13 +77,13 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   input: {
-    width: '80%', // Larghezza dell'input
+    width: '80%', 
     marginBottom: 20,
   },
   button: {
     width: '80%',
     height: 50,
-    justifyContent: 'center', // Centra il testo del bottone
+    justifyContent: 'center',
     borderRadius: 10,
   },
 });

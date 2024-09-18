@@ -1,55 +1,64 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
 import { Button, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
-import { useSelector } from 'react-redux'; // Importa useSelector per accedere allo stato Redux
-
-const leagues = [
-    { id: '1', name: 'Lega Serie A', description: 'Lega per gli appassionati della Serie A', image: require('../league2.png') },
-    { id: '2', name: 'Lega Champions', description: 'Sfida per la Champions League', image: require('../league1.png') },
-];
+import { useDispatch, useSelector } from 'react-redux'; // Importa useDispatch e useSelector
+import { getUserLeaguesThunk } from '../redux/slice/leaguesSlice'; // Importa il thunk per recuperare le leghe
+import { showLoading, hideLoading } from '../redux/slice/uiSlice'; // Slice per la gestione del caricamento
 
 export default function HomeScreen() {
-
-    
     const { colors } = useTheme();
-    const navigation = useNavigation(); // Ottieni l'oggetto di navigazione
+    const navigation = useNavigation();
+    const dispatch = useDispatch();
 
-    const authState = useSelector((state) => state.auth); // Usa useSelector per ottenere lo stato di auth
-    const uiState = useSelector((state) => state.ui); // Se vuoi accedere anche allo stato UI
+    const leaguesState = useSelector((state) => state.leagues); // Stato delle leghe
+    const loadingState = useSelector((state) => state.ui.loading); // Stato di caricamento
 
-    // Stampa lo stato Redux nella console
-    console.log('Auth State:', authState);
-    console.log('UI State:', uiState);
 
-    const [refreshing, setRefreshing] = useState(false); // Stato per gestire il refresh
+    const [refreshing, setRefreshing] = useState(false);
+
+    useEffect(() => {
+        fetchLeagues(); // Recupera le leghe quando la schermata viene caricata
+        console.log('leaguesState', leaguesState);
+    }, []);
+    
+    console.log('leaguesState', leaguesState);
+
+
+    // Funzione per recuperare le leghe
+    const fetchLeagues = async () => {
+        try {
+            dispatch(showLoading()); // Mostra lo stato di caricamento
+            await dispatch(getUserLeaguesThunk()).unwrap(); // Attendi che il thunk termini
+        } catch (error) {
+            console.error('Errore durante il recupero delle leghe:', error);
+        } finally {
+            dispatch(hideLoading()); // Nascondi lo stato di caricamento
+        }
+    };
+
 
     // Funzione di refresh
     const onRefresh = () => {
         setRefreshing(true);
-        console.log('Eseguo il refresh dei dati...');
-
-        // Simula una richiesta di aggiornamento dati (es. da un server)
-        setTimeout(() => {
-            setRefreshing(false);
-            console.log('Dati aggiornati');
-        }, 1000); // Simulazione di un delay di 2 secondi
+        fetchLeagues().then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
     };
 
     // Funzione per gestire il click su una lega
     const handleLeaguePress = (league) => {
-        console.log('Lega selezionata:', league.name);
-        navigation.navigate('LeagueDetailsStack', { league }); // Esempio di navigazione alla schermata dei dettagli della lega
+        navigation.navigate('LeagueDetailsStack', { league }); // Naviga alla schermata dei dettagli della lega
     };
 
     // Renderizza ogni lega nella FlatList
     const renderLeagueItem = ({ item }) => (
         <TouchableOpacity onPress={() => handleLeaguePress(item)}>
             <View style={{ ...styles.leagueContainer, backgroundColor: colors.surface }}>
-                <Image source={item.image} style={styles.leagueImage} />
+                {/* Puoi usare immagini statiche o caricarle dinamicamente */}
+                <Image source={require('../league1.png')} style={styles.leagueImage} />
                 <View style={styles.leagueTextContainer}>
-                    <Text style={{ ...styles.leagueName, color: colors.primary }}>{item.name}</Text>
-                    <Text style={styles.leagueDescription}>{item.description}</Text>
+                    <Text style={{ ...styles.leagueName, color: colors.primary }}>{item.name} {item.id}</Text>
+                    <Text style={styles.leagueDescription}>{item.members.length} Partecipanti</Text>
+
                 </View>
             </View>
         </TouchableOpacity>
@@ -63,9 +72,12 @@ export default function HomeScreen() {
                 <Button mode="contained" onPress={() => navigation.navigate('CreateLeague')}>Crea Lega</Button>
             </View>
 
+            {/* Stato di caricamento */}
+            {loadingState && <ActivityIndicator size="large" color={colors.primary} />}
+
             {/* Lista delle leghe con RefreshControl */}
             <FlatList
-                data={leagues}
+                data={leaguesState.leagues} // Usa le leghe dallo stato
                 renderItem={renderLeagueItem}
                 keyExtractor={item => item.id}
                 contentContainerStyle={styles.listContainer}
@@ -73,10 +85,15 @@ export default function HomeScreen() {
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
-                        tintColor={colors.primary} // Colore dell'animazione su iOS
-                        colors={[colors.primary]} // Colori dell'animazione su Android
+                        tintColor={colors.primary}
+                        colors={[colors.primary]}
                     />
                 }
+                ListEmptyComponent={!loadingState && (
+                    <View style={styles.emptyStateContainer}>
+                        <Text style={styles.emptyStateText}>Nessuna lega trovata</Text>
+                    </View>
+                )}
             />
 
             {/* Pulsante "Unisciti alla lega" */}
@@ -109,7 +126,7 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 10,
         marginBottom: 15,
-        elevation: 3, // Aggiungi un po' di ombra su Android
+        elevation: 3,
     },
     leagueImage: {
         width: 50,
@@ -129,10 +146,19 @@ const styles = StyleSheet.create({
         color: 'white',
     },
     listContainer: {
-        paddingBottom: 20, // Per evitare che il pulsante di join copra la lista
+        paddingBottom: 20,
     },
     joinButton: {
         marginBottom: 20,
         borderRadius: 10,
     },
+    emptyStateContainer: {
+        alignItems: 'center',
+        marginTop: 20,
+    },
+    emptyStateText: {
+        fontSize: 16,
+        color: 'gray',
+    },
 });
+
