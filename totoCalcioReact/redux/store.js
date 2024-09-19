@@ -1,16 +1,20 @@
 import { configureStore } from '@reduxjs/toolkit';
-import authReducer from '../redux/slice/authSlice'; // Importa il reducer per l'autenticazione
-import uiReducer from '../redux/slice/uiSlice'; // Importa il reducer per l'interfaccia utente
-import leaguesReducer from '../redux/slice/leaguesSlice'; // Importa il reducer per le leghe
+import logger from 'redux-logger'; // Importa redux-logger
+import authReducer from '../redux/slice/authSlice';
+import uiReducer from '../redux/slice/uiSlice';
+import leaguesReducer from '../redux/slice/leaguesSlice';
+import infogiornataAttualeReducer from '../redux/slice/infogiornataAttualeSlice';
+import selectedLeagueReducer from '../redux/slice/selectedLeagueSlice';
 
-
-// Configura lo store
 const store = configureStore({
   reducer: {
     auth: authReducer,
     ui: uiReducer,
-    leagues: leaguesReducer // Aggiungi il reducer per le leghe
+    leagues: leaguesReducer,
+    infogiornataAttuale: infogiornataAttualeReducer,
+    legaSelezionata: selectedLeagueReducer,
   },
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(logger), // Aggiungi redux-logger
 });
 
 export default store;

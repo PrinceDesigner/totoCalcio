@@ -7,6 +7,7 @@ import { deleteLeagueThunk, getUserLeaguesThunk } from '../redux/slice/leaguesSl
 import { showLoading, hideLoading } from '../redux/slice/uiSlice';
 import { Swipeable } from 'react-native-gesture-handler'; // Aggiungi Swipeable
 import { MaterialIcons } from '@expo/vector-icons'; // Aggiungi icone
+import { setSelectedLeagueGiornata } from '../redux/slice/selectedLeagueSlice';
 
 export default function HomeScreen() {
     const { colors } = useTheme();
@@ -45,7 +46,8 @@ export default function HomeScreen() {
 
     // Funzione per gestire il click su una lega
     const handleLeaguePress = (league) => {
-        navigation.navigate('LeagueDetailsStack', { league }); // Naviga alla schermata dei dettagli della lega
+        dispatch(setSelectedLeagueGiornata(league.giornataAttuale));
+        navigation.navigate('LeagueDetailsStack'); // Naviga alla schermata dei dettagli della lega
     };
 
     const handleDeleteLeague = async (leagueId) => {

@@ -1,15 +1,41 @@
+import moment from 'moment-timezone';
+import { useRoute } from '@react-navigation/native';
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 import { Card, Badge, useTheme, Button } from 'react-native-paper';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchDayDetails } from '../redux/slice/infogiornataAttualeSlice';
+import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { COLORJS } from '../theme/themeColor';
 
-const formatTime = (time) => (time < 10 ? `0${time}` : time);
 
 export default function LeagueDetails({ navigation }) {
     const { colors } = useTheme();
+
+    const dispatch = useDispatch();
+
+    const giornataAttuale = useSelector((state) => state.legaSelezionata.legaSelezionata); // Stato delle leghe
+    const infogiornataAttuale = useSelector((state) => state.infogiornataAttuale); // Stato delle leghe
+
     const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
-    const matchdayNumber = 12;
-    const deadline = new Date().getTime() + 3600000; // Simuliamo una scadenza a 1 ora da adesso
+    const matchdayNumber = infogiornataAttuale.dayId.replace('RegularSeason-', '');
+    const deadline = infogiornataAttuale.startDate; // Simuliamo una scadenza a 1 ora da adesso
+
+    useEffect(() => {
+        const getDayDetails = async () => {
+            try {
+                dispatch(showLoading()); // Mostra lo stato di caricamento
+                await dispatch(fetchDayDetails(giornataAttuale)).unwrap(); // Recupera i dettagli della giornata
+            } catch (error) {
+                console.error('Errore durante il recupero della giornata:', error);
+            } finally {
+                dispatch(hideLoading()); // Nascondi lo stato di caricamento
+            }
+        };
+
+        getDayDetails();
+    }, [dispatch]);
+
 
     const provisionalRanking = [
         { id: '1', name: 'Mario Rossi', points: 150 },
@@ -20,31 +46,39 @@ export default function LeagueDetails({ navigation }) {
         { id: '6', name: 'Alessandro Gialli', points: 100 },
     ];
 
+    // matches per quella giornata
+    const matches = infogiornataAttuale.matches;
 
-    const matches = [
-        { id: '1', home: 'Juventus', away: 'Inter', time: '18:00' },
-        { id: '2', home: 'Milan', away: 'Napoli', time: '20:45' },
-        { id: '3', home: 'Roma', away: 'Lazio', time: '21:00' },
-        { id: '4', home: 'Atalanta', away: 'Fiorentina', time: '18:00' },
-        { id: '5', home: 'Bologna', away: 'Torino', time: '20:45' },
-        { id: '6', home: 'Sassuolo', away: 'Cagliari', time: '21:00' },
-        { id: '7', home: 'Udinese', away: 'Monza', time: '18:00' },
-        { id: '8', home: 'Lecce', away: 'Verona', time: '20:45' },
-        { id: '9', home: 'Genoa', away: 'Frosinone', time: '21:00' },
-        { id: '10', home: 'Empoli', away: 'Salernitana', time: '21:00' },
-    ];
+    const convertToItalianTime = (dateString) => {
+        // Crea un nuovo oggetto Date dalla stringa ISO
+        return moment.tz(dateString, "Europe/Rome").format('HH:mm');
+      };
 
-    useEffect(() => {
+      useEffect(() => {
         const interval = setInterval(() => {
-            const now = new Date().getTime();
-            const distance = deadline - now;
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % 60000) / 1000);
-            setCountdown({ hours, minutes, seconds });
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [deadline]);
+          const now = moment(); // Ottieni la data attuale
+          const targetTime = moment(deadline).utcOffset('+02:00'); // Aggiungi 2 ore all'ora UTC (fuso orario italiano)
+    
+          const duration = moment.duration(targetTime.diff(now)); // Calcola la differenza tra deadline e ora attuale
+    
+          if (duration.asMilliseconds() <= 0) {
+            clearInterval(interval); // Ferma il timer se il countdown è finito
+            setCountdown({ days: '0', hours: '00', minutes: '00' });
+          } else {
+            const days = Math.floor(duration.asDays());
+            const hours = Math.floor(duration.asHours() % 24); // Restanti ore
+            const minutes = Math.floor(duration.asMinutes() % 60); // Restanti minuti
+    
+            setCountdown({
+              days: days.toString(),
+              hours: hours < 10 ? `0${hours}` : hours.toString(), // Formatta con 2 cifre
+              minutes: minutes < 10 ? `0${minutes}` : minutes.toString(), // Formatta con 2 cifre
+            });
+          }
+        }, 1000); // Aggiorna ogni secondo
+    
+        return () => clearInterval(interval); // Pulisci l'interval quando il componente viene smontato
+      }, [deadline]);
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }}>
@@ -65,7 +99,7 @@ export default function LeagueDetails({ navigation }) {
                 {/* Countdown visual nello stile "10:10:10" */}
                 <View style={styles.compactCountdownContainer}>
                     <Text style={styles.countdownNumber}>
-                        {formatTime(countdown.hours)}:{formatTime(countdown.minutes)}:{formatTime(countdown.seconds)}
+                    {countdown.days}d {countdown.hours}h {countdown.minutes}m
                     </Text>
                 </View>
 
@@ -105,16 +139,16 @@ export default function LeagueDetails({ navigation }) {
 
                 {/* Schema delle Partite */}
                 <Card style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginTop: 10 }}>
-                    <Text style={{ color: 'white', fontSize: 25 }}>Partite Giornata 12</Text>
+                    <Text style={{ color: 'white', fontSize: 25 }}>Partite Giornata {matchdayNumber}</Text>
                     {matches.map((match) => (
-                        <View key={match.id} style={styles.matchItem}>
+                        <View key={match.matchId} style={styles.matchItem}>
                             {/* Dettaglio del match */}
                             <View style={styles.matchDetails}>
                                 <View style={styles.leagueBadgeContainer}>
                                     <Badge style={{ backgroundColor: colors.primary }}>Serie A</Badge>
                                 </View>
-                                <Text style={styles.matchText}>{match.home} vs {match.away}</Text>
-                                <Text style={styles.matchTime}>{match.time}</Text>
+                                <Text style={styles.matchText}>{match.homeTeam} vs {match.awayTeam}</Text>
+                                <Text style={styles.matchTime}>{convertToItalianTime(match.startTime)}</Text>
                             </View>
                         </View>
                     ))}
