@@ -18,8 +18,8 @@ export default function LeagueDetails({ navigation }) {
     const infogiornataAttuale = useSelector((state) => state.infogiornataAttuale); // Stato delle leghe
 
     const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
-    const matchdayNumber = infogiornataAttuale.dayId.replace('RegularSeason-', '');
-    const deadline = infogiornataAttuale.startDate; // Simuliamo una scadenza a 1 ora da adesso
+    const matchdayNumber = infogiornataAttuale.dayId && infogiornataAttuale.dayId.replace('RegularSeason-', '') || 0;
+    const deadline = infogiornataAttuale && infogiornataAttuale.startDate; // Simuliamo una scadenza a 1 ora da adesso
 
     useEffect(() => {
         const getDayDetails = async () => {

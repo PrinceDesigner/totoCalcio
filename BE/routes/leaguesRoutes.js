@@ -311,10 +311,7 @@ router.post('/leagues/upload-matches', async (req, res) => {
 
     for (const fixture of fixtures) {
       let matchId = fixture.fixture.id.toString(); // Converti in stringa se necessario
-
-  
-      console.log(matchId)
-      // Verifica che matchId sia valido (non vuoto o undefined)
+        // Verifica che matchId sia valido (non vuoto o undefined)
       if (!matchId || typeof matchId !== 'string') {
         // console.error('Match ID non valido:', matchId);
         continue; // Salta questa partita se il matchId non è valido
