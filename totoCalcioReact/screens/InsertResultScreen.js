@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal } from 'react-native';
 import { Card, Button, useTheme } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
@@ -14,10 +14,33 @@ export default function InsertResultsScreen({ navigation }) {
     const userId = useSelector((state) => state.auth.user.user.userId); // Stato delle leghe
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata); // Stato delle leghe
     const giornataSchedina = useSelector((state) => state.giornataAttuale.giornataAttuale); // Stato delle leghe
+    const schedinaGiocata = useSelector((state) => state.insertPredictions.schedinaInserita.schedina); 
     const dispatch = useDispatch();
 
     const [results, setResults] = useState({});
     const [modalVisible, setModalVisible] = useState(false);
+
+    // Funzione per mappare l'array di predizioni in un oggetto compatibile con `setResults`
+    const mapPredictionsToResults = (predictionsArray) => {
+        return predictionsArray.reduce((acc, curr) => {
+            acc[curr.matchId] = {
+                matchId: curr.matchId,
+                result: curr.result,
+                esitoGiocato: curr.esitoGiocato
+            };
+            return acc;
+        }, {});
+    };
+
+    // Esempio di come usarlo nel tuo componente
+    useEffect(() => {
+        // Supponiamo di ricevere questo array di predizioni
+if (schedinaGiocata) {
+    setResults(mapPredictionsToResults(schedinaGiocata));
+}
+        // Popola lo stato con i dati mappati
+    }, [schedinaGiocata]);
+
 
     // Funzione per gestire la selezione dell'esito
     const handleSelectResult = (matchId, result) => {
@@ -54,13 +77,13 @@ export default function InsertResultsScreen({ navigation }) {
             setModalVisible(false); // Chiudi la modale
             dispatch(showLoading()); // Mostra lo stato di caricamento
             await dispatch(savePrediction(predictionData)).unwrap(); // Attendi che il thunk termini
-    
+
             // Se tutto va bene, mostra il toast di successo e naviga
             showToast('success', 'Predizioni salvate con successo!');
             navigation.navigate('LeagueDetails'); // Naviga alla schermata LeagueDetails
         } catch (error) {
             console.error('Errore durante il salvataggio delle predizioni:', error);
-    
+
             // Mostra un toast di errore
             showToast('error', 'Errore durante il salvataggio delle predizioni');
         } finally {
@@ -68,7 +91,7 @@ export default function InsertResultsScreen({ navigation }) {
             setModalVisible(false); // Chiudi la modale
         }
     };
-    
+
 
 
     return (

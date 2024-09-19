@@ -7,6 +7,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchDayDetails } from '../redux/slice/infogiornataAttualeSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { COLORJS } from '../theme/themeColor';
+import { fetchPrediction } from '../redux/slice/predictionsSlice';
+import { showToast } from '../ToastContainer';
 
 
 export default function LeagueDetails({ navigation }) {
@@ -15,26 +17,50 @@ export default function LeagueDetails({ navigation }) {
     const dispatch = useDispatch();
 
     const giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale); // Stato delle leghe
-    const infogiornataAttuale = useSelector((state) => state.infogiornataAttuale); // Stato delle leghe
+    const infogiornataAttuale = useSelector((state) => state.infogiornataAttuale);
+    const schedinaGiocata = useSelector((state) => state.insertPredictions.schedinaInserita.schedina);
+    // Selettori per ottenere le informazioni necessarie
+    const userId = useSelector((state) => state.auth.user.user.userId);
+    const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
+    const dayId = useSelector((state) => state.giornataAttuale.giornataAttuale);
 
     const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
     const matchdayNumber = infogiornataAttuale.dayId && infogiornataAttuale.dayId.replace('RegularSeason-', '') || 0;
     const deadline = infogiornataAttuale && infogiornataAttuale.startDate; // Simuliamo una scadenza a 1 ora da adesso
 
     useEffect(() => {
-        const getDayDetails = async () => {
-            try {
-                dispatch(showLoading()); // Mostra lo stato di caricamento
-                await dispatch(fetchDayDetails(giornataAttuale)).unwrap(); // Recupera i dettagli della giornata
-            } catch (error) {
-                console.error('Errore durante il recupero della giornata:', error);
-            } finally {
-                dispatch(hideLoading()); // Nascondi lo stato di caricamento
-            }
-        };
+            const getDayDetails = async () => {
+                try {
+                    dispatch(showLoading()); // Mostra lo stato di caricamento
+                    await dispatch(fetchDayDetails(giornataAttuale)).unwrap(); // Recupera i dettagli della giornata
+                } catch (error) {
+                    console.error('Errore durante il recupero della giornata:', error);
+                } finally {
+                    dispatch(hideLoading()); // Nascondi lo stato di caricamento
+                }
+            };
+            getDayDetails();
 
-        getDayDetails();
-    }, [dispatch]);
+    }, []);
+
+
+    useEffect(() => {
+        if (dayId && leagueId && userId) {
+            const fetchPredictionData = async () => {
+                try {
+                    dispatch(showLoading()); // Mostra lo stato di caricamento
+                    await dispatch(fetchPrediction({ dayId, leagueId, userId })).unwrap(); // Controlla la predizione
+                    showToast('success', 'Predizione caricata con successo!');
+                } catch (error) {
+                    console.error('Errore durante il controllo della predizione:', error);
+                } finally {
+                    dispatch(hideLoading()); // Nascondi lo stato di caricamento
+                }
+            };
+
+            fetchPredictionData();
+        }
+    }, [dispatch, dayId, leagueId, userId]);
 
 
     const provisionalRanking = [
@@ -52,33 +78,33 @@ export default function LeagueDetails({ navigation }) {
     const convertToItalianTime = (dateString) => {
         // Crea un nuovo oggetto Date dalla stringa ISO
         return moment.tz(dateString, "Europe/Rome").format('HH:mm');
-      };
+    };
 
-      useEffect(() => {
+    useEffect(() => {
         const interval = setInterval(() => {
-          const now = moment(); // Ottieni la data attuale
-          const targetTime = moment(deadline).utcOffset('+02:00'); // Aggiungi 2 ore all'ora UTC (fuso orario italiano)
-    
-          const duration = moment.duration(targetTime.diff(now)); // Calcola la differenza tra deadline e ora attuale
-    
-          if (duration.asMilliseconds() <= 0) {
-            clearInterval(interval); // Ferma il timer se il countdown è finito
-            setCountdown({ days: '0', hours: '00', minutes: '00' });
-          } else {
-            const days = Math.floor(duration.asDays());
-            const hours = Math.floor(duration.asHours() % 24); // Restanti ore
-            const minutes = Math.floor(duration.asMinutes() % 60); // Restanti minuti
-    
-            setCountdown({
-              days: days.toString(),
-              hours: hours < 10 ? `0${hours}` : hours.toString(), // Formatta con 2 cifre
-              minutes: minutes < 10 ? `0${minutes}` : minutes.toString(), // Formatta con 2 cifre
-            });
-          }
+            const now = moment(); // Ottieni la data attuale
+            const targetTime = moment(deadline).utcOffset('+02:00'); // Aggiungi 2 ore all'ora UTC (fuso orario italiano)
+
+            const duration = moment.duration(targetTime.diff(now)); // Calcola la differenza tra deadline e ora attuale
+
+            if (duration.asMilliseconds() <= 0) {
+                clearInterval(interval); // Ferma il timer se il countdown è finito
+                setCountdown({ days: '0', hours: '00', minutes: '00' });
+            } else {
+                const days = Math.floor(duration.asDays());
+                const hours = Math.floor(duration.asHours() % 24); // Restanti ore
+                const minutes = Math.floor(duration.asMinutes() % 60); // Restanti minuti
+
+                setCountdown({
+                    days: days.toString(),
+                    hours: hours < 10 ? `0${hours}` : hours.toString(), // Formatta con 2 cifre
+                    minutes: minutes < 10 ? `0${minutes}` : minutes.toString(), // Formatta con 2 cifre
+                });
+            }
         }, 1000); // Aggiorna ogni secondo
-    
+
         return () => clearInterval(interval); // Pulisci l'interval quando il componente viene smontato
-      }, [deadline]);
+    }, [deadline]);
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }}>
@@ -99,7 +125,7 @@ export default function LeagueDetails({ navigation }) {
                 {/* Countdown visual nello stile "10:10:10" */}
                 <View style={styles.compactCountdownContainer}>
                     <Text style={styles.countdownNumber}>
-                    {countdown.days}d {countdown.hours}h {countdown.minutes}m
+                        {countdown.days}d {countdown.hours}h {countdown.minutes}m
                     </Text>
                 </View>
 
@@ -109,7 +135,7 @@ export default function LeagueDetails({ navigation }) {
                     onPress={() => navigation.navigate('InsertResults')}
                     style={styles.insertButton}
                 >
-                    Inserisci Esiti
+                    {schedinaGiocata ? 'Modifica Esiti' : 'Inserisci Esiti'}
                 </Button>
             </View>
 

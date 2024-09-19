@@ -8,7 +8,7 @@ const { firestore } = require('../firebaseAdmin'); // Assicurati di aver configu
 const router = express.Router();
 
 // Route per inserire una predizione
-router.post('/add',authMiddleware, async (req, res) => {
+router.post('/add', authMiddleware, async (req, res) => {
     const { userId, leagueId, schedina, daysId } = req.body;
 
     if (!userId || !leagueId || !schedina || !daysId) {
@@ -44,6 +44,32 @@ router.post('/add',authMiddleware, async (req, res) => {
     } catch (error) {
         console.error('Errore durante il salvataggio della predizione:', error);
         return res.status(500).json({ message: 'Errore durante il salvataggio della predizione.' });
+    }
+});
+
+// Route per controllare se esiste già una predizione
+router.get('/check', async (req, res) => {
+    const { dayId, leagueId, userId } = req.query;
+
+    try {
+        // Query per trovare una predizione con dayId, leagueId e userId
+        const predictionsSnapshot = await firestore.collection('predictions')
+            .where('daysId', '==', dayId)
+            .where('leagueId', '==', leagueId)
+            .where('userId', '==', userId)
+            .get();
+
+        if (predictionsSnapshot.empty) {
+            // Nessuna predizione trovata
+            return res.status(404).json({ message: 'Nessuna predizione trovata' });
+        }
+
+        // Se c'è almeno una predizione, restituiscila (assumo che ce ne sia solo una)
+        const predictionData = predictionsSnapshot.docs[0].data();
+        res.status(200).json(predictionData);
+    } catch (error) {
+        console.error('Errore durante il controllo della predizione:', error);
+        res.status(500).json({ message: 'Errore durante il controllo della predizione' });
     }
 });
 
