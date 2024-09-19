@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl, ActivityIndicator, Modal } from 'react-native';
 import { Button, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
-import { useDispatch, useSelector } from 'react-redux'; // Importa useDispatch e useSelector
-import { getUserLeaguesThunk } from '../redux/slice/leaguesSlice'; // Importa il thunk per recuperare le leghe
-import { showLoading, hideLoading } from '../redux/slice/uiSlice'; // Slice per la gestione del caricamento
+import { useDispatch, useSelector } from 'react-redux';
+import { deleteLeagueThunk, getUserLeaguesThunk } from '../redux/slice/leaguesSlice';
+import { showLoading, hideLoading } from '../redux/slice/uiSlice';
+import { Swipeable } from 'react-native-gesture-handler'; // Aggiungi Swipeable
+import { MaterialIcons } from '@expo/vector-icons'; // Aggiungi icone
 
 export default function HomeScreen() {
     const { colors } = useTheme();
@@ -13,17 +15,15 @@ export default function HomeScreen() {
 
     const leaguesState = useSelector((state) => state.leagues); // Stato delle leghe
     const loadingState = useSelector((state) => state.ui.loading); // Stato di caricamento
-
+    const userId = useSelector((state) => state.auth.user.user.userId);
 
     const [refreshing, setRefreshing] = useState(false);
+    const [selectedLeague, setSelectedLeague] = useState(null); // Stato per la lega selezionata per l'eliminazione
+    const [isModalVisible, setModalVisible] = useState(false); // Stato per la visibilità della modale
 
     useEffect(() => {
         fetchLeagues(); // Recupera le leghe quando la schermata viene caricata
-        console.log('leaguesState', leaguesState);
     }, []);
-    
-    console.log('leaguesState', leaguesState);
-
 
     // Funzione per recuperare le leghe
     const fetchLeagues = async () => {
@@ -37,7 +37,6 @@ export default function HomeScreen() {
         }
     };
 
-
     // Funzione di refresh
     const onRefresh = () => {
         setRefreshing(true);
@@ -49,20 +48,54 @@ export default function HomeScreen() {
         navigation.navigate('LeagueDetailsStack', { league }); // Naviga alla schermata dei dettagli della lega
     };
 
-    // Renderizza ogni lega nella FlatList
-    const renderLeagueItem = ({ item }) => (
-        <TouchableOpacity onPress={() => handleLeaguePress(item)}>
-            <View style={{ ...styles.leagueContainer, backgroundColor: colors.surface }}>
-                {/* Puoi usare immagini statiche o caricarle dinamicamente */}
-                <Image source={require('../league1.png')} style={styles.leagueImage} />
-                <View style={styles.leagueTextContainer}>
-                    <Text style={{ ...styles.leagueName, color: colors.primary }}>{item.name} {item.id}</Text>
-                    <Text style={styles.leagueDescription}>{item.members.length} Partecipanti</Text>
+    const handleDeleteLeague = async (leagueId) => {
+        try {
+            dispatch(showLoading());
+            await dispatch(deleteLeagueThunk(leagueId)).unwrap(); // Esegui il thunk per eliminare la lega
+            console.log('Lega eliminata con successo');
+        } catch (error) {
+            console.error('Errore durante l\'eliminazione della lega:', error);
+        } finally {
+            dispatch(hideLoading());
+            setModalVisible(false); // Nascondi la modale
+        }
+    };
 
-                </View>
-            </View>
+    // Funzione per aprire la modale di conferma
+    const confirmDeleteLeague = (league) => {
+        console.log('lega', league);
+        setSelectedLeague(league); // Salva la lega selezionata
+        setModalVisible(true); // Mostra la modale
+    };
+
+    // Renderizza la UI che appare durante lo swipe
+    const renderRightActions = (league) => (
+        <TouchableOpacity style={styles.deleteButton} onPress={() => confirmDeleteLeague(league)}>
+            <MaterialIcons name="delete" size={30} color="white" />
         </TouchableOpacity>
     );
+
+    // Renderizza ogni lega nella FlatList con swipeable
+    const renderLeagueItem = ({ item }) => {
+        // Simula che l'utente è l'owner della lega
+        const isOwner = item.ownerId === userId; // Cambia in base alla tua logica reale
+
+        return (
+            <Swipeable
+                renderRightActions={() => isOwner ? renderRightActions(item) : null}
+            >
+                <TouchableOpacity onPress={() => handleLeaguePress(item)}>
+                    <View style={{ ...styles.leagueContainer, backgroundColor: colors.surface }}>
+                        <Image source={require('../league1.png')} style={styles.leagueImage} />
+                        <View style={styles.leagueTextContainer}>
+                            <Text style={{ ...styles.leagueName, color: colors.primary }}>{item.name} {item.id}</Text>
+                            <Text style={styles.leagueDescription}>{item.members.length} Partecipanti</Text>
+                        </View>
+                    </View>
+                </TouchableOpacity>
+            </Swipeable>
+        );
+    };
 
     return (
         <View style={{ ...styles.container, backgroundColor: colors.background }}>
@@ -100,6 +133,28 @@ export default function HomeScreen() {
             <Button mode="contained" onPress={() => navigation.navigate('JoinLeague')} style={styles.joinButton}>
                 Unisciti alla Lega
             </Button>
+
+            {/* Modale di conferma eliminazione */}
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={isModalVisible}
+                onRequestClose={() => setModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalText}>Sei sicuro di voler eliminare la lega {selectedLeague?.name}?</Text>
+                        <View style={styles.modalButtons}>
+                            <Button mode="contained" onPress={() => handleDeleteLeague(selectedLeague.id)} style={styles.modalButton}>
+                                Si
+                            </Button>
+                            <Button mode="outlined" onPress={() => setModalVisible(false)} style={styles.modalButton}>
+                                Annulla
+                            </Button>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -160,5 +215,40 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: 'gray',
     },
+    deleteButton: {
+        backgroundColor: 'red',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 70,
+        marginBottom: 15,
+        borderTopLeftRadius: 10,
+        borderBottomLeftRadius: 10,
+    },
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        width: 300,
+        padding: 20,
+        backgroundColor: 'white',
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    modalText: {
+        fontSize: 18,
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+    },
+    modalButton: {
+        flex: 1,
+        marginHorizontal: 10,
+    },
 });
-

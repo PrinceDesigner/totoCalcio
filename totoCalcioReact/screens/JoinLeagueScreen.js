@@ -4,6 +4,9 @@ import { Button, TextInput, useTheme } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { joinLeagueThunk } from '../redux/slice/leaguesSlice'; 
 import { showLoading, hideLoading } from '../redux/slice/uiSlice';
+import { showToast } from '../ToastContainer';
+
+
 
 export default function JoinLeagueScreen({ navigation }) {
   const [leagueCode, setLeagueCode] = useState('');
@@ -18,12 +21,12 @@ export default function JoinLeagueScreen({ navigation }) {
       dispatch(showLoading());
       try {
         await dispatch(joinLeagueThunk(leagueCode)).unwrap();
-        Alert.alert('Successo', 'Ti sei unito alla lega con successo');
+        showToast('success', 'Ti sei unito alla lega con successo');
         navigation.goBack();
       } catch (error) {
         // Controlla se l'errore è un oggetto e visualizza il messaggio correttamente
         const errorMessage = error.message || 'Si è verificato un errore'; 
-        Alert.alert('Errore', errorMessage);
+        showToast('error', error.message);
       } finally {
         dispatch(hideLoading());
       }

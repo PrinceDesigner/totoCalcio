@@ -94,7 +94,6 @@ export default function SignupScreen({ navigation }) {
                 navigation.navigate('Home');
             } catch (error) {
                 console.error('Errore durante la registrazione:', error.code);
-                console.log(AuthErrors[error.code])
                 // Mostra la modale di errore
                 setErrorMessage(AuthErrors[error.code] || 'Errore durante la registrazione.');
                 setErrorModalVisible(true);

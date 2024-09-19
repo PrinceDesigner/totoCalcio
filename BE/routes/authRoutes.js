@@ -64,7 +64,6 @@ router.post('/signup', async (req, res) => {
 // Rotta per il login
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
-    console.log(email);
     try {
         // Verifica l'email dell'utente in Firebase Authentication
         const userRecord = await admin.auth().getUserByEmail(email);

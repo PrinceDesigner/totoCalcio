@@ -131,7 +131,7 @@ router.delete('/leagues/:leagueId', authMiddleware, async (req, res) => {
 
     await leagueRef.delete();
 
-    res.status(200).json({ message: 'Lega eliminata con successo' });
+    res.status(200).json({ message: 'Lega eliminata con successo', leagueId });
   } catch (error) {
     console.error('Errore durante l\'eliminazione della lega:', error);
     res.status(500).json({ message: 'Errore durante l\'eliminazione della lega' });

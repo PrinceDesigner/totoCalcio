@@ -4,6 +4,7 @@ import { Button, TextInput, useTheme } from 'react-native-paper';
 import { useDispatch } from 'react-redux'; // Per dispatchare azioni
 import { createLeagueThunk } from '../redux/slice/leaguesSlice'; // Importa il thunk
 import { showLoading, hideLoading } from '../redux/slice/uiSlice'; // Importa per mostrare/nascondere caricamento
+import { showToast } from '../ToastContainer';
 
 export default function CreateLeagueScreen({ navigation }) {
   const [leagueName, setLeagueName] = useState(''); // Stato per il nome della lega
@@ -18,7 +19,7 @@ export default function CreateLeagueScreen({ navigation }) {
         // Dispatcha il thunk per creare la lega
         await dispatch(createLeagueThunk(leagueName)).unwrap();
 
-        Alert.alert('Successo', `Lega "${leagueName}" creata con successo!`);
+        showToast('success', 'Lega creata con successo');
         navigation.goBack(); // Torna indietro o naviga verso un'altra schermata
       } catch (error) {
         Alert.alert('Errore', 'Errore durante la creazione della lega.');

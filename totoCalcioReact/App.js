@@ -1,3 +1,5 @@
+import 'react-native-gesture-handler'; // Importa all'inizio del file
+import { GestureHandlerRootView } from 'react-native-gesture-handler'; // Avvolgi l'app con questo componente
 import * as React from 'react';
 import { Provider, useSelector } from 'react-redux';
 import { StyleSheet, View, TouchableOpacity } from 'react-native';
@@ -21,6 +23,7 @@ import ProfileScreen from './screens/ProfileScreen';
 import SignupScreen from './screens/auth/SignupScreen';
 import SplashScreen from './screens/SplashScreen';
 import { COLORJS } from './theme/themeColor';
+import ToastContainer from './ToastContainer';
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator(); // Crea un Drawer Navigator
@@ -97,8 +100,17 @@ function DrawerNavigator() {
 export default function App() {
   // Cambia il tema in base allo stato
   const theme = customDarkTheme;
+  const toastRef = React.useRef(); // Usa useRef per gestire il ref
 
+  React.useEffect(() => {
+    if (toastRef.current) {
+      Toast.setRef(toastRef.current); // Assicurati di settare il ref solo dopo che il componente è montato
+    }
+  }, [toastRef]);
+
+  
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <PaperProvider theme={theme}>
       <Provider store={store}>
         <NavigationContainer>
@@ -139,8 +151,10 @@ export default function App() {
             <GlobalLoadingIndicator />
           </View>
         </NavigationContainer>
+          <ToastContainer/>
       </Provider>
     </PaperProvider>
+    </GestureHandlerRootView>
   );
 }
 

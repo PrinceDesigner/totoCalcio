@@ -4,7 +4,6 @@ import axiosInstance from '../services/axiosInterceptor';
 export const createLeague = async (name) => {
   try {
     const response = await axiosInstance.post('/leagues', { name });
-    console.log(('respo', response.data));
     return response.data;
   } catch (error) {
     console.error('Errore durante la creazione della lega:', error);

@@ -120,6 +120,19 @@ const leaguesSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
+            .addCase(deleteLeagueThunk.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(deleteLeagueThunk.fulfilled, (state, action) => {
+                state.loading = false;
+                // Filtra l'ID della lega eliminata
+                state.leagues = state.leagues.filter(league => league.id !== action.payload.leagueId);
+            })
+            .addCase(deleteLeagueThunk.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            });
 
     }
 });
