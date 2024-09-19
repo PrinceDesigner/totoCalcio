@@ -2,7 +2,8 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-    legaSelezionata: null, // Stato iniziale con nessuna lega selezionata
+  giornataAttuale: null, // Stato iniziale con nessuna lega selezionata
+  legaSelezionata: null, 
 };
 
 const selectedLeagueSlice = createSlice({
@@ -10,10 +11,11 @@ const selectedLeagueSlice = createSlice({
   initialState,
   reducers: {
     setSelectedLeagueGiornata: (state, action) => {
-      state.legaSelezionata = action.payload; // Imposta la lega selezionata
+      state.giornataAttuale = action.payload.giornataAttuale; // Imposta la lega selezionata
+      state.legaSelezionata = action.payload.legaSelezionata; // Imposta la lega selezionata
     },
     clearSelectedLeague: (state) => {
-      state.legaSelezionata = null; // Pulisce la selezione della lega
+      state.giornataAttuale = null; // Pulisce la selezione della lega
     },
   },
 });

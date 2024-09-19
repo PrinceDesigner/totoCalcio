@@ -14,7 +14,7 @@ export default function LeagueDetails({ navigation }) {
 
     const dispatch = useDispatch();
 
-    const giornataAttuale = useSelector((state) => state.legaSelezionata.legaSelezionata); // Stato delle leghe
+    const giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale); // Stato delle leghe
     const infogiornataAttuale = useSelector((state) => state.infogiornataAttuale); // Stato delle leghe
 
     const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });

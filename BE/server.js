@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors'); // Importa CORS
 const authRoutes = require('./routes/authRoutes');
 const leagueRoutes = require('./routes/leaguesRoutes'); // Importa le route delle leghe
+const predictionsRoute = require('./routes/predictionsRoute'); // Importa le route delle leghe
 
 require('dotenv').config();
 
@@ -24,6 +25,7 @@ app.use(express.json());
 // Rotte di autenticazione
 app.use('/api/auth', authRoutes);
 app.use('/api', leagueRoutes);
+app.use('/api/predictions', predictionsRoute);
 
 // Middleware per la gestione degli errori (deve essere l'ultimo middleware)
 app.use((err, req, res, next) => {

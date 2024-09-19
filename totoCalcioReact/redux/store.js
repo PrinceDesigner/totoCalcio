@@ -12,7 +12,7 @@ const store = configureStore({
     ui: uiReducer,
     leagues: leaguesReducer,
     infogiornataAttuale: infogiornataAttualeReducer,
-    legaSelezionata: selectedLeagueReducer,
+    giornataAttuale: selectedLeagueReducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(logger), // Aggiungi redux-logger
 });

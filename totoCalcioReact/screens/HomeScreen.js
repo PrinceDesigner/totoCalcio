@@ -46,7 +46,7 @@ export default function HomeScreen() {
 
     // Funzione per gestire il click su una lega
     const handleLeaguePress = (league) => {
-        dispatch(setSelectedLeagueGiornata(league.giornataAttuale));
+        dispatch(setSelectedLeagueGiornata({giornataAttuale: league.giornataAttuale, legaSelezionata: league.id}));
         navigation.navigate('LeagueDetailsStack'); // Naviga alla schermata dei dettagli della lega
     };
 
