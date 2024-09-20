@@ -25,9 +25,9 @@ export default function CustomDrawerContent(props) {
 
       // Dispatch del logout per aggiornare lo stato di Redux
       dispatch(logout());
-
       // Naviga alla schermata di login
       props.navigation.replace('LoginScreen');
+
     } catch (error) {
       console.error('Errore durante il logout:', error);
     } finally {

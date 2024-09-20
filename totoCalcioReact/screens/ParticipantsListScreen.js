@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { Card, useTheme, Avatar, Button } from 'react-native-paper';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; // Importa l'icona del cestino
+import { useSelector } from 'react-redux';
+import { selectLeagueById } from '../redux/slice/leaguesSlice';
 
 // Dati dei partecipanti alla lega (con immagini)
 const participants = [
@@ -21,6 +23,9 @@ export default function ParticipantsListScreen() {
     const { colors } = useTheme();
     const [modalVisible, setModalVisible] = useState(false); // Stato per la visibilità della modale
     const [selectedParticipant, setSelectedParticipant] = useState(null); // Partecipante selezionato per l'eliminazione
+    const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
+    const userId = useSelector((state) => state.auth.user.user.userId);
+    const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
 
     // Funzione per mostrare la modale
     const handleDeleteParticipant = (participant) => {
@@ -55,9 +60,9 @@ export default function ParticipantsListScreen() {
                             <Text style={{ ...styles.participantName, color: 'white' }}>{participant.name}</Text>
 
                             {/* Icona del cestino */}
-                            <TouchableOpacity onPress={() => handleDeleteParticipant(participant)}>
+                            {selectedLeague.ownerId === userId ? <TouchableOpacity onPress={() => handleDeleteParticipant(participant)}>
                                 <MaterialIcons name="delete" size={24} color={colors.primary} />
-                            </TouchableOpacity>
+                            </TouchableOpacity> : null}
                         </View>
                     </Card>
                 ))}

@@ -1,6 +1,7 @@
 // src/services/authService.js
 
 import axios from 'axios'; // Usa axios per fare le richieste HTTP
+import axiosInstance from './axiosInterceptor'; // Importa il tuo axiosInterceptor
 
 const API_URL = 'http://192.168.1.26:5001/api/auth'; // Imposta il tuo URL API
 
@@ -35,3 +36,22 @@ export const login = async (email, password) => {
     throw error;
   }
 };
+
+// Funzione per aggiornare l'email e il displayName dell'utente
+export const updateUser = async (email, displayName, userId) => {
+  try {
+    // Effettua la chiamata API per aggiornare l'email e il displayName
+    const response = await axiosInstance.put('/update-user', {
+      email,
+      displayName,
+      userId,
+    });
+    console.log('API', response);
+    return response.data; // Restituisci i dati della risposta
+  } catch (error) {
+    console.error('Errore durante l\'aggiornamento dell\'utente:', error);
+    throw error; // Rilancia l'errore per gestirlo nel componente
+  }
+};
+
+

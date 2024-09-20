@@ -19,7 +19,7 @@ export default function HomeScreen() {
 
     const leaguesState = useSelector((state) => state.leagues); // Stato delle leghe
     const loadingState = useSelector((state) => state.ui.loading); // Stato di caricamento
-    const userId = useSelector((state) => state.auth.user.user.userId);
+    const userId = useSelector((state) => state.auth.user && state.auth.user.user.userId);
 
     const [refreshing, setRefreshing] = useState(false);
     const [selectedLeague, setSelectedLeague] = useState(null); // Stato per la lega selezionata per l'eliminazione

@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getAuth, updateProfile } from 'firebase/auth';
+import { updateUser } from '../../services/authServices';
 
 // Stato iniziale per l'autenticazione
 const initialState = {
@@ -11,6 +12,20 @@ const initialState = {
   error: null, // Per gestire eventuali errori di autenticazione o signup
 };
 
+
+// Thunk per aggiornare l'email e il displayName
+export const updateProfileThunk = createAsyncThunk(
+  'auth/updateProfile',
+  async ({ email, displayName, userId }, { rejectWithValue }) => {
+    try {
+      // Chiama il servizio per aggiornare l'email e il displayName
+      const response = await updateUser(email, displayName, userId);
+      return response.user; // Restituisce i dati aggiornati dell'utente
+    } catch (error) {
+      return rejectWithValue(error.response.data || 'Errore durante l\'aggiornamento del profilo');
+    }
+  }
+);
 
 // Thunk per aggiornare l'URI della foto profilo
 export const updateProfilePhoto = createAsyncThunk(
@@ -96,6 +111,24 @@ const authSlice = createSlice({
       state.photoUri = null; // Reset dell'URI della foto
       state.error = null;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      // Gestione dell'aggiornamento del profilo
+      .addCase(updateProfileThunk.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(updateProfileThunk.fulfilled, (state, action) => {
+        state.user = {
+          ...state.user,
+          email: action.payload.email,
+          displayName: action.payload.displayName,
+        };
+        state.error = null; // Resetta l'errore
+      })
+      .addCase(updateProfileThunk.rejected, (state, action) => {
+        state.error = action.payload || 'Errore durante l\'aggiornamento del profilo';
+      });
   },
 });
 

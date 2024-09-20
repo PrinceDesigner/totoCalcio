@@ -3,13 +3,14 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'rea
 import { Button, TextInput, Avatar, useTheme } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker'; // Libreria per selezionare immagini
 import { useDispatch, useSelector } from 'react-redux';
-import { updateProfilePhoto } from '../redux/slice/authSlice';
+import { updateProfilePhoto, updateProfileThunk } from '../redux/slice/authSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { showToast } from '../ToastContainer';
 
 export default function ProfileScreen({ navigation }) {
-  const [userName, setUserName] = useState('Mario Rossi');
-  const [userEmail, setUserEmail] = useState('mario.rossi@example.com');
+  const userDetail = useSelector((state) => state.auth.user && state.auth.user.user); // Stato delle leghe
+  const [userName, setUserName] = useState(userDetail && userDetail.fullName);
+  const [userEmail, setUserEmail] = useState(userDetail && userDetail.email);
   const [profileImage, setProfileImage] = useState(null); // Stato per l'immagine del profilo
   const photoProfile = useSelector((state) => state.auth.photoUri); // Stato delle leghe
 
@@ -67,9 +68,26 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  const handleSaveProfile = () => {
-    console.log(`Salva profilo: Nome = ${userName}, Email = ${userEmail}`);
+  const handleSaveProfile = async () => {
+    try {
+      const userId = userDetail.userId; // Passa l'ID dell'utente
+      dispatch(showLoading()); // Mostra lo stato di caricamento
+
+      // Esegui l'aggiornamento del profilo
+      await dispatch(updateProfileThunk({ email: userEmail, displayName: userName, userId })).unwrap();
+
+      // Mostra un messaggio di successo usando un toast
+      showToast('success', 'Profilo aggiornato con successo');
+    } catch (error) {
+      // Gestisci eventuali errori e mostra un messaggio di errore
+      console.error('Errore durante l\'aggiornamento del profilo:', error);
+      showToast('error', 'Errore durante l\'aggiornamento del profilo');
+    } finally {
+      dispatch(hideLoading()); // Nascondi lo stato di caricamento
+    }
   };
+
+
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>

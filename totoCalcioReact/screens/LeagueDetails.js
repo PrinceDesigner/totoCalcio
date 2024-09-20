@@ -20,7 +20,7 @@ export default function LeagueDetails({ navigation }) {
     const infogiornataAttuale = useSelector((state) => state.infogiornataAttuale);
     const schedinaGiocata = useSelector((state) => state.insertPredictions.schedinaInserita.schedina);
     // Selettori per ottenere le informazioni necessarie
-    const userId = useSelector((state) => state.auth.user.user.userId);
+    const userId = useSelector((state) => state.auth.user && state.auth.user.user.userId);
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const dayId = useSelector((state) => state.giornataAttuale.giornataAttuale);
 
@@ -150,7 +150,7 @@ export default function LeagueDetails({ navigation }) {
                 </View> : null}
 
                 {/* Bottone "Inserisci Esiti" */}
-                {isDatePast(deadline) ? <Button
+                {!isDatePast(deadline) ? <Button
                     mode="contained"
                     onPress={() => navigation.navigate('InsertResults')}
                     style={styles.insertButton}

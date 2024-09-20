@@ -3,7 +3,6 @@ const { firestore } = require('../firebaseAdmin'); // Assicurati di aver configu
 const { FieldValue, FieldPath } = require('firebase-admin').firestore; // Importa FieldValue
 const authMiddleware = require('../middlewares/authMiddleware');
 const router = express.Router();
-const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
 
 // Funzione per sanitizzare i matchId
