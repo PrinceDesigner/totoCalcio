@@ -8,6 +8,9 @@ import { showLoading, hideLoading } from '../redux/slice/uiSlice';
 import { Swipeable } from 'react-native-gesture-handler'; // Aggiungi Swipeable
 import { MaterialIcons } from '@expo/vector-icons'; // Aggiungi icone
 import { setSelectedLeagueGiornata } from '../redux/slice/selectedLeagueSlice';
+import { updatePhotoUri } from '../redux/slice/authSlice';
+import { getAuth } from 'firebase/auth'; // Importa Firebase Authentication
+
 
 export default function HomeScreen() {
     const { colors } = useTheme();
@@ -21,6 +24,8 @@ export default function HomeScreen() {
     const [refreshing, setRefreshing] = useState(false);
     const [selectedLeague, setSelectedLeague] = useState(null); // Stato per la lega selezionata per l'eliminazione
     const [isModalVisible, setModalVisible] = useState(false); // Stato per la visibilità della modale
+
+
 
     useEffect(() => {
         fetchLeagues(); // Recupera le leghe quando la schermata viene caricata
@@ -46,7 +51,7 @@ export default function HomeScreen() {
 
     // Funzione per gestire il click su una lega
     const handleLeaguePress = (league) => {
-        dispatch(setSelectedLeagueGiornata({giornataAttuale: league.giornataAttuale, legaSelezionata: league.id}));
+        dispatch(setSelectedLeagueGiornata({ giornataAttuale: league.giornataAttuale, legaSelezionata: league.id }));
         navigation.navigate('LeagueDetailsStack'); // Naviga alla schermata dei dettagli della lega
     };
 

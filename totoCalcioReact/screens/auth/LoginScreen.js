@@ -77,7 +77,6 @@ export default function LoginScreen({ navigation }) {
 
                 // Salva il token in AsyncStorage
                 await saveToken(token);
-
                 // Dispatch del loginSuccess con le informazioni dell'utente
                 dispatch(loginSuccess({
                     user: {
@@ -86,6 +85,7 @@ export default function LoginScreen({ navigation }) {
                         fullName: user.displayName || decodedToken.name, // Usa il nome dal token decodificato se disponibile
                     },
                     token, // Salva il token JWT nello stato Redux
+                    photoUri: user.photoURL
                 }));
 
                 // Naviga alla schermata Home

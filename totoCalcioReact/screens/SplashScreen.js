@@ -13,7 +13,9 @@ const SplashScreen = ({ navigation }) => {
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            if (user) {
+            if (user) {                
+                console.log(user)
+
                 try {
                     // L'utente è autenticato, recupera il token JWT
                     const token = await user.getIdToken(true); // Recupera il token ID di Firebase
@@ -29,6 +31,7 @@ const SplashScreen = ({ navigation }) => {
                             fullName: user.displayName || 'Utente', // Puoi usare user.displayName se esiste
                         },
                         token,
+                        photoUri: user.photoURL
                     }));
 
                     // Naviga alla schermata Home

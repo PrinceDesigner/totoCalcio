@@ -1,18 +1,21 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Avatar } from 'react-native-paper';
 import { COLORJS } from '../../theme/themeColor';
+import { getAuth } from 'firebase/auth'; // Importa Firebase Authentication
+import { useDispatch, useSelector } from 'react-redux';
+import { updatePhotoUri } from '../../redux/slice/authSlice';
 
 // Funzione per generare l'header personalizzato
 export function CustomHeader({ navigation }) {
-  const userPhoto = 'https://via.placeholder.com/150'; // Puoi sostituirlo con l'URL della foto utente dal tuo backend o Redux
+  const photoProfile = useSelector((state) => state.auth.photoUri); // Stato delle leghe
 
   return {
     headerLeft: () => (
       <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
         <Avatar.Image
-          source={{ uri: userPhoto }}
+          source={{ uri: photoProfile || 'https://via.placeholder.com/150' }}
           size={36}
           style={{ marginLeft: 15 }} // Posiziona la foto profilo a sinistra
         />

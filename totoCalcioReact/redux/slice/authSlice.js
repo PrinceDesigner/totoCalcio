@@ -1,12 +1,56 @@
-// redux/slices/authSlice.js
 import { createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk } from '@reduxjs/toolkit';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getAuth, updateProfile } from 'firebase/auth';
 
 // Stato iniziale per l'autenticazione
 const initialState = {
   isAuthenticated: false,
   user: null, // Dati utente come email, username, ecc.
+  photoUri: null, // URI della foto del profilo utente
   error: null, // Per gestire eventuali errori di autenticazione o signup
 };
+
+
+// Thunk per aggiornare l'URI della foto profilo
+export const updateProfilePhoto = createAsyncThunk(
+  'auth/updateProfilePhoto',
+  async (photoUri, { dispatch, rejectWithValue }) => {
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      if (!user) {
+        throw new Error('Utente non autenticato');
+      }
+
+      // Ottieni il file blob dalla foto
+      const response = await fetch(photoUri);
+      const blob = await response.blob();
+
+      // Carica la foto su Firebase Storage
+      const storage = getStorage();
+      const storageRef = ref(storage, `profilePictures/${user.uid}.jpg`);
+
+      // Carica l'immagine
+      await uploadBytes(storageRef, blob);
+
+      // Ottieni l'URL dell'immagine caricata
+      const downloadURL = await getDownloadURL(storageRef);
+
+      // Aggiorna il profilo dell'utente su Firebase Auth con il nuovo photoURL
+      await updateProfile(user, { photoURL: downloadURL });
+
+      // Aggiorna l'URI della foto nel Redux store
+      dispatch(updatePhotoUri(downloadURL));
+
+      return downloadURL;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 
 // Crea lo slice per l'autenticazione
 const authSlice = createSlice({
@@ -17,39 +61,46 @@ const authSlice = createSlice({
     loginSuccess: (state, action) => {
       state.isAuthenticated = true;
       state.user = action.payload; // Imposta i dati dell'utente
+      state.photoUri = action.payload.photoUri; // Imposta l'URI della foto profilo (se esiste)
       state.error = null;
     },
     // Azione per login fallito
     loginFailure: (state, action) => {
       state.isAuthenticated = false;
       state.user = null;
+      state.photoUri = null; // Reset dell'URI della foto
       state.error = action.payload; // Imposta l'errore di login
     },
     // Azione per registrazione successo
     signupSuccess: (state, action) => {
       state.isAuthenticated = true; // Potresti voler mantenere l'utente autenticato dopo il signup
-      state.user = action.payload.user; // Imposta i dati dell'utente (es: email, displayName, ecc.)
-      state.token = action.payload.token; // Imposta i dati dell'utente (es: email, displayName, ecc.)
+      state.user = action.payload; // Imposta i dati dell'utente (es: email, displayName, ecc.)
+      state.photoUri = action.payload.photoUri; // Imposta l'URI della foto profilo
       state.error = null;
     },
     // Azione per registrazione fallita
     signupFailure: (state, action) => {
       state.isAuthenticated = false;
       state.user = null;
+      state.photoUri = null; // Reset dell'URI della foto
       state.error = action.payload; // Imposta l'errore di registrazione
+    },
+    // Azione per aggiornare la foto profilo
+    updatePhotoUri: (state, action) => {
+      state.photoUri = action.payload; // Aggiorna l'URI della foto profilo
     },
     // Azione per il logout
     logout: (state) => {
       state.isAuthenticated = false;
       state.user = null;
+      state.photoUri = null; // Reset dell'URI della foto
       state.error = null;
-      state.token = null; // Imposta i dati dell'utente (es: email, displayName, ecc.)
     },
   },
 });
 
 // Esporta le azioni generate automaticamente
-export const { loginSuccess, loginFailure, signupSuccess, signupFailure, logout } = authSlice.actions;
+export const { loginSuccess, loginFailure, signupSuccess, signupFailure, updatePhotoUri, logout } = authSlice.actions;
 
 // Esporta il reducer per essere usato nel Redux store
 export default authSlice.reducer;
