@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import { createLeague, joinLeague, getUserLeagues, getLeagueStandings, deleteLeague } from '../../services/leagueService';
 
 // Creazione di una nuova lega
@@ -136,6 +136,15 @@ const leaguesSlice = createSlice({
 
     }
 });
+
+// Selettore di base che restituisce tutte le leghe dallo stato
+const selectLeagues = (state) => state.leagues.leagues;
+
+// Selettore che accetta idPassato come argomento e filtra le leghe
+export const selectLeagueById = (leagueId) => createSelector(
+  [selectLeagues],
+  (leagues) => leagues.find(league => league.id === leagueId)
+);
 
 export const { clearError } = leaguesSlice.actions;
 export default leaguesSlice.reducer;

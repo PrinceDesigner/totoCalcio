@@ -4,6 +4,7 @@ import LeagueDetailsTabs from './tabs/LeagueDetailsTabs';
 import InsertResultsScreen from '../screens/InsertResultScreen';
 import { CreateLeagueHeader } from './customHeader/customHeader';
 import FullParticipantsRankingScreen from '../screens/FullParticipantsRankingScreen';
+import GiornataDetailsScreen from '../screens/giornataDetailsScreen';
 
 const Stack = createStackNavigator();
 
@@ -23,6 +24,15 @@ export default function LeagueStackNavigator() {
                 component={InsertResultsScreen}
                 options={({ navigation }) => ({
                     title: 'Inserisci esiti',
+                    headerShown: true, // Mostra l'header solo per questa schermata
+                    ...CreateLeagueHeader({ navigation }), // Applica l'header personalizzato con Go Back
+                })}
+            />
+            <Stack.Screen
+                name="EsitiInseriti"
+                component={GiornataDetailsScreen}
+                options={({ navigation }) => ({
+                    title: 'Esiti Inseriti',
                     headerShown: true, // Mostra l'header solo per questa schermata
                     ...CreateLeagueHeader({ navigation }), // Applica l'header personalizzato con Go Back
                 })}

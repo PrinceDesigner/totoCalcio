@@ -14,7 +14,7 @@ export default function InsertResultsScreen({ navigation }) {
     const userId = useSelector((state) => state.auth.user.user.userId); // Stato delle leghe
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata); // Stato delle leghe
     const giornataSchedina = useSelector((state) => state.giornataAttuale.giornataAttuale); // Stato delle leghe
-    const schedinaGiocata = useSelector((state) => state.insertPredictions.schedinaInserita.schedina); 
+    const schedinaGiocata = useSelector((state) => state.insertPredictions.schedinaInserita.schedina);
     const dispatch = useDispatch();
 
     const [results, setResults] = useState({});
@@ -35,9 +35,9 @@ export default function InsertResultsScreen({ navigation }) {
     // Esempio di come usarlo nel tuo componente
     useEffect(() => {
         // Supponiamo di ricevere questo array di predizioni
-if (schedinaGiocata) {
-    setResults(mapPredictionsToResults(schedinaGiocata));
-}
+        if (schedinaGiocata) {
+            setResults(mapPredictionsToResults(schedinaGiocata));
+        }
         // Popola lo stato con i dati mappati
     }, [schedinaGiocata]);
 
@@ -79,7 +79,7 @@ if (schedinaGiocata) {
             await dispatch(savePrediction(predictionData)).unwrap(); // Attendi che il thunk termini
 
             // Se tutto va bene, mostra il toast di successo e naviga
-            showToast('success', 'Predizioni salvate con successo!');
+            showToast('success', 'Esiti caricati con successo!');
             navigation.navigate('LeagueDetails'); // Naviga alla schermata LeagueDetails
         } catch (error) {
             console.error('Errore durante il salvataggio delle predizioni:', error);

@@ -8,7 +8,7 @@ import { fetchDayDetails } from '../redux/slice/infogiornataAttualeSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { COLORJS } from '../theme/themeColor';
 import { fetchPrediction } from '../redux/slice/predictionsSlice';
-import { showToast } from '../ToastContainer';
+import { selectLeagueById } from '../redux/slice/leaguesSlice';
 
 
 export default function LeagueDetails({ navigation }) {
@@ -24,22 +24,40 @@ export default function LeagueDetails({ navigation }) {
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const dayId = useSelector((state) => state.giornataAttuale.giornataAttuale);
 
+    const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
+
     const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
     const matchdayNumber = infogiornataAttuale.dayId && infogiornataAttuale.dayId.replace('RegularSeason-', '') || 0;
     const deadline = infogiornataAttuale && infogiornataAttuale.startDate; // Simuliamo una scadenza a 1 ora da adesso
 
+    const isDatePast = (inputDate) => {
+        if (deadline) {
+            // Configura la data di input usando moment e imposta il fuso orario a "Europe/Rome"
+            const date = moment.tz(inputDate, "Europe/Rome");
+
+            // Ottieni l'orario attuale e imposta il fuso orario a "Europe/Rome"
+            const currentDate = moment.tz("Europe/Rome");
+
+            // Confronta le date e restituisci true se la data di input è minore dell'orario attuale
+            return date.isBefore(currentDate);
+        } else {
+            return '..'
+        }
+    };
+
+
     useEffect(() => {
-            const getDayDetails = async () => {
-                try {
-                    dispatch(showLoading()); // Mostra lo stato di caricamento
-                    await dispatch(fetchDayDetails(giornataAttuale)).unwrap(); // Recupera i dettagli della giornata
-                } catch (error) {
-                    console.error('Errore durante il recupero della giornata:', error);
-                } finally {
-                    dispatch(hideLoading()); // Nascondi lo stato di caricamento
-                }
-            };
-            getDayDetails();
+        const getDayDetails = async () => {
+            try {
+                dispatch(showLoading()); // Mostra lo stato di caricamento
+                await dispatch(fetchDayDetails(giornataAttuale)).unwrap(); // Recupera i dettagli della giornata
+            } catch (error) {
+                console.error('Errore durante il recupero della giornata:', error);
+            } finally {
+                dispatch(hideLoading()); // Nascondi lo stato di caricamento
+            }
+        };
+        getDayDetails();
 
     }, []);
 
@@ -50,7 +68,6 @@ export default function LeagueDetails({ navigation }) {
                 try {
                     dispatch(showLoading()); // Mostra lo stato di caricamento
                     await dispatch(fetchPrediction({ dayId, leagueId, userId })).unwrap(); // Controlla la predizione
-                    showToast('success', 'Predizione caricata con successo!');
                 } catch (error) {
                     console.error('Errore durante il controllo della predizione:', error);
                 } finally {
@@ -115,6 +132,9 @@ export default function LeagueDetails({ navigation }) {
                     <View style={styles.leagueBadgeCountDown}>
                         <Badge style={{ backgroundColor: colors.primary }}>Serie A</Badge>
                     </View>
+                    <View >
+                        <Text style={{ color: 'white' }}>{selectedLeague.name}</Text>
+                    </View>
 
                     {/* Numero di giornata */}
                     <View style={styles.leagueBadgeCountDown}>
@@ -123,20 +143,26 @@ export default function LeagueDetails({ navigation }) {
                 </View>
 
                 {/* Countdown visual nello stile "10:10:10" */}
-                <View style={styles.compactCountdownContainer}>
+                {!isDatePast(deadline) ? <View style={styles.compactCountdownContainer}>
                     <Text style={styles.countdownNumber}>
                         {countdown.days}d {countdown.hours}h {countdown.minutes}m
                     </Text>
-                </View>
+                </View> : null}
 
                 {/* Bottone "Inserisci Esiti" */}
-                <Button
+                {isDatePast(deadline) ? <Button
                     mode="contained"
                     onPress={() => navigation.navigate('InsertResults')}
                     style={styles.insertButton}
                 >
                     {schedinaGiocata ? 'Modifica Esiti' : 'Inserisci Esiti'}
-                </Button>
+                </Button> : <Button
+                    mode="contained"
+                    onPress={() => navigation.navigate('EsitiInseriti')}
+                    style={styles.insertButton}
+                >
+                    Guarda Esiti
+                </Button>}
             </View>
 
             <ScrollView style={{ ...styles.container, backgroundColor: colors.background }}>

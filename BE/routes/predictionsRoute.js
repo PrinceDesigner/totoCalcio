@@ -7,32 +7,50 @@ const authMiddleware = require('../middlewares/authMiddleware');
 const { firestore } = require('../firebaseAdmin'); // Assicurati di aver configurato Firebase Admin SDK
 const router = express.Router();
 
-// Route per inserire una predizione
+// Route per inserire o aggiornare una predizione
 router.post('/add', authMiddleware, async (req, res) => {
     const { userId, leagueId, schedina, daysId } = req.body;
 
     if (!userId || !leagueId || !schedina || !daysId) {
-        return res.status(400).json({ message: 'userId, leagueId e schedina sono obbligatori.' });
+        return res.status(400).json({ message: 'userId, leagueId, schedina e daysId sono obbligatori.' });
     }
 
-    // Genera un predictionId
-    const predictionId = uuidv4();
-
-    // Struttura del documento da salvare
-    const predictionData = {
-        predictionId,
-        userId,
-        leagueId,
-        daysId,
-        schedina
-    };
-
     try {
-        // Salva il documento su Firestore nella collection "predictions"
-        const predictionRef = firestore.collection('predictions').doc(predictionId);
-        await predictionRef.set(predictionData);
+        // Controlla se esiste già una predizione con questi parametri
+        const existingPredictionQuery = await firestore.collection('predictions')
+            .where('userId', '==', userId)
+            .where('leagueId', '==', leagueId)
+            .where('daysId', '==', daysId)
+            .get();
 
-        // Recupera il documento appena salvato
+        let predictionId;
+        let operation;
+
+        if (!existingPredictionQuery.empty) {
+            // Se esiste già una predizione, aggiornala
+            const existingPredictionDoc = existingPredictionQuery.docs[0]; // Ottieni il primo risultato
+            predictionId = existingPredictionDoc.id; // Usa l'ID del documento esistente
+            operation = 'update';
+        } else {
+            // Se non esiste, crea una nuova predizione
+            predictionId = uuidv4(); // Genera un nuovo UUID
+            operation = 'create';
+        }
+
+        // Struttura del documento da salvare o aggiornare
+        const predictionData = {
+            predictionId,
+            userId,
+            leagueId,
+            daysId,
+            schedina,
+        };
+
+        // Salva o aggiorna il documento su Firestore nella collection "predictions"
+        const predictionRef = firestore.collection('predictions').doc(predictionId);
+        await predictionRef.set(predictionData, { merge: true }); // Usa { merge: true } per aggiornare solo i campi specificati
+
+        // Recupera il documento appena salvato o aggiornato
         const savedPrediction = await predictionRef.get();
 
         if (!savedPrediction.exists) {
