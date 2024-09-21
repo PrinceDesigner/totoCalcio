@@ -8,6 +8,7 @@ import { fetchDayDetails } from '../redux/slice/infogiornataAttualeSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { COLORJS } from '../theme/themeColor';
 import { fetchPrediction } from '../redux/slice/predictionsSlice';
+import { fetchParticipantsThunk } from '../redux/slice/partecipantsSlice';
 import { selectLeagueById } from '../redux/slice/leaguesSlice';
 
 
@@ -25,6 +26,12 @@ export default function LeagueDetails({ navigation }) {
     const dayId = useSelector((state) => state.giornataAttuale.giornataAttuale);
 
     const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
+
+    // id Partecipanti
+    const userIds = selectedLeague.members;
+
+    //partecipanti
+    const provisionalRanking = useSelector((state) => state.partecipantiLegaCorrente.participants);
 
     const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
     const matchdayNumber = infogiornataAttuale.dayId && infogiornataAttuale.dayId.replace('RegularSeason-', '') || 0;
@@ -47,47 +54,77 @@ export default function LeagueDetails({ navigation }) {
 
 
     useEffect(() => {
-        const getDayDetails = async () => {
+        const fetchDataInParallel = async () => {
             try {
                 dispatch(showLoading()); // Mostra lo stato di caricamento
-                await dispatch(fetchDayDetails(giornataAttuale)).unwrap(); // Recupera i dettagli della giornata
+                
+                // Esegui entrambe le chiamate in parallelo con Promise.all
+                await Promise.all([
+                    dispatch(fetchDayDetails(giornataAttuale)).unwrap(), // Recupera i dettagli della giornata
+                    dispatch(fetchPrediction({ dayId, leagueId, userId })).unwrap() ,// Controlla la predizione
+                    dispatch(fetchParticipantsThunk({ userIds, leagueId })).unwrap()
+                ]);
+                
             } catch (error) {
-                console.error('Errore durante il recupero della giornata:', error);
+                console.error('Errore durante il recupero dei dati:', error);
             } finally {
                 dispatch(hideLoading()); // Nascondi lo stato di caricamento
             }
         };
-        getDayDetails();
-
-    }, []);
-
-
-    useEffect(() => {
-        if (dayId && leagueId && userId) {
-            const fetchPredictionData = async () => {
-                try {
-                    dispatch(showLoading()); // Mostra lo stato di caricamento
-                    await dispatch(fetchPrediction({ dayId, leagueId, userId })).unwrap(); // Controlla la predizione
-                } catch (error) {
-                    console.error('Errore durante il controllo della predizione:', error);
-                } finally {
-                    dispatch(hideLoading()); // Nascondi lo stato di caricamento
-                }
-            };
-
-            fetchPredictionData();
+    
+        // Verifica che tutti i valori siano disponibili prima di effettuare le chiamate
+        if (giornataAttuale && dayId && leagueId && userId && userIds) {
+            fetchDataInParallel();
         }
-    }, [dispatch, dayId, leagueId, userId]);
+    }, [dispatch, giornataAttuale, dayId, leagueId, userId, userIds]);
+
+    // useEffect(() => {
+    //     const getDayDetails = async () => {
+    //         try {
+    //             dispatch(showLoading()); // Mostra lo stato di caricamento
+    //             await dispatch(fetchDayDetails(giornataAttuale)).unwrap(); // Recupera i dettagli della giornata
+    //         } catch (error) {
+    //             console.error('Errore durante il recupero della giornata:', error);
+    //         } finally {
+    //             dispatch(hideLoading()); // Nascondi lo stato di caricamento
+    //         }
+    //     };
+    //     getDayDetails();
+
+    // }, []);
 
 
-    const provisionalRanking = [
-        { id: '1', name: 'Mario Rossi', points: 150 },
-        { id: '2', name: 'Luigi Bianchi', points: 140 },
-        { id: '3', name: 'Giovanni Verdi', points: 130 },
-        { id: '4', name: 'Francesco Neri', points: 120 },
-        { id: '5', name: 'Carlo Blu', points: 110 },
-        { id: '6', name: 'Alessandro Gialli', points: 100 },
-    ];
+    // useEffect(() => {
+    //     if (dayId && leagueId && userId) {
+    //         const fetchPredictionData = async () => {
+    //             try {
+    //                 dispatch(showLoading()); // Mostra lo stato di caricamento
+    //                 await dispatch(fetchPrediction({ dayId, leagueId, userId })).unwrap(); // Controlla la predizione
+    //             } catch (error) {
+    //                 console.error('Errore durante il controllo della predizione:', error);
+    //             } finally {
+    //                 dispatch(hideLoading()); // Nascondi lo stato di caricamento
+    //             }
+    //         };
+
+    //         fetchPredictionData();
+    //     }
+    // }, [dispatch, dayId, leagueId, userId]);
+
+    // useEffect(() => {
+    //     const fetchParticipants = async () => {
+    //         try {
+    //             dispatch(showLoading()); // Mostra lo stato di caricamento
+    //             await dispatch(fetchParticipantsThunk({ userIds, leagueId })).unwrap();
+    //         } catch (error) {
+    //             console.error('Errore durante il caricamento dei partecipanti:', error);
+    //         } finally {
+    //             dispatch(hideLoading()); // Nascondi lo stato di caricamento
+    //         }
+    //     };
+
+    //     fetchParticipants();
+    // }, [dispatch, userIds, leagueId]);
 
     // matches per quella giornata
     const matches = infogiornataAttuale.matches;
@@ -170,12 +207,12 @@ export default function LeagueDetails({ navigation }) {
                 <Card style={{ ...styles.section, marginBottom: 0 }}>
                     <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica Provvisoria</Text>
                     {provisionalRanking.map((player, index) => (
-                        <View key={player.id} style={styles.rankItem}>
+                        <View key={index + 1} style={styles.rankItem}>
                             <View style={{ display: 'flex', flexDirection: 'row' }}>
                                 <Text style={styles.rankPosition}>{index + 1}</Text>
-                                <Text style={styles.rankName}>{player.name}</Text>
+                                <Text style={styles.rankName}>{player.displayName}</Text>
                             </View>
-                            <Text style={{ ...styles.rankPoints, color: 'white' }}>{player.points} punti</Text>
+                            <Text style={{ ...styles.rankPoints, color: 'white' }}>{player.punti} punti</Text>
                         </View>
                     ))}
 

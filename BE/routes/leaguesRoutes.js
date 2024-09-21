@@ -11,6 +11,56 @@ function sanitizeMatchId(matchId) {
   return matchId.replace(/[\/.#$[\]]/g, '-');
 }
 
+// Funzione per caricare le giornate su Firebase
+async function fetchSerieAFixtures() {
+  try {
+    const response = await axios.get('https://api-football-v1.p.rapidapi.com/v3/fixtures', {
+      params: {
+        league: 135, // Serie A
+        season: 2024 // Stagione 2024
+      },
+      headers: {
+        'x-rapidapi-key': 'db73c3daeamshce50eba84993c27p1ebcadjsnb14d87bc676d',
+        'x-rapidapi-host': 'api-football-v1.p.rapidapi.com'
+      }
+    });
+    return response.data.response;
+  } catch (error) {
+    console.error('Errore durante il recupero dei fixture:', error);
+  }
+}
+
+async function fetchCurrentRound() {
+  try {
+    const response = await axios.get('https://api-football-v1.p.rapidapi.com/v3/fixtures/rounds', {
+      params: {
+        league: 135, // Serie A
+        season: 2024,
+        current: 'true' // Ottiene la giornata attuale
+      },
+      headers: {
+        'x-rapidapi-key': 'db73c3daeamshce50eba84993c27p1ebcadjsnb14d87bc676d',
+        'x-rapidapi-host': 'api-football-v1.p.rapidapi.com'
+      }
+    });
+
+    return response.data.response[0]; // Es. "Regular Season - 31"
+  } catch (error) {
+    console.error('Errore durante il recupero della giornata attuale:', error);
+  }
+}
+// Funzione per determinare il risultato finale (1, X, 2)
+function determineResult(homeGoals, awayGoals) {
+  if (homeGoals > awayGoals) {
+    return "1"; // Vittoria squadra di casa
+  } else if (homeGoals < awayGoals) {
+    return "2"; // Vittoria squadra ospite
+  } else {
+    return "X"; // Pareggio
+  }
+}
+
+
 // Funzione per ottenere la giornata attuale
 async function fetchCurrentRound() {
   try {
@@ -25,7 +75,7 @@ async function fetchCurrentRound() {
         'x-rapidapi-host': 'api-football-v1.p.rapidapi.com'
       }
     });
-    
+
     const currentRound = response.data.response[0]; // Es. "Regular Season - 31"
     return currentRound
   } catch (error) {
@@ -49,6 +99,7 @@ router.post('/leagues', authMiddleware, async (req, res) => {
       ownerId: userId,
       createdAt: new Date(),
       members: [userId], // L'utente che crea la lega è anche il primo membro
+      membersInfo: [{id: userId, punti:0}],
       giornate: [{dayId: currentRound.toString().trim().replace(/\s+/g, ''), calcolata: false }],
       giornataAttuale: currentRound.toString().trim().replace(/\s+/g, '') // Rimuove spazi in eccesso, // Aggiungi la giornata attuale
     });
@@ -82,22 +133,28 @@ router.post('/leagues/join', authMiddleware, async (req, res) => {
 
     const leagueData = league.data();
 
-    // Controlla se l'utente è già membro della lega
-    if (leagueData.members && leagueData.members.includes(userId)) {
-      return res.status(400).json({ message: 'L\'utente è già membro di questa lega.' });
-    }
+   // Controlla se l'utente è già membro della lega
+   if (leagueData.members && leagueData.members.includes(userId)) {
+    return res.status(400).json({ message: 'L\'utente è già membro di questa lega.' });
+  }
 
-    // Aggiungi l'utente ai membri della lega
-    await leagueRef.update({
-      members: FieldValue.arrayUnion(userId),
-    });
+  const obj = {
+    id: userId,
+    punti: 0
+  }
+
+  // Aggiungi l'utente ai membri della lega
+  await leagueRef.update({
+    members: FieldValue.arrayUnion(userId),
+    membersInfo: FieldValue.arrayUnion(obj)
+  });
 
     // Ritorna la lega aggiornata insieme al messaggio di successo
     const updatedLeague = await leagueRef.get();
 
     res.status(200).json({
       message: 'Partecipazione avvenuta con successo',
-      leagueData: {...updatedLeague.data(), id: updatedLeague.id}, // Restituisci i dettagli della lega
+      leagueData: { ...updatedLeague.data(), id: updatedLeague.id }, // Restituisci i dettagli della lega
     });
   } catch (error) {
     console.error('Errore durante la partecipazione alla lega:', error);
@@ -174,44 +231,7 @@ router.delete('/leagues/:leagueId', authMiddleware, async (req, res) => {
   }
 });
 
-// Funzione per caricare le giornate su Firebase
-async function fetchSerieAFixtures() {
-  try {
-    const response = await axios.get('https://api-football-v1.p.rapidapi.com/v3/fixtures', {
-      params: {
-        league: 135, // Serie A
-        season: 2024 // Stagione 2024
-      },
-      headers: {
-        'x-rapidapi-key': 'db73c3daeamshce50eba84993c27p1ebcadjsnb14d87bc676d',
-        'x-rapidapi-host': 'api-football-v1.p.rapidapi.com'
-      }
-    });
-    return response.data.response;
-  } catch (error) {
-    console.error('Errore durante il recupero dei fixture:', error);
-  }
-}
 
-async function fetchCurrentRound() {
-  try {
-    const response = await axios.get('https://api-football-v1.p.rapidapi.com/v3/fixtures/rounds', {
-      params: {
-        league: 135, // Serie A
-        season: 2024,
-        current: 'true' // Ottiene la giornata attuale
-      },
-      headers: {
-        'x-rapidapi-key': 'db73c3daeamshce50eba84993c27p1ebcadjsnb14d87bc676d',
-        'x-rapidapi-host': 'api-football-v1.p.rapidapi.com'
-      }
-    });
-
-    return response.data.response[0]; // Es. "Regular Season - 31"
-  } catch (error) {
-    console.error('Errore durante il recupero della giornata attuale:', error);
-  }
-}
 
 // Route per caricare le giornate
 // Route per caricare le giornate
@@ -292,16 +312,7 @@ router.post('/leagues/upload-days', async (req, res) => {
 
 
 
-// Funzione per determinare il risultato finale (1, X, 2)
-function determineResult(homeGoals, awayGoals) {
-  if (homeGoals > awayGoals) {
-    return "1"; // Vittoria squadra di casa
-  } else if (homeGoals < awayGoals) {
-    return "2"; // Vittoria squadra ospite
-  } else {
-    return "X"; // Pareggio
-  }
-}
+
 
 // Route per caricare le partite su Firestore usando gli stessi matchId presenti in 'days'
 router.post('/leagues/upload-matches', async (req, res) => {
@@ -310,14 +321,14 @@ router.post('/leagues/upload-matches', async (req, res) => {
 
     for (const fixture of fixtures) {
       let matchId = fixture.fixture.id.toString(); // Converti in stringa se necessario
-        // Verifica che matchId sia valido (non vuoto o undefined)
+      // Verifica che matchId sia valido (non vuoto o undefined)
       if (!matchId || typeof matchId !== 'string') {
         // console.error('Match ID non valido:', matchId);
         continue; // Salta questa partita se il matchId non è valido
       }
 
       // Controlla se la partita è terminata, se sì, determina il risultato
-      const result = fixture.fixture.status.short === "FT" 
+      const result = fixture.fixture.status.short === "FT"
         ? determineResult(fixture.goals.home, fixture.goals.away)
         : null;  // Se la partita non è terminata, il risultato sarà `null`
 

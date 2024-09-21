@@ -17,16 +17,14 @@ export default function GiornataDetailsScreen({ route }) {
     const matchdayNumber = dayId.replace('RegularSeason-', '') || 0;
     const matches = useSelector((state) => state.infogiornataAttuale.matches);
 
+    const participants = useSelector((state) => state.partecipantiLegaCorrente.participants);
+
+
     // Dati dal Redux store
     const prediction = useSelector((state) => state.insertPredictions.schedinaInserita);
     const loading = useSelector((state) => state.ui.loading);
 
-    // Mock dei partecipanti
-    const participants = [
-        { id: '1', name: 'Mario Rossi', image: 'https://placekitten.com/40/40' },
-        { id: '2', name: 'Luca Bianchi', image: 'https://placekitten.com/40/41' },
-        { id: '3', name: 'Giovanni Verdi', image: 'https://placekitten.com/40/42' },
-    ];
+
 
     const getMatchById = (matchId) => {
         return matches.find(match => match.matchId === matchId);
@@ -63,16 +61,16 @@ export default function GiornataDetailsScreen({ route }) {
             <Text style={{ ...styles.sectionTitle, color: colors.primary }}>Partecipanti</Text>
             <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>
                 {participants.map((participant, index) => (
-                    <Card key={participant.id} style={{ ...styles.card, backgroundColor: colors.surface }}>
+                    <Card key={index + 1} style={{ ...styles.card, backgroundColor: colors.surface }}>
                         <View style={styles.participantRow}>
                             <Text style={{ color: 'white' }}>{index + 1}</Text>
                             <Avatar.Image
-                                source={{ uri: participant.image }}
+                                source={{ uri: participant.photoURL}}
                                 size={40}
                                 style={styles.avatar}
                             />
                             <Text style={{ ...styles.participantName, color: 'white' }}>
-                                {participant.name}
+                                {participant.displayName}
                             </Text>
 
                         </View>

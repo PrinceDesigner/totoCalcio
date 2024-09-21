@@ -5,20 +5,6 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; // Importa 
 import { useSelector } from 'react-redux';
 import { selectLeagueById } from '../redux/slice/leaguesSlice';
 
-// Dati dei partecipanti alla lega (con immagini)
-const participants = [
-    { id: '1', name: 'Mario Rossi', image: 'https://via.placeholder.com/50' },
-    { id: '2', name: 'Luigi Bianchi', image: 'https://via.placeholder.com/50' },
-    { id: '3', name: 'Giovanni Verdi', image: 'https://via.placeholder.com/50' },
-    { id: '4', name: 'Francesco Neri', image: 'https://via.placeholder.com/50' },
-    { id: '5', name: 'Carlo Blu', image: 'https://via.placeholder.com/50' },
-    { id: '6', name: 'Alessandro Gialli', image: 'https://via.placeholder.com/50' },
-    { id: '7', name: 'Andrea Viola', image: 'https://via.placeholder.com/50' },
-    { id: '8', name: 'Giorgio Rosa', image: 'https://via.placeholder.com/50' },
-    { id: '9', name: 'Pietro Marroni', image: 'https://via.placeholder.com/50' },
-    { id: '10', name: 'Fabio Arancioni', image: 'https://via.placeholder.com/50' },
-];
-
 export default function ParticipantsListScreen() {
     const { colors } = useTheme();
     const [modalVisible, setModalVisible] = useState(false); // Stato per la visibilità della modale
@@ -26,6 +12,8 @@ export default function ParticipantsListScreen() {
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const userId = useSelector((state) => state.auth.user.user.userId);
     const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
+    const participants = useSelector((state) => state.partecipantiLegaCorrente.participants);
+
 
     // Funzione per mostrare la modale
     const handleDeleteParticipant = (participant) => {
@@ -49,15 +37,15 @@ export default function ParticipantsListScreen() {
         <View style={{ flex: 1 }}>
             <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}>
                 {participants.map((participant, index) => (
-                    <Card key={participant.id} style={{ ...styles.card, backgroundColor: colors.surface }}>
+                    <Card key={index + 1} style={{ ...styles.card, backgroundColor: colors.surface }}>
                         <View style={styles.participantRow}>
                             <Text style={{ color: 'white' }}>{index + 1}</Text>
                             <Avatar.Image
-                                source={{ uri: participant.image }}
+                                source={{ uri: participant.photoURL }}
                                 size={40}
                                 style={styles.avatar}
                             />
-                            <Text style={{ ...styles.participantName, color: 'white' }}>{participant.name}</Text>
+                            <Text style={{ ...styles.participantName, color: 'white' }}>{participant.displayName}</Text>
 
                             {/* Icona del cestino */}
                             {selectedLeague.ownerId === userId ? <TouchableOpacity onPress={() => handleDeleteParticipant(participant)}>
