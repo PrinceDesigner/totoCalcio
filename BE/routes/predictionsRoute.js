@@ -44,6 +44,7 @@ router.post('/add', authMiddleware, async (req, res) => {
             leagueId,
             daysId,
             schedina,
+            punti: 0
         };
 
         // Salva o aggiorna il documento su Firestore nella collection "predictions"
@@ -90,5 +91,7 @@ router.get('/check', async (req, res) => {
         res.status(500).json({ message: 'Errore durante il controllo della predizione' });
     }
 });
+
+
 
 module.exports = router;

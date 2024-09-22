@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View, Text, FlatList, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import React from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTheme, Card, Avatar } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -25,10 +25,6 @@ export default function GiornataDetailsUserScreen({ route }) {
     // const prediction = useSelector((state) => state.insertPredictions.schedinaInserita);
     const loading = useSelector((state) => state.ui.loading);
 
-
-// Funzione per gestire il click su un partecipante
-const handleParticipantPress = async (participant) => {
-};
 
     const getMatchById = (matchId) => {
         return matches.find(match => match.matchId === matchId);

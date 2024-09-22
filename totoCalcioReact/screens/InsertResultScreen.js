@@ -22,11 +22,14 @@ export default function InsertResultsScreen({ navigation }) {
 
     // Funzione per mappare l'array di predizioni in un oggetto compatibile con `setResults`
     const mapPredictionsToResults = (predictionsArray) => {
+        console.log('predictionsArray',predictionsArray);
         return predictionsArray.reduce((acc, curr) => {
             acc[curr.matchId] = {
                 matchId: curr.matchId,
                 result: curr.result,
-                esitoGiocato: curr.esitoGiocato
+                esitoGiocato: curr.esitoGiocato,
+                homeTeam: curr.homeTeam,
+                awayTeam: curr.awayTeam
             };
             return acc;
         }, {});
@@ -43,13 +46,16 @@ export default function InsertResultsScreen({ navigation }) {
 
 
     // Funzione per gestire la selezione dell'esito
-    const handleSelectResult = (matchId, result) => {
+    const handleSelectResult = (match, result) => {
+        console.log('handleSelectResult', match);
         setResults(prevResults => ({
             ...prevResults,
-            [matchId]: {
-                matchId: matchId,
+            [match.matchId]: {
+                matchId: match.matchId,
                 result: null,
-                esitoGiocato: result
+                esitoGiocato: result,
+                homeTeam: match.homeTeam,
+                awayTeam: match.awayTeam
             }
         }));
     };
@@ -64,6 +70,8 @@ export default function InsertResultsScreen({ navigation }) {
                 matchId: result.matchId,
                 result: null,
                 esitoGiocato: result.esitoGiocato,
+                homeTeam: result.homeTeam,
+                awayTeam: result.awayTeam
             })),
         };
 
@@ -109,7 +117,7 @@ export default function InsertResultsScreen({ navigation }) {
                                     styles.resultBox,
                                     results[match.matchId]?.esitoGiocato === '1' && styles.selectedResult
                                 ]}
-                                onPress={() => handleSelectResult(match.matchId, '1')}
+                                onPress={() => handleSelectResult(match, '1')}
                             >
                                 <Text style={styles.resultText}>1</Text>
                             </TouchableOpacity>
@@ -119,7 +127,7 @@ export default function InsertResultsScreen({ navigation }) {
                                     styles.resultBox,
                                     results[match.matchId]?.esitoGiocato === 'X' && styles.selectedResult
                                 ]}
-                                onPress={() => handleSelectResult(match.matchId, 'X')}
+                                onPress={() => handleSelectResult(match, 'X')}
                             >
                                 <Text style={styles.resultText}>X</Text>
                             </TouchableOpacity>
@@ -129,7 +137,7 @@ export default function InsertResultsScreen({ navigation }) {
                                     styles.resultBox,
                                     results[match.matchId]?.esitoGiocato === '2' && styles.selectedResult
                                 ]}
-                                onPress={() => handleSelectResult(match.matchId, '2')}
+                                onPress={() => handleSelectResult(match, '2')}
                             >
                                 <Text style={styles.resultText}>2</Text>
                             </TouchableOpacity>

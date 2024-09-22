@@ -6,6 +6,8 @@ import { CreateLeagueHeader } from './customHeader/customHeader';
 import FullParticipantsRankingScreen from '../screens/FullParticipantsRankingScreen';
 import GiornataDetailsScreen from '../screens/giornataDetailsScreen';
 import GiornataDetailsUserScreen from '../screens/GiornataDetailsUserScreen';
+import UserHistoryScreen from '../screens/userDaysHistorScreen';
+import GiornataSchedinaDetailsUserScreen from '../screens/SchedinaStoricoUtenteScreen';
 
 const Stack = createStackNavigator();
 
@@ -52,6 +54,24 @@ export default function LeagueStackNavigator() {
                 component={FullParticipantsRankingScreen}
                 options={({ navigation }) => ({
                     title: 'Classifica',
+                    headerShown: true, // Mostra l'header solo per questa schermata
+                    ...CreateLeagueHeader({ navigation }), // Applica l'header personalizzato con Go Back
+                })}
+            />
+            <Stack.Screen
+                name="UserHistoryScreen"
+                component={UserHistoryScreen}
+                options={({ navigation }) => ({
+                    title: 'Storia giornate',
+                    headerShown: true, // Mostra l'header solo per questa schermata
+                    ...CreateLeagueHeader({ navigation }), // Applica l'header personalizzato con Go Back
+                })}
+            />
+            <Stack.Screen
+                name="GiornataSchedinaDetailsUserScreen"
+                component={GiornataSchedinaDetailsUserScreen}
+                options={({ navigation }) => ({
+                    title: 'Storia giornate schedina',
                     headerShown: true, // Mostra l'header solo per questa schermata
                     ...CreateLeagueHeader({ navigation }), // Applica l'header personalizzato con Go Back
                 })}

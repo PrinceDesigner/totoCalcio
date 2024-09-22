@@ -2,10 +2,14 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { Card, useTheme, Avatar, Button } from 'react-native-paper';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; // Importa l'icona del cestino
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { selectLeagueById } from '../redux/slice/leaguesSlice';
+import { fetchStoricoPerUtenteSelezionato } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
+import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 
-export default function ParticipantsListScreen() {
+export default function ParticipantsListScreen({navigation}) {
+    const dispatch = useDispatch(); // Usa dispatch per inviare l'azione Redux
+
     const { colors } = useTheme();
     const [modalVisible, setModalVisible] = useState(false); // Stato per la visibilità della modale
     const [selectedParticipant, setSelectedParticipant] = useState(null); // Partecipante selezionato per l'eliminazione
@@ -33,26 +37,60 @@ export default function ParticipantsListScreen() {
         setModalVisible(false);
     };
 
+    const handleParticipantPress = async (participant) => {
+        try {
+            // Mostra lo stato di caricamento
+            dispatch(showLoading());
+    
+            // Effettua la chiamata all'API
+            await dispatch(fetchStoricoPerUtenteSelezionato({ leagueId, userId: participant.userId })).unwrap();
+    
+            // Nascondi lo stato di caricamento
+            dispatch(hideLoading());
+    
+            // Naviga alla schermata successiva, ad esempio "UserHistoryScreen"
+            navigation.navigate('UserHistoryScreen');
+            
+            // Mostra un messaggio di successo se necessario
+        } catch (error) {
+            console.error('Errore durante il caricamento dei dati:', error);
+    
+            // Nascondi lo stato di caricamento
+            dispatch(hideLoading());
+    
+            // Mostra un messaggio di errore
+        }
+    };
+    
+
     return (
         <View style={{ flex: 1 }}>
             <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}>
                 {participants.map((participant, index) => (
-                    <Card key={index + 1} style={{ ...styles.card, backgroundColor: colors.surface }}>
-                        <View style={styles.participantRow}>
-                            <Text style={{ color: 'white' }}>{index + 1}</Text>
-                            <Avatar.Image
-                                source={{ uri: participant.photoURL }}
-                                size={40}
-                                style={styles.avatar}
-                            />
-                            <Text style={{ ...styles.participantName, color: 'white' }}>{participant.displayName}</Text>
+                    <TouchableOpacity
+                        key={index + 1}
+                        onPress={() => handleParticipantPress(participant)} // Aggiungi la funzione da eseguire al tocco
+                        style={{ ...styles.cardTouchable }} // Modifica per includere lo stile
+                    >
+                        <Card style={styles.card}>
+                            <View style={styles.participantRow}>
+                                <Text style={{ color: 'white' }}>{index + 1}</Text>
+                                <Avatar.Image
+                                    source={{ uri: participant.photoURL }}
+                                    size={40}
+                                    style={styles.avatar}
+                                />
+                                <Text style={{ ...styles.participantName, color: 'white' }}>{participant.displayName}</Text>
 
-                            {/* Icona del cestino */}
-                            {selectedLeague.ownerId === userId ? <TouchableOpacity onPress={() => handleDeleteParticipant(participant)}>
-                                <MaterialIcons name="delete" size={24} color={colors.primary} />
-                            </TouchableOpacity> : null}
-                        </View>
-                    </Card>
+                                {/* Icona del cestino */}
+                                {selectedLeague.ownerId === userId ? (
+                                    <TouchableOpacity onPress={() => handleDeleteParticipant(participant)}>
+                                        <MaterialIcons name="delete" size={24} color={colors.primary} />
+                                    </TouchableOpacity>
+                                ) : null}
+                            </View>
+                        </Card>
+                    </TouchableOpacity>
                 ))}
             </ScrollView>
 

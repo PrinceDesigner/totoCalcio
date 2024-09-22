@@ -8,6 +8,7 @@ import selectedLeagueReducer from '../redux/slice/selectedLeagueSlice';
 import insertPredictionsReducer from '../redux/slice/predictionsSlice';
 import getPredictionsReducer from '../redux/slice/predictionsSlice';
 import participantsReducer from '../redux/slice/partecipantsSlice'; // Importa il reducer dei partecipanti
+import storicoPerUtenteSelezionatoReducer from '../redux/slice/storicoPerUtenteSelezionatoSlice'; // Importa il reducer dei partecipanti
 
 
 const store = configureStore({
@@ -19,6 +20,7 @@ const store = configureStore({
     giornataAttuale: selectedLeagueReducer,
     insertPredictions: insertPredictionsReducer,
     partecipantiLegaCorrente: participantsReducer, // Aggiungi il reducer dei partecipanti
+    storicoPerUtenteSelezionato: storicoPerUtenteSelezionatoReducer,
 
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(logger), // Aggiungi redux-logger
