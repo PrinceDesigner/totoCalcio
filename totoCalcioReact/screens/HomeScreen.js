@@ -10,6 +10,7 @@ import { MaterialIcons } from '@expo/vector-icons'; // Aggiungi icone
 import { setSelectedLeagueGiornata } from '../redux/slice/selectedLeagueSlice';
 import { updatePhotoUri } from '../redux/slice/authSlice';
 import { getAuth } from 'firebase/auth'; // Importa Firebase Authentication
+import { getGiornataAttuale } from '../services/infoGiornataService';
 
 
 export default function HomeScreen() {
@@ -20,7 +21,8 @@ export default function HomeScreen() {
     const leaguesState = useSelector((state) => state.leagues); // Stato delle leghe
     const loadingState = useSelector((state) => state.ui.loading); // Stato di caricamento
     const userId = useSelector((state) => state.auth.user && state.auth.user.user.userId);
-
+    
+    const [giornataAttuale, setGiornataAttuale] = useState();
     const [refreshing, setRefreshing] = useState(false);
     const [selectedLeague, setSelectedLeague] = useState(null); // Stato per la lega selezionata per l'eliminazione
     const [isModalVisible, setModalVisible] = useState(false); // Stato per la visibilità della modale
@@ -43,15 +45,31 @@ export default function HomeScreen() {
         }
     };
 
+    // Esempio di utilizzo all'interno di un useEffect in un componente
+    const fetchGiornataAttuale = async () => {
+        try {
+            const giornata = await getGiornataAttuale();
+            setGiornataAttuale(giornata)
+            console.log('Giornata Attuale:', giornata);
+        } catch (error) {
+            console.error('Errore durante il recupero della giornata attuale:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchGiornataAttuale();
+    }, []);
+
     // Funzione di refresh
     const onRefresh = () => {
         setRefreshing(true);
         fetchLeagues().then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
+        fetchGiornataAttuale().then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
     };
 
     // Funzione per gestire il click su una lega
     const handleLeaguePress = (league) => {
-        dispatch(setSelectedLeagueGiornata({ giornataAttuale: league.giornataAttuale, legaSelezionata: league.id }));
+        dispatch(setSelectedLeagueGiornata({ giornataAttuale: giornataAttuale, legaSelezionata: league.id }));
         navigation.navigate('LeagueDetailsStack'); // Naviga alla schermata dei dettagli della lega
     };
 

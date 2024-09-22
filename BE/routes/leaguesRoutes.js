@@ -49,6 +49,35 @@ async function fetchCurrentRound() {
     console.error('Errore durante il recupero della giornata attuale:', error);
   }
 }
+
+
+
+// Route per ottenere l'unico documento dalla raccolta 'nomeGiornataAttuale'
+router.get('/giornata-attuale', async (req, res) => {
+  try {
+    // Ottieni il riferimento alla raccolta 'nomeGiornataAttuale'
+    const collectionRef = firestore.collection('giornataAttuale');
+
+    // Esegui una query per ottenere tutti i documenti presenti nella raccolta (anche se sarà sempre uno)
+    const snapshot = await collectionRef.limit(1).get();
+
+    // Controlla se è presente un documento
+    if (snapshot.empty) {
+      return res.status(404).json({ message: 'Nessun documento trovato nella raccolta.' });
+    }
+
+    // Estrai i dati del documento
+    const doc = snapshot.docs[0];
+    const giornataAttuale = doc.data().giornataAttuale;
+
+    // Restituisci il campo 'giornataAttuale'
+    res.status(200).json({ giornataAttuale });
+  } catch (error) {
+    console.error('Errore durante il recupero del documento:', error);
+    res.status(500).json({ message: 'Errore durante il recupero del documento.' });
+  }
+});
+
 // Funzione per determinare il risultato finale (1, X, 2)
 function determineResult(homeGoals, awayGoals) {
   if (homeGoals > awayGoals) {
@@ -85,6 +114,7 @@ async function fetchCurrentRound() {
 }
 
 // Creazione di una nuova lega
+// Creazione di una nuova lega
 router.post('/leagues', authMiddleware, async (req, res) => {
   const { name } = req.body;
   const userId = req.user.uid; // Ottieni l'ID utente dal token verificato
@@ -92,6 +122,7 @@ router.post('/leagues', authMiddleware, async (req, res) => {
   try {
     // Recupera la giornata attuale
     const currentRound = await fetchCurrentRound();
+    const currentRoundFormatted = currentRound.toString().trim().replace(/\s+/g, '');
 
     // Crea una nuova lega in Firestore con la giornata attuale
     const leagueRef = await firestore.collection('leagues').add({
@@ -99,19 +130,31 @@ router.post('/leagues', authMiddleware, async (req, res) => {
       ownerId: userId,
       createdAt: new Date(),
       members: [userId], // L'utente che crea la lega è anche il primo membro
-      membersInfo: [{id: userId, punti:0}],
-      giornate: [{dayId: currentRound.toString().trim().replace(/\s+/g, ''), calcolata: false }],
-      giornataAttuale: currentRound.toString().trim().replace(/\s+/g, '') // Rimuove spazi in eccesso, // Aggiungi la giornata attuale
+      membersInfo: [{ id: userId, punti: 0 }],
+      giornate: [{ dayId: currentRoundFormatted, calcolata: false }],
     });
 
     const league = await leagueRef.get();
+    const leagueId = league.id;
 
-    res.status(201).json({ message: 'Lega creata con successo', leagueData: { ...league.data(), id: league.id } });
+    // Crea un nuovo documento nella collezione 'giornateCalcolate'
+    const calcolateData = {
+      calcolate: false,
+      dayId: currentRoundFormatted,
+    };
+
+    // Usa l'ID combinato 'idLega_currentRound'
+    const giornateCalcolateId = `${leagueId}_${currentRoundFormatted}`;
+    await firestore.collection('giornateCalcolate').doc(giornateCalcolateId).set(calcolateData);
+
+    // Restituisci la risposta con i dati della lega appena creata
+    res.status(201).json({ message: 'Lega creata con successo', leagueData: { ...league.data(), id: leagueId } });
   } catch (error) {
     console.error('Errore durante la creazione della lega:', error);
     res.status(500).json({ message: 'Errore durante la creazione della lega' });
   }
 });
+
 
 
 // Partecipazione a una lega esistente

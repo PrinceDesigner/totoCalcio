@@ -7,17 +7,13 @@ import { fetchPrediction } from '../redux/slice/predictionsSlice';
 import { showLoading, hideLoading } from '../redux/slice/uiSlice';
 import { showToast } from '../ToastContainer';
 import { checkPrediction } from '../services/predictionsService';
-import { useNavigation } from '@react-navigation/native';
 
-export default function GiornataDetailsScreen({ route }) {
+export default function GiornataDetailsUserScreen({ route }) {
+    const { prediction, user } = route.params; // Recupera i parametri passati
+
     const { colors } = useTheme();
     const dispatch = useDispatch();
 
-    const navigation = useNavigation(); // Inizializza la navigazione
-
-
-    const userId = useSelector((state) => state.auth.user.user.userId);
-    const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const dayId = useSelector((state) => state.giornataAttuale.giornataAttuale);
     const matchdayNumber = dayId.replace('RegularSeason-', '') || 0;
     const matches = useSelector((state) => state.infogiornataAttuale.matches);
@@ -26,42 +22,12 @@ export default function GiornataDetailsScreen({ route }) {
 
 
     // Dati dal Redux store
-    const prediction = useSelector((state) => state.insertPredictions.schedinaInserita);
+    // const prediction = useSelector((state) => state.insertPredictions.schedinaInserita);
     const loading = useSelector((state) => state.ui.loading);
 
 
 // Funzione per gestire il click su un partecipante
 const handleParticipantPress = async (participant) => {
-    try {
-        // Mostra lo stato di caricamento
-        dispatch(showLoading());
-
-        console.log('Request schedina', dayId, leagueId, participant.userId);
-
-        // Chiama il servizio checkPrediction
-        const predictionData = await checkPrediction(dayId, leagueId, participant.userId);
-
-        console.log('Risposta del servizio:', predictionData);
-
-        // Gestisci il risultato, ad esempio naviga a un'altra schermata o mostra un messaggio
-        if (predictionData) {
-            showToast('success', 'Predizione trovata!');
-            navigation.navigate('EsitiUtenteInseriti', {
-                prediction: predictionData, // Passa i dati della predizione
-                user: participant.displayName, // Passa i dettagli del partecipante se necessario
-            });
-
-        } else {
-            showToast('info', 'Nessuna predizione trovata per questo utente.');
-        }
-
-    } catch (error) {
-        console.error('Errore durante il controllo della predizione:', error);
-        showToast('error', error.response.data.message);
-    } finally {
-        // Nascondi lo stato di caricamento
-        dispatch(hideLoading());
-    }
 };
 
     const getMatchById = (matchId) => {
@@ -70,7 +36,7 @@ const handleParticipantPress = async (participant) => {
 
     const renderPrediction = () => (
         <View style={styles.sectionContainer}>
-            <Text style={{ ...styles.sectionTitle, color: colors.primary }}>I tuoi esiti per la giornata {matchdayNumber} </Text>
+            <Text style={{ ...styles.sectionTitle, color: colors.primary }}>{user} esiti giornata {matchdayNumber} </Text>
             {prediction.schedina && prediction.schedina.length > 0 ? (
                 <View>
                     {prediction.schedina.map((item) => (
@@ -94,35 +60,6 @@ const handleParticipantPress = async (participant) => {
         </View>
     );
 
-    const renderParticipants = () => (
-        <View style={styles.sectionContainer}>
-            <Text style={{ ...styles.sectionTitle, color: colors.primary }}>Partecipanti</Text>
-            <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>
-                {participants.map((participant, index) => (
-                    <TouchableOpacity
-                        key={index + 1}
-                        onPress={() => handleParticipantPress(participant)} // Funzione per gestire il click
-                        style={{ marginBottom: 10 }} // Aggiungi un po' di margine
-                    >
-                        <Card style={{ ...styles.card, backgroundColor: colors.surface }}>
-                            <View style={styles.participantRow}>
-                                <Text style={{ color: 'white' }}>{index + 1}</Text>
-                                <Avatar.Image
-                                    source={{ uri: participant.photoURL }}
-                                    size={40}
-                                    style={styles.avatar}
-                                />
-                                <Text style={{ ...styles.participantName, color: 'white' }}>
-                                    {participant.displayName}
-                                </Text>
-                            </View>
-                        </Card>
-                    </TouchableOpacity>
-                ))}
-            </ScrollView>
-        </View>
-    );
-
     return (
         <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}>
             {loading ? (
@@ -130,7 +67,6 @@ const handleParticipantPress = async (participant) => {
             ) : (
                 <>
                     {renderPrediction()}
-                    {renderParticipants()}
                 </>
             )}
         </ScrollView>
