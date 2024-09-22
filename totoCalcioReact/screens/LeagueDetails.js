@@ -26,6 +26,7 @@ export default function LeagueDetails({ navigation }) {
     const dayId = useSelector((state) => state.giornataAttuale.giornataAttuale);
 
     const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
+    const createdAt = selectedLeague.createdAt
 
     // id Partecipanti
     const userIds = selectedLeague.members;
@@ -37,6 +38,8 @@ export default function LeagueDetails({ navigation }) {
     const matchdayNumber = infogiornataAttuale.dayId && infogiornataAttuale.dayId.replace('RegularSeason-', '') || 0;
     const deadline = infogiornataAttuale && infogiornataAttuale.startDate; // Simuliamo una scadenza a 1 ora da adesso
 
+    console.log('date lega', selectedLeague.createdAt )
+
     const isDatePast = (inputDate) => {
         if (deadline) {
             // Configura la data di input usando moment e imposta il fuso orario a "Europe/Rome"
@@ -44,6 +47,20 @@ export default function LeagueDetails({ navigation }) {
 
             // Ottieni l'orario attuale e imposta il fuso orario a "Europe/Rome"
             const currentDate = moment.tz("Europe/Rome");
+
+            // Confronta le date e restituisci true se la data di input è minore dell'orario attuale
+            return date.isBefore(currentDate);
+        } else {
+            return '..'
+        }
+    };
+    const isDatePastLeagues = () => {
+        if (deadline) {
+            // Configura la data di input usando moment e imposta il fuso orario a "Europe/Rome"
+            const date = moment.tz(deadline, "Europe/Rome");
+
+            // Ottieni l'orario attuale e imposta il fuso orario a "Europe/Rome"
+            const currentDate = moment.tz(createdAt,"Europe/Rome");
 
             // Confronta le date e restituisci true se la data di input è minore dell'orario attuale
             return date.isBefore(currentDate);
@@ -193,13 +210,13 @@ export default function LeagueDetails({ navigation }) {
                     style={styles.insertButton}
                 >
                     {schedinaGiocata ? 'Modifica Esiti' : 'Inserisci Esiti'}
-                </Button> : <Button
+                </Button> : !isDatePastLeagues() ? <Button
                     mode="contained"
                     onPress={() => navigation.navigate('EsitiInseriti')}
                     style={styles.insertButton}
                 >
                     Guarda Esiti
-                </Button>}
+                </Button> : <Text>Giornata Iniziata, attendi la fine della giornata attuale per iniziare a giocare</Text> }
             </View>
 
             <ScrollView style={{ ...styles.container, backgroundColor: colors.background }}>

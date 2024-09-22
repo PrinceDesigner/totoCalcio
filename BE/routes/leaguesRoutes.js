@@ -4,6 +4,8 @@ const { FieldValue, FieldPath } = require('firebase-admin').firestore; // Import
 const authMiddleware = require('../middlewares/authMiddleware');
 const router = express.Router();
 const axios = require('axios');
+const moment = require('moment');
+
 
 // Funzione per sanitizzare i matchId
 function sanitizeMatchId(matchId) {
@@ -128,7 +130,7 @@ router.post('/leagues', authMiddleware, async (req, res) => {
     const leagueRef = await firestore.collection('leagues').add({
       name,
       ownerId: userId,
-      createdAt: new Date(),
+      createdAt: moment().utc().format('YYYY-MM-DDTHH:mm:ss+00:00'),
       members: [userId], // L'utente che crea la lega è anche il primo membro
       membersInfo: [{ id: userId, punti: 0 }],
       giornate: [{ dayId: currentRoundFormatted, calcolata: false }],
@@ -143,6 +145,7 @@ router.post('/leagues', authMiddleware, async (req, res) => {
       dayId: currentRoundFormatted,
       leagueId
     };
+
 
     // Usa l'ID combinato 'idLega_currentRound'
     const giornateCalcolateId = `${leagueId}_${currentRoundFormatted}`;
