@@ -50,7 +50,6 @@ export default function HomeScreen() {
         try {
             const giornata = await getGiornataAttuale();
             setGiornataAttuale(giornata)
-            console.log('Giornata Attuale:', giornata);
         } catch (error) {
             console.error('Errore durante il recupero della giornata attuale:', error);
         }
@@ -88,7 +87,6 @@ export default function HomeScreen() {
 
     // Funzione per aprire la modale di conferma
     const confirmDeleteLeague = (league) => {
-        console.log('lega', league);
         setSelectedLeague(league); // Salva la lega selezionata
         setModalVisible(true); // Mostra la modale
     };

@@ -41,7 +41,6 @@ const handleParticipantPress = async (participant) => {
         // Chiama il servizio checkPrediction
         const predictionData = await checkPrediction(dayId, leagueId, participant.userId);
 
-        console.log('Risposta del servizio:', predictionData);
 
         // Gestisci il risultato, ad esempio naviga a un'altra schermata o mostra un messaggio
         if (predictionData) {

@@ -46,7 +46,6 @@ export const updateUser = async (email, displayName, userId) => {
       displayName,
       userId,
     });
-    console.log('API', response);
     return response.data; // Restituisci i dati della risposta
   } catch (error) {
     console.error('Errore durante l\'aggiornamento dell\'utente:', error);

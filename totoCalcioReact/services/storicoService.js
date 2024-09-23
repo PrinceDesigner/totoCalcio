@@ -5,7 +5,7 @@ export const fetchGiornatePerUtenteSelzionato = async (leagueId, userId) => {
   try {
     // Effettua la chiamata API
     const response = await axiosInstance.get(`/giornate-calcolate/${leagueId}/${userId}`);
-    console.log();
+
     return response.data.documentsWithPredictions; // Restituisce l'array dei documenti
   } catch (error) {
     console.error('Errore durante il recupero delle giornate calcolate:', error);

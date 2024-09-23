@@ -21,7 +21,6 @@ export default function ListGiornateDaCalcolareScreen({ navigation }) {
             try {
                 dispatch(showLoading()); // Mostra il caricamento
                 const data = await fetchGiornateCalcolate(leagueId);
-                console.log(data);
                 setGiornateCalcolate(data);
             } catch (error) {
                 console.error('Errore durante il recupero delle giornate calcolate:', error);
