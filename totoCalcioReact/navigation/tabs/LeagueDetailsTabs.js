@@ -6,11 +6,19 @@ import { Ionicons } from '@expo/vector-icons'; // Usa Ionicons per le icone
 import LeagueDetails from '../../screens/LeagueDetails';
 import ParticipantsListScreen from '../../screens/ParticipantsListScreen';
 import { COLORJS } from '../../theme/themeColor';
+import ListGiornateDaCalcolareScreen from '../../screens/ListGiornateDaCalcolareScreen';
+import { useSelector } from 'react-redux';
+import { selectLeagueById } from '../../redux/slice/leaguesSlice';
 
 const Tab = createBottomTabNavigator();
 
 
 export default function LeagueDetailsTabs() {
+
+    const userId = useSelector((state) => state.auth.user && state.auth.user.user.userId);
+    const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
+    const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
+    const ownerid = selectedLeague.ownerId
     const navigation = useNavigation(); // Ottieni l'oggetto di navigazione
 
 
@@ -68,6 +76,12 @@ export default function LeagueDetailsTabs() {
                     },
                 }}
             />
+            {userId === ownerid && (
+                <Tab.Screen
+                    name="Calcolo Giornate"
+                    component={ListGiornateDaCalcolareScreen}
+                />
+            )}
         </Tab.Navigator>
     );
 }

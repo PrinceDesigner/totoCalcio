@@ -1,6 +1,6 @@
 // redux/slice/storicoPerUtenteSelezionatoSlice.js
 import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
-import { fetchGiornateCalcolate, fetchGiornatePerUtenteSelzionato } from '../../services/storicoService';
+import { fetchGiornatePerUtenteSelzionato } from '../../services/storicoService';
 
 // Thunk asincrono per recuperare i dati delle giornate calcolate
 export const fetchStoricoPerUtenteSelezionato = createAsyncThunk(

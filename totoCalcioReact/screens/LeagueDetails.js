@@ -197,9 +197,11 @@ export default function LeagueDetails({ navigation }) {
 
                 {/* Schema delle Partite */}
                 <Card style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginTop: 10 }}>
-                    <Text style={{ color: 'white', fontSize: 25 }}>Partite Giornata {matchdayNumber}</Text>
+                    <View>
+                        <Text style={{ color: 'white', fontSize: 25 }}>Giornata {matchdayNumber}</Text>
+                    </View>
                     {matches.map((match) => (
-                        <View key={match.matchId} style={{...styles.matchItem, backgroundColor: colors.surface}}>
+                        <View key={match.matchId} style={{ ...styles.matchItem, backgroundColor: colors.surface }}>
                             {/* Dettaglio del match */}
                             <View style={styles.matchDetails}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
@@ -333,7 +335,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#aaa',
         padding: 10
-        
+
     },
     matchDetails: {
         // paddingHorizontal: 10,
