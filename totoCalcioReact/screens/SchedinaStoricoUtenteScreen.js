@@ -29,7 +29,7 @@ export default function GiornataSchedinaDetailsUserScreen({ route }) {
                     Esiti giornata {dayId.replace('RegularSeason-', '')}
                 </Text>
                 {prediction.schedina.map((item) => (
-                    <Card key={item.matchId} style={{ ...styles.matchCard, backgroundColor: colors.surface }}>
+                    <Card key={item.matchId} style={{ ...styles.matchCard, backgroundColor: item.esitoGiocato === item.result ?  'green' : item.result === null ? colors.surface : 'red' }}>
                         <View style={styles.matchInfo}>
                             <Text style={[styles.matchText, { color: 'white' }]}>
                                 {item.homeTeam} - {item.awayTeam}

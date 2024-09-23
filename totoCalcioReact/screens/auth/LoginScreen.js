@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Image, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, Modal, Pressable } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, Image, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, Modal, Pressable, Alert } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { Button, Text, TextInput, useTheme } from 'react-native-paper';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,7 +8,10 @@ import { hideLoading, showLoading } from '../../redux/slice/uiSlice';
 import { signInWithEmailAndPassword, getAuth } from 'firebase/auth'; // Firebase auth
 import { saveToken } from '../../AsyncStorage/AsyncStorage'; // Salva il token JWT
 import { jwtDecode } from 'jwt-decode'; // Decodifica JWT se necessario
+import * as LocalAuthentication from 'expo-local-authentication'; // Per autenticazione biometrica
+import * as SecureStore from 'expo-secure-store'; // Importa SecureStore
 import AuthErrors from '../../AuthErrorFirebase';
+
 
 export default function LoginScreen({ navigation }) {
     const { colors } = useTheme();
@@ -27,6 +30,9 @@ export default function LoginScreen({ navigation }) {
     const [errorModalVisible, setErrorModalVisible] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
 
+    const [isBiometricSupported, setIsBiometricSupported] = useState(false); // Per controllare il supporto biometrico
+
+
     const handleForgotPassword = () => {
         console.log('Password dimenticata');
     };
@@ -43,18 +49,71 @@ export default function LoginScreen({ navigation }) {
         navigation.navigate('SignupScreen');
     };
 
+    useEffect(() => {
+        // Verifica se il dispositivo supporta Face ID o Touch ID
+        const checkDeviceForHardware = async () => {
+            const compatible = await LocalAuthentication.hasHardwareAsync();
+            setIsBiometricSupported(compatible);
+
+            if (compatible) {
+                // Se compatibile, effettua l'autenticazione biometrica automatica al montaggio del componente
+                handleBiometricAuth();
+            }
+        };
+        checkDeviceForHardware();
+    }, []);
+
+    const handleBiometricAuth = async () => {
+        try {
+            const savedBiometrics = await LocalAuthentication.isEnrolledAsync();
+            if (!savedBiometrics) {
+                return Alert.alert('Errore', 'Non sono state salvate impronte digitali o Face ID sul dispositivo');
+            }
+    
+            const biometricAuth = await LocalAuthentication.authenticateAsync({
+                promptMessage: 'Accedi con Face ID / Touch ID',
+                fallbackLabel: 'Inserisci la tua password',
+            });
+    
+            if (biometricAuth.success) {
+                // Recupera le credenziali salvate da SecureStore
+                const savedEmail = await SecureStore.getItemAsync('userEmail');
+                const savedPassword = await SecureStore.getItemAsync('userPassword');
+
+                if (savedEmail && savedPassword) {
+                    setEmail(savedEmail);
+                    setPassword(savedPassword);
+                    // Usa direttamente le credenziali salvate senza aspettare l'aggiornamento dello stato
+            
+                    // Esegui il login automatico con le credenziali salvate
+                    handleLogin(savedEmail, savedPassword);
+                } else {
+                    Alert.alert('Errore', 'Nessuna credenziale salvata per l\'accesso automatico.');
+                }
+            
+            }
+        } catch (error) {
+            console.error(error);
+            Alert.alert('Errore', 'Errore durante l\'autenticazione biometrica');
+        }
+    };
+    
+
+
+
+
     // Funzione di validazione
-    const validateInputs = () => {
+    const validateInputs = (emailInput = email, passwordInput = password) => {
         let valid = true;
         setEmailError('');
         setPasswordError('');
 
-        if (email.trim() === '') {
+        if (emailInput.trim() === '') {
             setEmailError('Il campo email è obbligatorio');
             valid = false;
         }
 
-        if (password.trim() === '') {
+        if (passwordInput.trim() === '') {
             setPasswordError('Il campo password è obbligatorio');
             valid = false;
         }
@@ -62,13 +121,14 @@ export default function LoginScreen({ navigation }) {
         return valid;
     };
 
-    const handleLogin = async () => {
-        if (validateInputs()) {
+    const handleLogin = async (emailInput = email, passwordInput = password) => {
+        console.log('creenzialiLog' ,emailInput);
+        if (validateInputs(emailInput, passwordInput )) {
             try {
                 dispatch(showLoading());
 
                 // Effettua il login con Firebase Auth
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const userCredential = await signInWithEmailAndPassword(auth, emailInput, passwordInput);
                 const user = userCredential.user;
 
                 // Ottieni il token JWT
@@ -77,6 +137,12 @@ export default function LoginScreen({ navigation }) {
 
                 // Salva il token in AsyncStorage
                 await saveToken(token);
+
+                // Salva email e password in SecureStore
+                await SecureStore.setItemAsync('userEmail', emailInput);
+                await SecureStore.setItemAsync('userPassword', passwordInput);
+
+
                 // Dispatch del loginSuccess con le informazioni dell'utente
                 dispatch(loginSuccess({
                     user: {
@@ -151,7 +217,7 @@ export default function LoginScreen({ navigation }) {
                 </View>
 
                 {/* Pulsante Login */}
-                <Button mode="contained" style={styles.authButton} onPress={handleLogin}>
+                <Button mode="contained" style={styles.authButton} onPress={() => handleLogin(email, password)}>
                     Login
                 </Button>
 
@@ -180,12 +246,21 @@ export default function LoginScreen({ navigation }) {
                     >
                         Facebook
                     </Button>
+
                 </View>
+                {/* Pulsante per l'autenticazione biometrica */}
+
 
                 {/* Scritta "Creare un account? Registrati" */}
                 <TouchableOpacity onPress={handleSignUp}>
                     <Text style={styles.signUpText}>Creare un account? Registrati</Text>
                 </TouchableOpacity>
+                {isBiometricSupported && (
+                    <TouchableOpacity onPress={handleBiometricAuth} style={styles.biometricButton}>
+                        <MaterialIcons name="fingerprint" size={24} color={colors.primary} />
+                        <Text style={{ color: colors.primary }}>Accedi con Face ID / Touch ID</Text>
+                    </TouchableOpacity>
+                )}
 
                 {/* Modale di errore */}
                 <Modal
@@ -215,6 +290,12 @@ export default function LoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+    // ... gli altri stili già presenti
+    biometricButton: {
+        marginTop: 20,
+        alignItems: 'center',
+    },
+
     container: {
         flexGrow: 1,
         justifyContent: 'center',

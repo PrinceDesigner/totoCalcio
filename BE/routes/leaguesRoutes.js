@@ -124,7 +124,8 @@ router.post('/leagues', authMiddleware, async (req, res) => {
   try {
     // Recupera la giornata attuale
     const currentRound = await fetchCurrentRound();
-    const currentRoundFormatted = currentRound.toString().trim().replace(/\s+/g, '');
+    // const currentRoundFormatted = currentRound.toString().trim().replace(/\s+/g, '');
+    const currentRoundFormatted = 'RegularSeason-6'.toString().trim().replace(/\s+/g, '');
 
     // Crea una nuova lega in Firestore con la giornata attuale
     const leagueRef = await firestore.collection('leagues').add({
