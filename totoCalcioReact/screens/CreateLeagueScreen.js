@@ -50,6 +50,11 @@ export default function CreateLeagueScreen({ navigation }) {
             style={styles.input}
           />
 
+          {/* Messaggio di avviso */}
+          <Text style={styles.warningText}>
+            ⚠️ Se stai creando una lega mentre una giornata di Serie A è in corso, per giocare dovrai aspettare la prossima giornata. La lega sarà configurata con la giornata attuale, ma non avrà la schedina per questa giornata in corso.
+          </Text>
+
           {/* Bottone per creare la lega */}
           <Button
             mode="contained"
@@ -80,6 +85,16 @@ const styles = StyleSheet.create({
   input: {
     width: '80%', 
     marginBottom: 20,
+  },
+  warningText: {
+    width: '80%',
+    color: '#FFD700', // Giallo per attirare l'attenzione
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+    padding: 10,
+    backgroundColor: '#333', // Sfondo scuro per evidenziare il messaggio
+    borderRadius: 5,
   },
   button: {
     width: '80%',

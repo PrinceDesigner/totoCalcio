@@ -9,6 +9,7 @@ import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { COLORJS } from '../theme/themeColor';
 import { fetchPrediction } from '../redux/slice/predictionsSlice';
 import { fetchParticipantsThunk } from '../redux/slice/partecipantsSlice';
+import { Image } from 'react-native'; // Importa il componente Image
 import { selectLeagueById } from '../redux/slice/leaguesSlice';
 
 
@@ -38,7 +39,6 @@ export default function LeagueDetails({ navigation }) {
     const matchdayNumber = infogiornataAttuale.dayId && infogiornataAttuale.dayId.replace('RegularSeason-', '') || 0;
     const deadline = infogiornataAttuale && infogiornataAttuale.startDate; // Simuliamo una scadenza a 1 ora da adesso
 
-    console.log('date lega', selectedLeague.createdAt )
 
     const isDatePast = (inputDate) => {
         if (deadline) {
@@ -60,7 +60,7 @@ export default function LeagueDetails({ navigation }) {
             const date = moment.tz(deadline, "Europe/Rome");
 
             // Ottieni l'orario attuale e imposta il fuso orario a "Europe/Rome"
-            const currentDate = moment.tz(createdAt,"Europe/Rome");
+            const currentDate = moment.tz(createdAt, "Europe/Rome");
 
             // Confronta le date e restituisci true se la data di input è minore dell'orario attuale
             return date.isBefore(currentDate);
@@ -74,76 +74,28 @@ export default function LeagueDetails({ navigation }) {
         const fetchDataInParallel = async () => {
             try {
                 dispatch(showLoading()); // Mostra lo stato di caricamento
-                
+
                 // Esegui entrambe le chiamate in parallelo con Promise.all
                 await Promise.all([
                     dispatch(fetchDayDetails(giornataAttuale)).unwrap(), // Recupera i dettagli della giornata
-                    dispatch(fetchPrediction({ dayId, leagueId, userId })).unwrap() ,// Controlla la predizione
+                    dispatch(fetchPrediction({ dayId, leagueId, userId })).unwrap(),// Controlla la predizione
                     dispatch(fetchParticipantsThunk({ userIds, leagueId })).unwrap()
                 ]);
-                
+
             } catch (error) {
                 console.error('Errore durante il recupero dei dati:', error);
             } finally {
                 dispatch(hideLoading()); // Nascondi lo stato di caricamento
             }
         };
-    
+
         // Verifica che tutti i valori siano disponibili prima di effettuare le chiamate
         if (giornataAttuale && dayId && leagueId && userId && userIds) {
             fetchDataInParallel();
         }
     }, [dispatch, giornataAttuale, dayId, leagueId, userId, userIds]);
 
-    // useEffect(() => {
-    //     const getDayDetails = async () => {
-    //         try {
-    //             dispatch(showLoading()); // Mostra lo stato di caricamento
-    //             await dispatch(fetchDayDetails(giornataAttuale)).unwrap(); // Recupera i dettagli della giornata
-    //         } catch (error) {
-    //             console.error('Errore durante il recupero della giornata:', error);
-    //         } finally {
-    //             dispatch(hideLoading()); // Nascondi lo stato di caricamento
-    //         }
-    //     };
-    //     getDayDetails();
 
-    // }, []);
-
-
-    // useEffect(() => {
-    //     if (dayId && leagueId && userId) {
-    //         const fetchPredictionData = async () => {
-    //             try {
-    //                 dispatch(showLoading()); // Mostra lo stato di caricamento
-    //                 await dispatch(fetchPrediction({ dayId, leagueId, userId })).unwrap(); // Controlla la predizione
-    //             } catch (error) {
-    //                 console.error('Errore durante il controllo della predizione:', error);
-    //             } finally {
-    //                 dispatch(hideLoading()); // Nascondi lo stato di caricamento
-    //             }
-    //         };
-
-    //         fetchPredictionData();
-    //     }
-    // }, [dispatch, dayId, leagueId, userId]);
-
-    // useEffect(() => {
-    //     const fetchParticipants = async () => {
-    //         try {
-    //             dispatch(showLoading()); // Mostra lo stato di caricamento
-    //             await dispatch(fetchParticipantsThunk({ userIds, leagueId })).unwrap();
-    //         } catch (error) {
-    //             console.error('Errore durante il caricamento dei partecipanti:', error);
-    //         } finally {
-    //             dispatch(hideLoading()); // Nascondi lo stato di caricamento
-    //         }
-    //     };
-
-    //     fetchParticipants();
-    // }, [dispatch, userIds, leagueId]);
-
-    // matches per quella giornata
     const matches = infogiornataAttuale.matches;
 
     const convertToItalianTime = (dateString) => {
@@ -210,13 +162,13 @@ export default function LeagueDetails({ navigation }) {
                     style={styles.insertButton}
                 >
                     {schedinaGiocata ? 'Modifica Esiti' : 'Inserisci Esiti'}
-                </Button> : !isDatePastLeagues() ? <Button
+                </Button> : <Button
                     mode="contained"
                     onPress={() => navigation.navigate('EsitiInseriti')}
                     style={styles.insertButton}
                 >
                     Guarda Esiti
-                </Button> : <Text>Giornata Iniziata, attendi la fine della giornata attuale per iniziare a giocare</Text> }
+                </Button>}
             </View>
 
             <ScrollView style={{ ...styles.container, backgroundColor: colors.background }}>
@@ -247,13 +199,41 @@ export default function LeagueDetails({ navigation }) {
                 <Card style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginTop: 10 }}>
                     <Text style={{ color: 'white', fontSize: 25 }}>Partite Giornata {matchdayNumber}</Text>
                     {matches.map((match) => (
-                        <View key={match.matchId} style={styles.matchItem}>
+                        <View key={match.matchId} style={{...styles.matchItem, backgroundColor: colors.surface}}>
                             {/* Dettaglio del match */}
                             <View style={styles.matchDetails}>
-                                <View style={styles.leagueBadgeContainer}>
-                                    <Badge style={{ backgroundColor: colors.primary }}>Serie A</Badge>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                                    <View style={styles.leagueBadgeContainer}>
+                                        <Badge style={{ backgroundColor: colors.primary }}>Serie A</Badge>
+                                    </View>
+                                    <View style={styles.leagueBadgeContainer}>
+                                        <Badge style={{ backgroundColor: colors.primary }}>{match.stadio}</Badge>
+                                    </View>
                                 </View>
-                                <Text style={styles.matchText}>{match.homeTeam} vs {match.awayTeam}</Text>
+
+                                {/* Sezione con i loghi delle squadre e i nomi */}
+                                <View style={styles.teamContainer}>
+                                    <View style={styles.team}>
+                                        <Image
+                                            source={{ uri: match.homeLogo }}
+                                            style={styles.teamLogo}
+                                            resizeMode="contain"
+                                        />
+                                        <Text style={styles.teamName}>{match.homeTeam}</Text>
+                                    </View>
+
+                                    <Text style={styles.vsText}>vs</Text>
+
+                                    <View style={styles.team}>
+                                        <Image
+                                            source={{ uri: match.awayLogo }}
+                                            style={styles.teamLogo}
+                                            resizeMode="contain"
+                                        />
+                                        <Text style={styles.teamName}>{match.awayTeam}</Text>
+                                    </View>
+                                </View>
+
                                 <Text style={styles.matchTime}>{convertToItalianTime(match.startTime)}</Text>
                             </View>
                         </View>
@@ -284,6 +264,7 @@ const styles = StyleSheet.create({
         padding: 5,
         borderRadius: 12,
         backgroundColor: COLORJS.primary,
+
     },
     matchdayText: {
         fontSize: 14,
@@ -339,32 +320,64 @@ const styles = StyleSheet.create({
     fullRankingButton: {
         marginTop: 10,
     },
-    matchItem: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingVertical: 15,
-        borderBottomColor: '#ddd',
-        borderBottomWidth: 1,
-    },
     leagueBadgeContainer: {
         marginBottom: 10,
         padding: 5,
         borderRadius: 12,
         backgroundColor: COLORJS.primary,
     },
-    matchDetails: {
-        justifyContent: 'flex-start',
-        alignItems: 'flex-start',
-        flex: 1,
-    },
-    matchText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: 'white',
-    },
-    matchTime: {
+
+    matchItem: {
+        marginVertical: 5,
+        borderRadius: 5,
         fontSize: 14,
         color: '#aaa',
+        padding: 10
+        
+    },
+    matchDetails: {
+        // paddingHorizontal: 10,
+    },
+    leagueBadgeContainer: {
+        marginBottom: 5,
+    },
+    matchText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
+        textAlign: 'center',
+    },
+    matchTime: {
+        color: 'white',
+        fontSize: 14,
+        textAlign: 'center',
+        marginTop: 5,
+    },
+    teamContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginVertical: 5,
+    },
+    team: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginHorizontal: 10,
+    },
+    teamLogo: {
+        width: 30,
+        height: 30,
+        marginRight: 5,
+    },
+    teamName: {
+        color: 'white',
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    vsText: {
+        color: 'white',
+        fontSize: 14,
+        marginHorizontal: 5,
     },
 });
 

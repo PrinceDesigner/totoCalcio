@@ -23,7 +23,6 @@ export default function UserHistoryScreen({ route, navigation }) {
             const currentDate = moment.tz("Europe/Rome");
 
             // Confronta le date e restituisci true se la data di input è minore dell'orario attuale
-            console.log('DDDATE',date.isBefore(currentDate));
             return date.isBefore(currentDate);
     };
 

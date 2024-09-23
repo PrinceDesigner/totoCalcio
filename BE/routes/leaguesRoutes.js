@@ -383,6 +383,9 @@ router.post('/leagues/upload-matches', async (req, res) => {
         matchId,  // Usa il matchId esistente
         homeTeam: fixture.teams.home.name,  // Squadra di casa
         awayTeam: fixture.teams.away.name,  // Squadra ospite
+        homeLogo: fixture.teams.home.logo,
+        awayLogo: fixture.teams.away.logo,
+        stadio: fixture.fixture.venue.name,
         result,  // Risultato, `null` se la partita non è ancora finita
         dayId: fixture.league.round.toString().trim().replace(/\s+/g, ''),  // Giornata a cui appartiene la partita (stesso valore usato per la giornata)
         startTime: fixture.fixture.date  // Data e ora di inizio della partita
