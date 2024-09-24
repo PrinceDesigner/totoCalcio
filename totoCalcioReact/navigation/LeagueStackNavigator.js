@@ -8,6 +8,7 @@ import GiornataDetailsScreen from '../screens/giornataDetailsScreen';
 import GiornataDetailsUserScreen from '../screens/GiornataDetailsUserScreen';
 import UserHistoryScreen from '../screens/userDaysHistorScreen';
 import GiornataSchedinaDetailsUserScreen from '../screens/SchedinaStoricoUtenteScreen';
+import EditLeagueScreen from '../screens/EditLeagueScreen';
 
 const Stack = createStackNavigator();
 
@@ -76,7 +77,15 @@ export default function LeagueStackNavigator() {
                     ...CreateLeagueHeader({ navigation }), // Applica l'header personalizzato con Go Back
                 })}
             />
-            {/* Schermate successive nel stack */}
+            <Stack.Screen
+                name="EditLeagueScreen"
+                component={EditLeagueScreen}
+                options={({ navigation }) => ({
+                    title: 'Modifica Lega',
+                    headerShown: true, // Mostra l'header solo per questa schermata
+                    ...CreateLeagueHeader({ navigation }), // Applica l'header personalizzato con Go Back
+                })}
+            />
         </Stack.Navigator>
     );
 }

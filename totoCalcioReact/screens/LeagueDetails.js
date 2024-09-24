@@ -11,6 +11,10 @@ import { fetchPrediction } from '../redux/slice/predictionsSlice';
 import { fetchParticipantsThunk } from '../redux/slice/partecipantsSlice';
 import { Image } from 'react-native'; // Importa il componente Image
 import { selectLeagueById } from '../redux/slice/leaguesSlice';
+import * as Clipboard from 'expo-clipboard'; // Importa Clipboard
+import { Share } from 'react-native';
+
+
 
 
 export default function LeagueDetails({ navigation }) {
@@ -38,6 +42,33 @@ export default function LeagueDetails({ navigation }) {
     const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
     const matchdayNumber = infogiornataAttuale.dayId && infogiornataAttuale.dayId.replace('RegularSeason-', '') || 0;
     const deadline = infogiornataAttuale && infogiornataAttuale.startDate; // Simuliamo una scadenza a 1 ora da adesso
+
+    // Funzione per copiare l'ID della lega
+    const copyToClipboard = async () => {
+        await Clipboard.setStringAsync(leagueId);
+        alert('ID della lega copiato negli appunti');
+    };
+
+    // Funzione per condividere l'ID della lega
+    const shareLeagueId = async () => {
+        try {
+            const result = await Share.share({
+                message: `${leagueId}`,
+            });
+            if (result.action === Share.sharedAction) {
+                if (result.activityType) {
+                    // Condivisione riuscita con un'attività specifica
+                } else {
+                    // Condivisione riuscita
+                }
+            } else if (result.action === Share.dismissedAction) {
+                // Condivisione annullata
+            }
+        } catch (error) {
+            alert('Errore durante la condivisione: ' + error.message);
+        }
+    };
+
 
 
     const isDatePast = (inputDate) => {
@@ -195,8 +226,32 @@ export default function LeagueDetails({ navigation }) {
                     </Button>
                 </Card>
 
+                {/* Sezione per copiare e condividere l'ID della lega */}
+                <Card style={{ ...styles.section, padding: 5, marginTop: 20}}>
+                    <Text style={{ color: 'white', fontSize: 18, marginBottom: 10 }}>Condividi la tua Lega</Text>
+                    <Text style={{ color: 'white', fontSize: 16 }}>ID Lega: {leagueId}</Text>
+
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+                        <Button
+                            mode="contained"
+                            onPress={copyToClipboard}
+                            style={styles.copyButton}
+                        >
+                            Copia ID
+                        </Button>
+
+                        <Button
+                            mode="contained"
+                            onPress={shareLeagueId}
+                            style={styles.shareButton}
+                        >
+                            Condividi
+                        </Button>
+                    </View>
+                </Card>
+
                 {/* Schema delle Partite */}
-                <Card style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginTop: 10 }}>
+                <Card style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginBottom: 20 }}>
                     <View>
                         <Text style={{ color: 'white', fontSize: 25 }}>Giornata {matchdayNumber}</Text>
                     </View>
@@ -241,6 +296,14 @@ export default function LeagueDetails({ navigation }) {
                         </View>
                     ))}
                 </Card>
+
+                <Button
+                    mode="contained"
+                    onPress={() => navigation.navigate('EditLeagueScreen', {leagueId})}
+                    style={{...styles.insertButton, marginBottom: 20}}
+                >
+                    Modifica Lega
+                </Button>
             </ScrollView>
         </SafeAreaView>
     );
@@ -285,7 +348,7 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
     section: {
-        marginBottom: 30,
+        marginBottom: 10,
         padding: 20,
         borderRadius: 15,
         shadowColor: '#000',

@@ -93,10 +93,13 @@ export default function HomeScreen() {
 
     // Renderizza la UI che appare durante lo swipe
     const renderRightActions = (league) => (
+        <>
         <TouchableOpacity style={styles.deleteButton} onPress={() => confirmDeleteLeague(league)}>
             <MaterialIcons name="delete" size={30} color="white" />
         </TouchableOpacity>
+        </>
     );
+
 
     // Renderizza ogni lega nella FlatList con swipeable
     const renderLeagueItem = ({ item }) => {
@@ -105,7 +108,7 @@ export default function HomeScreen() {
 
         return (
             <Swipeable
-                renderRightActions={() => isOwner ? renderRightActions(item) : null}
+                renderRightActions={() => isOwner ? renderRightActions(item) : null}                
             >
                 <TouchableOpacity onPress={() => handleLeaguePress(item)}>
                     <View style={{ ...styles.leagueContainer, backgroundColor: colors.surface }}>

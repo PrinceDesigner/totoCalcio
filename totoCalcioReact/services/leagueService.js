@@ -54,3 +54,19 @@ export const deleteLeague = async (leagueId) => {
     throw error;
   }
 };
+
+
+// Servizio per aggiornare il nome della lega
+export const updateLeagueName = async (leagueId, leagueName) => {
+  console.log('API-NOME', leagueName);
+    try {
+        const response = await axiosInstance.put(`/leagues/${leagueId}`, {
+          leagueName
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Errore durante l\'aggiornamento della lega:', error);
+        throw error;
+    }
+};
+

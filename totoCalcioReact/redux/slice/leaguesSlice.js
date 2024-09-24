@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
-import { createLeague, joinLeague, getUserLeagues, getLeagueStandings, deleteLeague } from '../../services/leagueService';
+import { createLeague, joinLeague, getUserLeagues, getLeagueStandings, deleteLeague, updateLeagueName } from '../../services/leagueService';
 
 // Creazione di una nuova lega
 export const createLeagueThunk = createAsyncThunk('leagues/create', async (name, { rejectWithValue }) => {
@@ -51,6 +51,17 @@ export const deleteLeagueThunk = createAsyncThunk('leagues/delete', async (leagu
     }
 });
 
+// Thunk asincrono per aggiornare il nome della lega
+export const updateLeagueNameThunk = createAsyncThunk('leagues/updateName', async ({ leagueId, leagueName }, { rejectWithValue }) => {
+    try {
+        console.log('thunknime', leagueName);
+        const response = await updateLeagueName(leagueId, leagueName);
+        return response; // Torna i dettagli della lega aggiornata
+    } catch (error) {
+        return rejectWithValue(error.response.data); // Gestisci l'errore
+    }
+});
+
 // Slice per la gestione delle leghe
 const leaguesSlice = createSlice({
     name: 'leagues',
@@ -86,14 +97,14 @@ const leaguesSlice = createSlice({
             })
             .addCase(joinLeagueThunk.fulfilled, (state, action) => {
                 state.loading = false;
-            
+
                 const updatedLeague = action.payload.leagueData;
-            
+
                 // Verifica se la lega è già presente nello stato
                 const existingLeagueIndex = state.leagues.findIndex(
                     (league) => league.id === updatedLeague.id
                 );
-            
+
                 if (existingLeagueIndex === -1) {
                     // Se la lega non esiste già, la aggiunge alla lista
                     state.leagues = [...state.leagues, updatedLeague];
@@ -102,7 +113,7 @@ const leaguesSlice = createSlice({
                     state.leagues[existingLeagueIndex] = updatedLeague;
                 }
             })
-            
+
             .addCase(joinLeagueThunk.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
@@ -132,6 +143,32 @@ const leaguesSlice = createSlice({
             .addCase(deleteLeagueThunk.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
+            })
+            // Modifica del nome della lega
+            .addCase(updateLeagueNameThunk.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(updateLeagueNameThunk.fulfilled, (state, action) => {
+                state.loading = false;
+
+                const updatedLeague = action.payload; // La lega aggiornata
+
+                // Trova la lega nel tuo stato attuale e aggiorna il nome
+                const existingLeagueIndex = state.leagues.findIndex(
+                    (league) => league.id === updatedLeague.leagueId
+                );
+
+                if (existingLeagueIndex !== -1) {
+                    state.leagues[existingLeagueIndex] = {
+                        ...state.leagues[existingLeagueIndex],
+                        name: updatedLeague.nomeNuovo // Aggiorna solo il nome
+                    };
+                }
+            })
+            .addCase(updateLeagueNameThunk.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
             });
 
     }
@@ -142,8 +179,8 @@ const selectLeagues = (state) => state.leagues.leagues;
 
 // Selettore che accetta idPassato come argomento e filtra le leghe
 export const selectLeagueById = (leagueId) => createSelector(
-  [selectLeagues],
-  (leagues) => leagues.find(league => league.id === leagueId)
+    [selectLeagues],
+    (leagues) => leagues.find(league => league.id === leagueId)
 );
 
 export const { clearError } = leaguesSlice.actions;

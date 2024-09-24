@@ -125,7 +125,7 @@ router.post('/leagues', authMiddleware, async (req, res) => {
     // Recupera la giornata attuale
     const currentRound = await fetchCurrentRound();
     // const currentRoundFormatted = currentRound.toString().trim().replace(/\s+/g, '');
-    const currentRoundFormatted = 'RegularSeason-6'.toString().trim().replace(/\s+/g, '');
+    const currentRoundFormatted = currentRound.toString().trim().replace(/\s+/g, '');
 
     // Crea una nuova lega in Firestore con la giornata attuale
     const leagueRef = await firestore.collection('leagues').add({
@@ -161,6 +161,35 @@ router.post('/leagues', authMiddleware, async (req, res) => {
 });
 
 
+// Route per aggiornare il nome della lega
+router.put('/leagues/:leagueId', authMiddleware, async (req, res) => {
+  const { leagueId } = req.params; // Ottieni l'ID della lega dai parametri dell'URL
+  const { leagueName } = req.body; // Ottieni il nuovo nome della lega dal corpo della richiesta
+
+  if (!leagueName || leagueName.trim() === '') {
+    return res.status(400).json({ message: 'Il nome della lega non può essere vuoto.' });
+  }
+
+  try {
+    // Ottieni il riferimento al documento della lega
+    const leagueRef = firestore.collection('leagues').doc(leagueId);
+    const leagueDoc = await leagueRef.get();
+
+    // Verifica se la lega esiste
+    if (!leagueDoc.exists) {
+      return res.status(404).json({ message: 'Lega non trovata.' });
+    }
+
+    // Aggiorna il nome della lega
+    await leagueRef.update({ name: leagueName.trim() });
+
+    // Restituisci l'ID della lega e il nuovo nome come risposta
+    res.status(200).json({ leagueId, nomeNuovo: leagueName.trim() });
+  } catch (error) {
+    console.error('Errore durante l\'aggiornamento della lega:', error);
+    res.status(500).json({ message: 'Errore durante l\'aggiornamento della lega.' });
+  }
+});
 
 // Partecipazione a una lega esistente
 router.post('/leagues/join', authMiddleware, async (req, res) => {
