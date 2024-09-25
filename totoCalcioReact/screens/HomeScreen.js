@@ -114,7 +114,7 @@ export default function HomeScreen() {
                     <View style={{ ...styles.leagueContainer, backgroundColor: colors.surface }}>
                         <Image source={require('../league1.png')} style={styles.leagueImage} />
                         <View style={styles.leagueTextContainer}>
-                            <Text style={{ ...styles.leagueName, color: colors.primary }}>{item.name} {item.id}</Text>
+                            <Text style={{ ...styles.leagueName, color: colors.primary }}>{item.name}</Text>
                             <Text style={styles.leagueDescription}>{item.members.length} Partecipanti</Text>
                         </View>
                     </View>

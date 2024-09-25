@@ -57,23 +57,12 @@ async function fetchCurrentRound() {
 // Route per ottenere l'unico documento dalla raccolta 'nomeGiornataAttuale'
 router.get('/giornata-attuale', async (req, res) => {
   try {
-    // Ottieni il riferimento alla raccolta 'nomeGiornataAttuale'
-    const collectionRef = firestore.collection('giornataAttuale');
-
-    // Esegui una query per ottenere tutti i documenti presenti nella raccolta (anche se sarà sempre uno)
-    const snapshot = await collectionRef.limit(1).get();
-
-    // Controlla se è presente un documento
-    if (snapshot.empty) {
-      return res.status(404).json({ message: 'Nessun documento trovato nella raccolta.' });
-    }
-
-    // Estrai i dati del documento
-    const doc = snapshot.docs[0];
-    const giornataAttuale = doc.data().giornataAttuale;
+    const currentRound = await fetchCurrentRound();
+    // const currentRoundFormatted = currentRound.toString().trim().replace(/\s+/g, '');
+    const currentRoundFormatted = currentRound.toString().trim().replace(/\s+/g, '');
 
     // Restituisci il campo 'giornataAttuale'
-    res.status(200).json({ giornataAttuale });
+    res.status(200).json({ giornataAttuale: currentRoundFormatted });
   } catch (error) {
     console.error('Errore durante il recupero del documento:', error);
     res.status(500).json({ message: 'Errore durante il recupero del documento.' });
@@ -91,29 +80,6 @@ function determineResult(homeGoals, awayGoals) {
   }
 }
 
-
-// Funzione per ottenere la giornata attuale
-async function fetchCurrentRound() {
-  try {
-    const response = await axios.get('https://api-football-v1.p.rapidapi.com/v3/fixtures/rounds', {
-      params: {
-        league: 135, // Serie A
-        season: 2024,
-        current: 'true'
-      },
-      headers: {
-        'x-rapidapi-key': 'db73c3daeamshce50eba84993c27p1ebcadjsnb14d87bc676d',
-        'x-rapidapi-host': 'api-football-v1.p.rapidapi.com'
-      }
-    });
-
-    const currentRound = response.data.response[0]; // Es. "Regular Season - 31"
-    return currentRound
-  } catch (error) {
-    console.error('Errore durante il recupero della giornata attuale:', error);
-    throw new Error('Impossibile ottenere la giornata attuale');
-  }
-}
 
 // Creazione di una nuova lega
 // Creazione di una nuova lega
@@ -210,21 +176,21 @@ router.post('/leagues/join', authMiddleware, async (req, res) => {
 
     const leagueData = league.data();
 
-   // Controlla se l'utente è già membro della lega
-   if (leagueData.members && leagueData.members.includes(userId)) {
-    return res.status(400).json({ message: 'L\'utente è già membro di questa lega.' });
-  }
+    // Controlla se l'utente è già membro della lega
+    if (leagueData.members && leagueData.members.includes(userId)) {
+      return res.status(400).json({ message: 'L\'utente è già membro di questa lega.' });
+    }
 
-  const obj = {
-    id: userId,
-    punti: 0
-  }
+    const obj = {
+      id: userId,
+      punti: 0
+    }
 
-  // Aggiungi l'utente ai membri della lega
-  await leagueRef.update({
-    members: FieldValue.arrayUnion(userId),
-    membersInfo: FieldValue.arrayUnion(obj)
-  });
+    // Aggiungi l'utente ai membri della lega
+    await leagueRef.update({
+      members: FieldValue.arrayUnion(userId),
+      membersInfo: FieldValue.arrayUnion(obj)
+    });
 
     // Ritorna la lega aggiornata insieme al messaggio di successo
     const updatedLeague = await leagueRef.get();

@@ -95,7 +95,7 @@ const handleParticipantPress = async (participant) => {
 
     const renderParticipants = () => (
         <View style={styles.sectionContainer}>
-            <Text style={{ ...styles.sectionTitle, color: colors.primary }}>Partecipanti</Text>
+            <Text style={{ ...styles.sectionTitle, color: colors.primary }}>Vedi gli esiti degli avversari</Text>
             <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>
                 {participants.map((participant, index) => (
                     <TouchableOpacity

@@ -13,7 +13,6 @@ export default function UserHistoryScreen({ route, navigation }) {
     const userHistory = useSelector((state) => state.storicoPerUtenteSelezionato.storico); // Seleziona la lista delle giornate dallo stato
     const inizioGiornata = useSelector((state) => state.infogiornataAttuale.startDate);
     const dayId = useSelector((state) => state.infogiornataAttuale.dayId);
-    console.log('inizioGiornata', inizioGiornata);
 
     const isDatePast = () => {
             // Configura la data di input usando moment e imposta il fuso orario a "Europe/Rome"
@@ -45,7 +44,7 @@ export default function UserHistoryScreen({ route, navigation }) {
                                 />
                                 <Text style={{ ...styles.participantName, color: 'white' }}>Giornata {giornata.dayId.replace('RegularSeason-', '')}</Text>
 
-                                <Text style={{ ...styles.participantName, color: 'white' }}>8 punti</Text>
+                                <Text style={{ ...styles.participantName, color: 'white' }}>{giornata.prediction.punti} punti</Text>
                             </View>
                         </Card>
                     </TouchableOpacity>)

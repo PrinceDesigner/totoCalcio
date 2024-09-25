@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { updateProfilePhoto, updateProfileThunk } from '../redux/slice/authSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { showToast } from '../ToastContainer';
+import { COLORJS } from '../theme/themeColor';
 
 export default function ProfileScreen({ navigation }) {
   const userDetail = useSelector((state) => state.auth.user && state.auth.user.user); // Stato delle leghe
@@ -114,11 +115,6 @@ export default function ProfileScreen({ navigation }) {
             Salva modifiche
           </Button>
         </View>
-
-        {/* Sezione leghe */}
-        <View style={styles.leaguesSection}>
-          <Text style={styles.sectionTitle}>Le mie leghe</Text>
-        </View>
       </View>
 
       {/* Modale per l'immagine ingrandita */}
@@ -142,6 +138,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     paddingBottom: 50,
+    backgroundColor: COLORJS.background
   },
   container: {
     flex: 1,

@@ -16,13 +16,12 @@ import { Share } from 'react-native';
 
 
 
-
 export default function LeagueDetails({ navigation }) {
     const { colors } = useTheme();
 
     const dispatch = useDispatch();
-
-    const giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale); // Stato delle leghe
+    let [giornataAttuale, setGiornataAttuale] = useState();
+    giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale); // Stato delle leghe
     const infogiornataAttuale = useSelector((state) => state.infogiornataAttuale);
     const schedinaGiocata = useSelector((state) => state.insertPredictions.schedinaInserita.schedina);
     // Selettori per ottenere le informazioni necessarie
@@ -42,6 +41,7 @@ export default function LeagueDetails({ navigation }) {
     const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
     const matchdayNumber = infogiornataAttuale.dayId && infogiornataAttuale.dayId.replace('RegularSeason-', '') || 0;
     const deadline = infogiornataAttuale && infogiornataAttuale.startDate; // Simuliamo una scadenza a 1 ora da adesso
+
 
     // Funzione per copiare l'ID della lega
     const copyToClipboard = async () => {
@@ -85,21 +85,7 @@ export default function LeagueDetails({ navigation }) {
             return '..'
         }
     };
-    const isDatePastLeagues = () => {
-        if (deadline) {
-            // Configura la data di input usando moment e imposta il fuso orario a "Europe/Rome"
-            const date = moment.tz(deadline, "Europe/Rome");
-
-            // Ottieni l'orario attuale e imposta il fuso orario a "Europe/Rome"
-            const currentDate = moment.tz(createdAt, "Europe/Rome");
-
-            // Confronta le date e restituisci true se la data di input è minore dell'orario attuale
-            return date.isBefore(currentDate);
-        } else {
-            return '..'
-        }
-    };
-
+ 
 
     useEffect(() => {
         const fetchDataInParallel = async () => {
@@ -180,7 +166,7 @@ export default function LeagueDetails({ navigation }) {
                 </View>
 
                 {/* Countdown visual nello stile "10:10:10" */}
-                {!isDatePast(deadline) ? <View style={styles.compactCountdownContainer}>
+                {!isDatePast(deadline)  ? <View style={styles.compactCountdownContainer}>
                     <Text style={styles.countdownNumber}>
                         {countdown.days}d {countdown.hours}h {countdown.minutes}m
                     </Text>
@@ -193,16 +179,22 @@ export default function LeagueDetails({ navigation }) {
                     style={styles.insertButton}
                 >
                     {schedinaGiocata ? 'Modifica Esiti' : 'Inserisci Esiti'}
-                </Button> : <Button
-                    mode="contained"
-                    onPress={() => navigation.navigate('EsitiInseriti')}
-                    style={styles.insertButton}
-                >
-                    Guarda Esiti
-                </Button>}
+                </Button> :
+                    <>
+                        <Text style={{ textAlign: 'center', color: 'red', fontSize: 30 }}>LIVE</Text>
+                        <Button
+                            mode="contained"
+                            onPress={() => navigation.navigate('EsitiInseriti')}
+                            style={styles.insertButton}
+                        >
+                            Clicca per guardare i tuoi Esiti
+                        </Button>
+                    </>
+
+                }
             </View>
 
-            <ScrollView style={{ ...styles.container, backgroundColor: colors.background }}>
+            <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}>
                 {/* Classifica Provvisoria */}
                 <Card style={{ ...styles.section, marginBottom: 0 }}>
                     <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica Provvisoria</Text>
@@ -227,7 +219,7 @@ export default function LeagueDetails({ navigation }) {
                 </Card>
 
                 {/* Sezione per copiare e condividere l'ID della lega */}
-                <Card style={{ ...styles.section, padding: 5, marginTop: 20}}>
+                <Card style={{ ...styles.section, marginTop: 20 }}>
                     <Text style={{ color: 'white', fontSize: 18, marginBottom: 10 }}>Condividi la tua Lega</Text>
                     <Text style={{ color: 'white', fontSize: 16 }}>ID Lega: {leagueId}</Text>
 
@@ -251,7 +243,7 @@ export default function LeagueDetails({ navigation }) {
                 </Card>
 
                 {/* Schema delle Partite */}
-                <Card style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginBottom: 20 }}>
+                <Card style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginBottom: 10 }}>
                     <View>
                         <Text style={{ color: 'white', fontSize: 25 }}>Giornata {matchdayNumber}</Text>
                     </View>
@@ -299,8 +291,8 @@ export default function LeagueDetails({ navigation }) {
 
                 <Button
                     mode="contained"
-                    onPress={() => navigation.navigate('EditLeagueScreen', {leagueId})}
-                    style={{...styles.insertButton, marginBottom: 20}}
+                    onPress={() => navigation.navigate('EditLeagueScreen', { leagueId })}
+                    style={{ ...styles.insertButton }}
                 >
                     Modifica Lega
                 </Button>
