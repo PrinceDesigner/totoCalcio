@@ -24,7 +24,6 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
     
     // Riferimento al documento specifico nella collection "giornateCalcolate"
     const calcolateRef = db.collection('giornateCalcolate').doc(documentId);
-
     const lockRef = rtdb.ref(`locks/${leagueId}/${dayId}`);
 
     try {
@@ -36,7 +35,6 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
 
         // Verifica se la giornata è già stata calcolata
         const calcolateDoc = await calcolateRef.get();
-        
         if (calcolateDoc.exists && calcolateDoc.data().calcolate) {
             return { success: false, message: "Questa giornata è già stata calcolata." };
         } else if (!calcolateDoc.exists) {
@@ -46,68 +44,82 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
         // Imposta un lock
         await lockRef.set({ inProgress: true, timestamp: admin.database.ServerValue.TIMESTAMP });
 
-        // Recupera tutte le partite per il dayId
-        const matchesSnapshot = await db.collection('matches')
-            .where('dayId', '==', dayId)
-            .get();
+        // Esegui il recupero dei dati in parallelo utilizzando Promise.all()
+        const [matchesSnapshot, predictionsSnapshot, leagueDoc] = await Promise.all([
+            db.collection('matches').where('dayId', '==', dayId).get(),
+            db.collection('predictions').where('leagueId', '==', leagueId).where('daysId', '==', dayId).get(),
+            db.collection('leagues').doc(leagueId).get()
+        ]);
 
         if (matchesSnapshot.empty) {
             return { success: false, message: "Nessuna partita trovata per questa giornata." };
         }
-
-        const matches = [];
-        matchesSnapshot.forEach(doc => {
-            matches.push({ id: doc.id, ...doc.data() });
-        });
-
-        // Recupera tutte le predictions per la leagueId e il dayId
-        const predictionsSnapshot = await db.collection('predictions')
-            .where('leagueId', '==', leagueId)
-            .where('daysId', '==', dayId)
-            .get();
-
+        
         if (predictionsSnapshot.empty) {
             return { success: false, message: "Nessuna schedina trovata per questa giornata." };
         }
-
-        const batch = db.batch();
-        const userPointsMap = {}; // Mappa per mantenere i punti accumulati da ogni utente
-
-        predictionsSnapshot.forEach((predictionDoc) => {
-            const predictionData = predictionDoc.data();
-            let punti = 0;
-
-            // Calcola i punti basati sugli esiti
-            predictionData.schedina.forEach(prediction => {
-                const match = matches.find(m => m.matchId === prediction.matchId);
-                if (match && match.result === prediction.esitoGiocato) {
-                    punti += 1;
-                }
-
-                // Aggiorna anche il campo `result` nella schedina
-                prediction.result = match ? match.result : null;
-            });
-
-            // Aggiungi i punti dell'utente alla mappa
-            const userId = predictionData.userId;
-            if (userPointsMap[userId]) {
-                userPointsMap[userId] += punti;
-            } else {
-                userPointsMap[userId] = punti;
-            }
-
-            // Aggiorna i punti nella prediction
-            batch.update(predictionDoc.ref, { punti, schedina: predictionData.schedina });
-        });
-
-        // Recupera la lega per aggiornare i membri
-        const leagueRef = db.collection('leagues').doc(leagueId);
-        const leagueDoc = await leagueRef.get();
 
         if (!leagueDoc.exists) {
             return { success: false, message: "Lega non trovata." };
         }
 
+        // Definisci leagueRef qui dopo aver ottenuto leagueDoc
+        const leagueRef = db.collection('leagues').doc(leagueId);
+
+        // Utilizza una mappa per una ricerca più efficiente dei match
+        const matchesMap = new Map();
+        matchesSnapshot.forEach(doc => {
+            const data = doc.data();
+            matchesMap.set(data.matchId, data.result);
+        });
+
+        let batchCount = 0;
+        const MAX_BATCH_SIZE = 500;
+        let currentBatch = db.batch();
+
+        const userPointsMap = {}; // Mappa per mantenere i punti accumulati da ogni utente
+
+        // Calcola i punti per ogni prediction
+        predictionsSnapshot.forEach(async (predictionDoc) => {
+            const predictionData = predictionDoc.data();
+            let punti = 0;
+
+            // Calcola i punti basati sugli esiti usando la mappa
+            predictionData.schedina.forEach(prediction => {
+                const matchResult = matchesMap.get(prediction.matchId);
+                if (matchResult === prediction.esitoGiocato) {
+                    punti += 1;
+                }
+
+                // Aggiorna il campo `result` nella schedina
+                prediction.result = matchResult || null;
+            });
+
+            // Aggiungi i punti dell'utente alla mappa
+            const userId = predictionData.userId;
+            userPointsMap[userId] = (userPointsMap[userId] || 0) + punti;
+
+            // Aggiorna i punti nella prediction
+            currentBatch.update(predictionDoc.ref, { punti, schedina: predictionData.schedina });
+            batchCount++;
+
+            // Se raggiungi il limite, committa il batch e inizia un nuovo batch
+            if (batchCount >= MAX_BATCH_SIZE) {
+                await currentBatch.commit();  // Fai il commit del batch
+                currentBatch = db.batch();    // Crea un nuovo batch
+                batchCount = 0;               // Resetta il conteggio
+            }
+        });
+
+        // Commit dell'ultimo batch, nel caso ci siano ancora operazioni non committate
+        if (batchCount > 0) {
+            await currentBatch.commit();
+        }
+
+        // Inizia un nuovo batch per aggiornare la lega e la giornata calcolata
+        const finalBatch = db.batch();
+
+        // Aggiorna i punti dei membri della lega
         const leagueData = leagueDoc.data();
         const updatedMembersInfo = leagueData.membersInfo.map(member => {
             if (userPointsMap[member.id]) {
@@ -120,18 +132,19 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
         });
 
         // Aggiorna la tabella leagues con i nuovi punti
-        batch.update(leagueRef, { membersInfo: updatedMembersInfo });
-
+        finalBatch.update(leagueRef, { membersInfo: updatedMembersInfo });
+        
         // Aggiorna la giornata calcolata nella collection "giornateCalcolate"
-        batch.update(calcolateRef, { calcolate: true });
+        finalBatch.update(calcolateRef, { calcolate: true });
 
-        // Committa la transazione
-        await batch.commit();
+        // Committa l'ultimo batch per l'aggiornamento dei membri e la giornata calcolata
+        await finalBatch.commit();
 
         // Rimuovi il lock alla fine dell'operazione
         await lockRef.remove();
 
         return { success: true, message: "Calcolo punti completato con successo e punti aggiornati nella lega." };
+
     } catch (error) {
         console.error('Errore durante il calcolo dei punti:', error);
 
@@ -141,4 +154,5 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError('internal', 'Errore durante il calcolo dei punti');
     }
 });
+
 
