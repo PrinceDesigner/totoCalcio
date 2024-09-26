@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl, ActivityIndicator, Modal } from 'react-native';
 import { Button, useTheme } from 'react-native-paper';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { deleteLeagueThunk, getUserLeaguesThunk } from '../redux/slice/leaguesSlice';
 import { showLoading, hideLoading } from '../redux/slice/uiSlice';
@@ -17,6 +17,7 @@ export default function HomeScreen() {
     const { colors } = useTheme();
     const navigation = useNavigation();
     const dispatch = useDispatch();
+    const route = useRoute(); // Ottieni l'oggetto route
 
     const leaguesState = useSelector((state) => state.leagues); // Stato delle leghe
     const loadingState = useSelector((state) => state.ui.loading); // Stato di caricamento
@@ -28,6 +29,14 @@ export default function HomeScreen() {
     const [isModalVisible, setModalVisible] = useState(false); // Stato per la visibilità della modale
 
 
+
+    useEffect(() => {
+        if (route.params?.refresh) {
+            fetchLeagues()
+            fetchGiornataAttuale();
+navigation.setParams({ refresh: false });
+        }
+    }, [route.params?.refresh]);
 
     useEffect(() => {
         fetchLeagues(); // Recupera le leghe quando la schermata viene caricata

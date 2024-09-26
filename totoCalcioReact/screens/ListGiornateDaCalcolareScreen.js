@@ -8,11 +8,13 @@ import { fetchGiornateCalcolate } from '../services/storicoService';
 import { functions } from '../firebaseConfig'; // Importa le functions dal tuo file di configurazione
 import { httpsCallable } from 'firebase/functions';
 import { useNavigation } from '@react-navigation/native';
+import { showToast } from '../ToastContainer';
 
 
 export default function ListGiornateDaCalcolareScreen() {
     const { colors } = useTheme();
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
+    const dayId = useSelector((state) => state.giornataAttuale.giornataAttuale);
     const navigation = useNavigation();
 
     const dispatch = useDispatch();
@@ -28,7 +30,6 @@ export default function ListGiornateDaCalcolareScreen() {
                 const data = await fetchGiornateCalcolate(leagueId);
                 setGiornateCalcolate(data);
             } catch (error) {
-                console.error('Errore durante il recupero delle giornate calcolate:', error);
                 setError('Errore durante il recupero delle giornate calcolate');
             } finally {
                 dispatch(hideLoading()); // Nascondi il caricamento
@@ -39,52 +40,59 @@ export default function ListGiornateDaCalcolareScreen() {
     }, [dispatch, leagueId]);
 
 
-
     const handleCalculatePoints = async (giornata) => {
         try {
             // Mostra il caricamento
             dispatch(showLoading());
-
+    
             // Ottieni la reference alla Cloud Function
             const calcolaPuntiGiornata = httpsCallable(functions, 'calcolaPuntiGiornata');
-
+    
             // Chiama la function passando i parametri
             const result = await calcolaPuntiGiornata({ leagueId, dayId: giornata.dayId });
-
+    
             if (result.data.success) {
-
+                // Mostra un messaggio di successo usando showToast
+                showToast('success', 'Calcolo dei punti completato con successo!');
+    
                 // Naviga a LeagueDetails passando un parametro di aggiornamento
-                navigation.navigate('Home Lega', { refresh: true });
+                navigation.navigate('Home1', { refresh: true });
             } else {
-                Alert.alert('Errore', result.data.message);
+                // Mostra un messaggio di errore usando showToast
+                showToast('error', result.data.message);
             }
         } catch (error) {
             console.error('Errore durante il calcolo dei punti:', error);
-            Alert.alert('Errore', 'Errore durante il calcolo dei punti');
+            
+            // Mostra un messaggio di errore usando showToast
+            showToast('error', 'Errore durante il calcolo dei punti');
         } finally {
             // Nascondi il caricamento indipendentemente dal risultato
             dispatch(hideLoading());
         }
     };
+    
 
 
-    const isDateAfter = (endDate) => {
-        if (endDate) {
-            // Configura la data di input usando moment e imposta il fuso orario a "Europe/Rome"
-            const date = moment.tz(endDate, "Europe/Rome");
+    const isDateAfter = (dayIdPar) => {
+        console.log('dayIdPar', dayId);
+        return dayIdPar === dayId
+        // if (endDate) {
+        //     // Configura la data di input usando moment e imposta il fuso orario a "Europe/Rome"
+        //     const date = moment.tz(endDate, "Europe/Rome");
 
-            // Ottieni l'orario attuale e imposta il fuso orario a "Europe/Rome"
-            const currentDate = moment.tz("Europe/Rome");
-            // Confronta le date e restituisci true se la data di input è minore dell'orario attuale
-            return currentDate.add(5, 'hours').isBefore(date);
-        }
+        //     // Ottieni l'orario attuale e imposta il fuso orario a "Europe/Rome"
+        //     const currentDate = moment.tz("Europe/Rome");
+        //     // Confronta le date e restituisci true se la data di input è minore dell'orario attuale
+        //     return currentDate.add(5, 'hours').isBefore(date);
+        // }
     };
 
     return (
         <View style={{ flex: 1 }}>
             <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}>
                 {giornateCalcolate.map((giornata, index) => {
-                    return !isDateAfter(giornata.endDate) ? (
+                    return !isDateAfter(giornata.dayId) ? (
                         <View
                             key={index + 1}
                             style={{ ...styles.cardTouchable }} // Modifica per includere lo stile
@@ -97,8 +105,6 @@ export default function ListGiornateDaCalcolareScreen() {
                                         style={styles.avatar}
                                     />
                                     <Text style={{ ...styles.participantName, color: 'white' }}>Giornata {giornata.dayId.replace('RegularSeason-', '')}</Text>
-
-                                    <Text style={{ ...styles.participantPoints, color: 'white' }}>{giornata.punti} punti</Text>
                                 </View>
 
                                 {/* Bottone per calcolare la giornata */}

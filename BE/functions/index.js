@@ -5,10 +5,11 @@ const serviceAccount = require('./firebase-service-account.json'); // Modifica i
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://totocalcioreact.firebaseio.com"
+    databaseURL: "https://totocalcioreact-default-rtdb.europe-west1.firebasedatabase.app"
 });
 
 const db = admin.firestore();
+const rtdb = admin.database();
 
 // Funzione per calcolare i punti della giornata
 exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
@@ -18,7 +19,33 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError('invalid-argument', 'League ID e Day ID sono richiesti.');
     }
 
+    // Crea l'ID del documento basato su leagueId e dayId
+    const documentId = `${leagueId}_${dayId}`;
+    
+    // Riferimento al documento specifico nella collection "giornateCalcolate"
+    const calcolateRef = db.collection('giornateCalcolate').doc(documentId);
+
+    const lockRef = rtdb.ref(`locks/${leagueId}/${dayId}`);
+
     try {
+        // Controlla se esiste già un lock per questa lega e giornata
+        const lockSnapshot = await lockRef.once('value');
+        if (lockSnapshot.exists()) {
+            return { success: false, message: "Il calcolo è già in corso per questa giornata e lega." };
+        }
+
+        // Verifica se la giornata è già stata calcolata
+        const calcolateDoc = await calcolateRef.get();
+        
+        if (calcolateDoc.exists && calcolateDoc.data().calcolate) {
+            return { success: false, message: "Questa giornata è già stata calcolata." };
+        } else if (!calcolateDoc.exists) {
+            return { success: false, message: "Questa giornata non esiste nella collection giornateCalcolate." };
+        }
+
+        // Imposta un lock
+        await lockRef.set({ inProgress: true, timestamp: admin.database.ServerValue.TIMESTAMP });
+
         // Recupera tutte le partite per il dayId
         const matchesSnapshot = await db.collection('matches')
             .where('dayId', '==', dayId)
@@ -44,7 +71,6 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
         }
 
         const batch = db.batch();
-
         const userPointsMap = {}; // Mappa per mantenere i punti accumulati da ogni utente
 
         predictionsSnapshot.forEach((predictionDoc) => {
@@ -96,12 +122,22 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
         // Aggiorna la tabella leagues con i nuovi punti
         batch.update(leagueRef, { membersInfo: updatedMembersInfo });
 
+        // Aggiorna la giornata calcolata nella collection "giornateCalcolate"
+        batch.update(calcolateRef, { calcolate: true });
+
         // Committa la transazione
         await batch.commit();
+
+        // Rimuovi il lock alla fine dell'operazione
+        await lockRef.remove();
 
         return { success: true, message: "Calcolo punti completato con successo e punti aggiornati nella lega." };
     } catch (error) {
         console.error('Errore durante il calcolo dei punti:', error);
+
+        // Assicurati di rimuovere il lock anche in caso di errore
+        await lockRef.remove();
+
         throw new functions.https.HttpsError('internal', 'Errore durante il calcolo dei punti');
     }
 });
