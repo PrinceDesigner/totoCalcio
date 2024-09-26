@@ -7,6 +7,7 @@ admin.initializeApp({
     databaseURL: "https://totocalcioreact.firebaseio.com"
 });
 
+
 const firestore = admin.firestore(); // Inizializza Firestore
 
 module.exports = { admin, firestore }; // Esporta anche Firestore

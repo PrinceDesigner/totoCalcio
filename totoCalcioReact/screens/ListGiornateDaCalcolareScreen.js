@@ -1,14 +1,19 @@
 import moment from 'moment-timezone';
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Card, useTheme, Avatar, Button } from 'react-native-paper'; // Importa il bottone da react-native-paper
 import { useDispatch, useSelector } from 'react-redux';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { fetchGiornateCalcolate } from '../services/storicoService';
+import { functions } from '../firebaseConfig'; // Importa le functions dal tuo file di configurazione
+import { httpsCallable } from 'firebase/functions';
+import { useNavigation } from '@react-navigation/native';
 
-export default function ListGiornateDaCalcolareScreen({ navigation }) {
+
+export default function ListGiornateDaCalcolareScreen() {
     const { colors } = useTheme();
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
+    const navigation = useNavigation();
 
     const dispatch = useDispatch();
     const [giornateCalcolate, setGiornateCalcolate] = useState([]);
@@ -34,17 +39,40 @@ export default function ListGiornateDaCalcolareScreen({ navigation }) {
     }, [dispatch, leagueId]);
 
 
-    // Funzione per gestire il calcolo della giornata
-    const handleCalculateDay = (giornata) => {
-        console.log(`Calcola la ${giornata.dayId}`);
-        // Implementa la logica per calcolare la giornata
+
+    const handleCalculatePoints = async (giornata) => {
+        try {
+            // Mostra il caricamento
+            dispatch(showLoading());
+
+            // Ottieni la reference alla Cloud Function
+            const calcolaPuntiGiornata = httpsCallable(functions, 'calcolaPuntiGiornata');
+
+            // Chiama la function passando i parametri
+            const result = await calcolaPuntiGiornata({ leagueId, dayId: giornata.dayId });
+
+            if (result.data.success) {
+
+                // Naviga a LeagueDetails passando un parametro di aggiornamento
+                navigation.navigate('Home Lega', { refresh: true });
+            } else {
+                Alert.alert('Errore', result.data.message);
+            }
+        } catch (error) {
+            console.error('Errore durante il calcolo dei punti:', error);
+            Alert.alert('Errore', 'Errore durante il calcolo dei punti');
+        } finally {
+            // Nascondi il caricamento indipendentemente dal risultato
+            dispatch(hideLoading());
+        }
     };
 
+
     const isDateAfter = (endDate) => {
-        if (endDate) {      
+        if (endDate) {
             // Configura la data di input usando moment e imposta il fuso orario a "Europe/Rome"
             const date = moment.tz(endDate, "Europe/Rome");
-    
+
             // Ottieni l'orario attuale e imposta il fuso orario a "Europe/Rome"
             const currentDate = moment.tz("Europe/Rome");
             // Confronta le date e restituisci true se la data di input è minore dell'orario attuale
@@ -76,7 +104,7 @@ export default function ListGiornateDaCalcolareScreen({ navigation }) {
                                 {/* Bottone per calcolare la giornata */}
                                 <Button
                                     mode="contained"
-                                    onPress={() => handleCalculateDay(giornata)}
+                                    onPress={() => handleCalculatePoints(giornata)}
                                     style={styles.calculateButton}
                                     color={colors.primary} // Colore del bottone
                                 >

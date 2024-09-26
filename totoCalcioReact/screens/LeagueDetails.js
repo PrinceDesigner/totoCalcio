@@ -10,9 +10,10 @@ import { COLORJS } from '../theme/themeColor';
 import { fetchPrediction } from '../redux/slice/predictionsSlice';
 import { fetchParticipantsThunk } from '../redux/slice/partecipantsSlice';
 import { Image } from 'react-native'; // Importa il componente Image
-import { selectLeagueById } from '../redux/slice/leaguesSlice';
+import { getUserLeaguesThunk, selectLeagueById } from '../redux/slice/leaguesSlice';
 import * as Clipboard from 'expo-clipboard'; // Importa Clipboard
 import { Share } from 'react-native';
+import { getGiornataAttuale } from '../services/infoGiornataService';
 
 
 
@@ -41,6 +42,38 @@ export default function LeagueDetails({ navigation }) {
     const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
     const matchdayNumber = infogiornataAttuale.dayId && infogiornataAttuale.dayId.replace('RegularSeason-', '') || 0;
     const deadline = infogiornataAttuale && infogiornataAttuale.startDate; // Simuliamo una scadenza a 1 ora da adesso
+
+
+    const route = useRoute(); // Ottieni l'oggetto route
+
+    const fetchLeagues = async () => {
+        try {
+            dispatch(showLoading()); // Mostra lo stato di caricamento
+            await dispatch(getUserLeaguesThunk()).unwrap(); // Attendi che il thunk termini
+        } catch (error) {
+            console.error('Errore durante il recupero delle leghe:', error);
+        } finally {
+            dispatch(hideLoading()); // Nascondi lo stato di caricamento
+        }
+    };
+
+    // Esempio di utilizzo all'interno di un useEffect in un componente
+    const fetchGiornataAttuale = async () => {
+        try {
+            const giornata = await getGiornataAttuale();
+            setGiornataAttuale(giornata)
+        } catch (error) {
+            console.error('Errore durante il recupero della giornata attuale:', error);
+        }
+    };
+
+    useEffect(() => {
+        if (route.params?.refresh) {
+                fetchDataInParallel();
+                navigation.setParams({ refresh: false });
+        }
+    }, [route.params?.refresh]);
+
 
 
     // Funzione per copiare l'ID della lega
@@ -86,26 +119,24 @@ export default function LeagueDetails({ navigation }) {
         }
     };
  
+    const fetchDataInParallel = async () => {
+        try {
+            dispatch(showLoading()); // Mostra lo stato di caricamento
 
+            // Esegui entrambe le chiamate in parallelo con Promise.all
+            await Promise.all([
+                dispatch(fetchDayDetails(giornataAttuale)).unwrap(), // Recupera i dettagli della giornata
+                dispatch(fetchPrediction({ dayId, leagueId, userId })).unwrap(),// Controlla la predizione
+                dispatch(fetchParticipantsThunk({ userIds, leagueId })).unwrap(),
+            ]);
+
+        } catch (error) {
+            console.error('Errore durante il recupero dei dati:', error);
+        } finally {
+            dispatch(hideLoading()); // Nascondi lo stato di caricamento
+        }
+    };
     useEffect(() => {
-        const fetchDataInParallel = async () => {
-            try {
-                dispatch(showLoading()); // Mostra lo stato di caricamento
-
-                // Esegui entrambe le chiamate in parallelo con Promise.all
-                await Promise.all([
-                    dispatch(fetchDayDetails(giornataAttuale)).unwrap(), // Recupera i dettagli della giornata
-                    dispatch(fetchPrediction({ dayId, leagueId, userId })).unwrap(),// Controlla la predizione
-                    dispatch(fetchParticipantsThunk({ userIds, leagueId })).unwrap()
-                ]);
-
-            } catch (error) {
-                console.error('Errore durante il recupero dei dati:', error);
-            } finally {
-                dispatch(hideLoading()); // Nascondi lo stato di caricamento
-            }
-        };
-
         // Verifica che tutti i valori siano disponibili prima di effettuare le chiamate
         if (giornataAttuale && dayId && leagueId && userId && userIds) {
             fetchDataInParallel();
