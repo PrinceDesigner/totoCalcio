@@ -80,7 +80,7 @@ export default function LeagueDetails({ navigation }) {
             const date = moment.tz(inputDate, "Europe/Rome");
 
             // Ottieni l'orario attuale e imposta il fuso orario a "Europe/Rome"
-            const currentDate = moment.tz("Europe/Rome");
+            const currentDate = moment.tz("Europe/Rome").format('YYYY-MM-DDTHH:mm:ss+00:00');
 
             // Confronta le date e restituisci true se la data di input è minore dell'orario attuale
             return date.isBefore(currentDate);
@@ -118,14 +118,13 @@ export default function LeagueDetails({ navigation }) {
 
     const convertToItalianTime = (dateString) => {
         // Crea un nuovo oggetto Date dalla stringa ISO
-        return moment.tz(dateString, "Europe/Rome").format('HH:mm');
+        return moment(dateString).utc().format('HH:mm');
     };
 
     useEffect(() => {
         const interval = setInterval(() => {
-            const now = moment(); // Ottieni la data attuale
-            const targetTime = moment(deadline).utcOffset('+02:00'); // Aggiungi 2 ore all'ora UTC (fuso orario italiano)
-
+            const now = moment().utc("Europe/Rome"); // Ottieni la data attuale
+            const targetTime = moment(deadline);
             const duration = moment.duration(targetTime.diff(now)); // Calcola la differenza tra deadline e ora attuale
 
             if (duration.asMilliseconds() <= 0) {

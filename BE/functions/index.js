@@ -177,24 +177,35 @@ exports.scheduleDayUpdateTasks = functions.https.onCall(async (data, context) =>
         const authClient = await auth.getClient();
         const scheduler = google.cloudscheduler('v1', { auth: authClient });
 
-        console.log("authClient ",authClient)
+        console.log("authClient ", authClient)
         // Itera su ogni giornata per pianificare un task
         daysSnapshot.forEach(async (doc) => {
             const dayData = doc.data();
             const dayId = doc.id;
-            const dayNumber = doc.dayNumber
-            const endDate = new Date(dayData.endDate); // Ottieni la data di fine
-            const scheduleTime = new Date(endDate.getTime() + 2 * 60 * 60 * 1000); // Aggiungi 2 ore
+            const dayNumber = dayData.dayNumber
+            // Ottieni la data di fine con moment
+            const endDate = moment(dayData.endDate);
 
-            const formattedTime = scheduleTime.toISOString().replace(/\.\d+Z$/, 'Z'); // Formatta l'ora
-            console.log('schedule->', `0 ${scheduleTime.getUTCHours()} ${scheduleTime.getUTCDate()} ${scheduleTime.getUTCMonth() + 1} *`);
-            console.log('endDate->', endDate);
-            console.log('scheduleTime->', scheduleTime);
+            // Aggiungi 2 ore alla data di fine
+            const scheduleTime = endDate.add(3, 'hours');
+
+            // Ottieni l'ora formattata come stringa ISO
+            const formattedTime = scheduleTime.toISOString();
+
+            // Estrai i componenti della data e dell'ora per la programmazione del task
+            const scheduleMinute = scheduleTime.minutes();
+            const scheduleHour = scheduleTime.hours();
+            const scheduleDay = scheduleTime.date();
+            const scheduleMonth = scheduleTime.month() + 1; // I mesi in Moment sono indicizzati da 0
+
+            console.log('schedule->', `0 ${scheduleHour} ${scheduleDay} ${scheduleMonth} *`);
+            console.log('endDate->', endDate.format());
+            console.log('scheduleTime->', scheduleTime.format());
             console.log('dayNumber ->', dayNumber);
 
             const job = {
                 name: `projects/${projectId}/locations/europe-west1/jobs/update-matches-${dayId}`,
-                schedule: `0 ${scheduleTime.getUTCHours()} ${scheduleTime.getUTCDate()} ${scheduleTime.getUTCMonth() + 1} *`,
+                schedule: `${scheduleMinute} ${scheduleHour} ${scheduleDay} ${scheduleMonth} *`, // Configura l'orario con Moment
                 timeZone: 'Europe/Rome',
                 httpTarget: {
                     uri: `https://${projectId}.cloudfunctions.net/updateMatches`,

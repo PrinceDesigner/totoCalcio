@@ -5,6 +5,8 @@ const authMiddleware = require('../middlewares/authMiddleware');
 const router = express.Router();
 const axios = require('axios');
 const moment = require('moment');
+const momentTime = require('moment-timezone');
+
 
 
 // Funzione per sanitizzare i matchId
@@ -332,8 +334,8 @@ router.post('/leagues/upload-days', async (req, res) => {
         dayId,
         dayNumber: day.dayNumber,
         matches: day.matches,
-        startDate: day.startDate,   // Prima partita della giornata
-        endDate: day.endDate,       // Ultima partita della giornata
+        startDate: moment.tz(day.startDate,"Europe/Rome").format('YYYY-MM-DDTHH:mm:ss+00:00'),   // Prima partita della giornata
+        endDate: moment.tz(day.endDate,"Europe/Rome").format('YYYY-MM-DDTHH:mm:ss+00:00'),       // Ultima partita della giornata
         isCurrentDay               // Booleano per indicare se è la giornata attuale
       };
 
@@ -384,7 +386,7 @@ router.post('/leagues/upload-matches', async (req, res) => {
         stadio: fixture.fixture.venue.name,
         result,  // Risultato, `null` se la partita non è ancora finita
         dayId: fixture.league.round.toString().trim().replace(/\s+/g, ''),  // Giornata a cui appartiene la partita (stesso valore usato per la giornata)
-        startTime: fixture.fixture.date  // Data e ora di inizio della partita
+        startTime: moment.tz(fixture.fixture.date,"Europe/Rome").format('YYYY-MM-DDTHH:mm:ss+00:00')  // Data e ora di inizio della partita
       };
 
       // Carica il match su Firestore usando lo stesso matchId già presente nella collezione 'days'
