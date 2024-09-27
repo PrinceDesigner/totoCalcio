@@ -2,6 +2,10 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const serviceAccount = require('./firebase-service-account.json'); // Modifica il percorso se necessario
+const { google } = require('googleapis');
+const moment = require('moment');
+const { log } = require("firebase-functions/logger");
+
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -21,7 +25,7 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
 
     // Crea l'ID del documento basato su leagueId e dayId
     const documentId = `${leagueId}_${dayId}`;
-    
+
     // Riferimento al documento specifico nella collection "giornateCalcolate"
     const calcolateRef = db.collection('giornateCalcolate').doc(documentId);
     const lockRef = rtdb.ref(`locks/${leagueId}/${dayId}`);
@@ -54,7 +58,7 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
         if (matchesSnapshot.empty) {
             return { success: false, message: "Nessuna partita trovata per questa giornata." };
         }
-        
+
         if (predictionsSnapshot.empty) {
             return { success: false, message: "Nessuna schedina trovata per questa giornata." };
         }
@@ -133,7 +137,7 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
 
         // Aggiorna la tabella leagues con i nuovi punti
         finalBatch.update(leagueRef, { membersInfo: updatedMembersInfo });
-        
+
         // Aggiorna la giornata calcolata nella collection "giornateCalcolate"
         finalBatch.update(calcolateRef, { calcolate: true });
 
@@ -154,5 +158,126 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError('internal', 'Errore durante il calcolo dei punti');
     }
 });
+
+
+
+// Function per pianificare il task di aggiornamento per ogni giornata
+exports.scheduleDayUpdateTasks = functions.https.onCall(async (data, context) => {
+    try {
+        const daysSnapshot = await db.collection('days').get();
+
+        if (daysSnapshot.empty) {
+            return { success: false, message: "Nessuna giornata trovata" };
+        }
+
+        const projectId = 'totocalcioreact'; // Usa l'ID del progetto Firebase
+        const auth = new google.auth.GoogleAuth({
+            scopes: ['https://www.googleapis.com/auth/cloud-platform']
+        });
+        const authClient = await auth.getClient();
+        const scheduler = google.cloudscheduler('v1', { auth: authClient });
+
+        console.log("authClient ",authClient)
+        // Itera su ogni giornata per pianificare un task
+        daysSnapshot.forEach(async (doc) => {
+            const dayData = doc.data();
+            const dayId = doc.id;
+            const dayNumber = doc.dayNumber
+            const endDate = new Date(dayData.endDate); // Ottieni la data di fine
+            const scheduleTime = new Date(endDate.getTime() + 2 * 60 * 60 * 1000); // Aggiungi 2 ore
+
+            const formattedTime = scheduleTime.toISOString().replace(/\.\d+Z$/, 'Z'); // Formatta l'ora
+            console.log('schedule->', `0 ${scheduleTime.getUTCHours()} ${scheduleTime.getUTCDate()} ${scheduleTime.getUTCMonth() + 1} *`);
+            console.log('endDate->', endDate);
+            console.log('scheduleTime->', scheduleTime);
+            console.log('dayNumber ->', dayNumber);
+
+            const job = {
+                name: `projects/${projectId}/locations/europe-west1/jobs/update-matches-${dayId}`,
+                schedule: `0 ${scheduleTime.getUTCHours()} ${scheduleTime.getUTCDate()} ${scheduleTime.getUTCMonth() + 1} *`,
+                timeZone: 'Europe/Rome',
+                httpTarget: {
+                    uri: `https://${projectId}.cloudfunctions.net/updateMatches`,
+                    httpMethod: 'POST',
+                    body: Buffer.from(JSON.stringify({ dayId })).toString('base64'),
+                    headers: { 'Content-Type': 'application/json' },
+                },
+            };
+
+            try {
+                await scheduler.projects.locations.jobs.create({
+                    parent: `projects/${projectId}/locations/europe-west1`,
+                    requestBody: job,
+                    auth: authClient
+                });
+                console.log(`Task creato per dayId: ${dayId}`);
+            } catch (error) {
+                console.error(`Errore durante la creazione del task per ${dayId}:`, error);
+            }
+        });
+
+        return { success: true, message: "Tasks pianificati correttamente" };
+    } catch (error) {
+        console.error('Errore durante la pianificazione dei task:', error);
+        throw new functions.https.HttpsError('internal', 'Errore durante la pianificazione dei task');
+    }
+});
+
+
+// Function per aggiornare i risultati delle partite
+exports.updateMatches = functions.https.onRequest(async (req, res) => {
+    const { dayId } = req.body;
+
+
+    function determineResult(homeGoals, awayGoals) {
+        if (homeGoals > awayGoals) {
+            return "1"; // Vittoria squadra di casa
+        } else if (homeGoals < awayGoals) {
+            return "2"; // Vittoria squadra ospite
+        } else {
+            return "X"; // Pareggio
+        }
+    }
+
+    if (!dayId) {
+        res.status(400).send({ success: false, message: "dayId è richiesto" });
+        return;
+    }
+
+
+    try {
+        // Ottieni i dati dalla API di football
+        const response = await axios.get(`https://api-football-v1.p.rapidapi.com/v3/fixtures`, {
+            params: {
+                league: '135', // ID della lega che stai monitorando
+                season: '2024', // Anno della stagione
+                round: dayId.replace('Regular', 'Regular ').replace('Season', 'Season ').replace('-', '-  ') // Passa il dayId come round
+            },
+            headers: {
+                'x-rapidapi-key': 'db73c3daeamshce50eba84993c27p1ebcadjsnb14d87bc676d',
+                'x-rapidapi-host': 'api-football-v1.p.rapidapi.com'
+            }
+        });
+
+        const fixtures = response.data.response;
+
+        // Itera su ogni match e aggiorna la collection matches
+        const batch = db.batch();
+        fixtures.forEach(match => {
+            const matchRef = db.collection('matches').doc(match.fixture.id.toString());
+            batch.update(matchRef, {
+                result: determineResult(match.goals.home, match.goals.away), // Supponendo che tu abbia un campo "result" nella tua collection
+            });
+        });
+
+        await batch.commit();
+
+        res.status(200).send({ success: true, message: "Partite aggiornate con successo" });
+    } catch (error) {
+        console.error('Errore durante l\'aggiornamento delle partite:', error);
+        res.status(500).send({ success: false, message: "Errore durante l'aggiornamento delle partite" });
+    }
+});
+
 
 
