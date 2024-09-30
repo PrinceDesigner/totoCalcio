@@ -24,6 +24,7 @@ import SignupScreen from './screens/auth/SignupScreen';
 import SplashScreen from './screens/SplashScreen';
 import { COLORJS } from './theme/themeColor';
 import ToastContainer from './ToastContainer';
+import EmailVerificationScreen from './screens/EmailVerificationScreen';
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator(); // Crea un Drawer Navigator
@@ -108,52 +109,54 @@ export default function App() {
     }
   }, [toastRef]);
 
-  
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-    <PaperProvider theme={theme}>
-      <Provider store={store}>
-        <NavigationContainer>
-          <View style={{ flex: 1 }}>
-            <Stack.Navigator initialRouteName="SplashScreen">
-              <Stack.Screen
-                name="SplashScreen"
-                component={SplashScreen}
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="Onboarding"
-                component={OnboardingScreen}
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="LoginScreen"
-                component={LoginScreen}
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="SignupScreen"
-                component={SignupScreen}
-                options={{ headerShown: false }}
-              />
-              {/* Usa il DrawerNavigator una volta loggato */}
-              <Stack.Screen
-                name="Home"
-                component={DrawerNavigator}
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="LeagueDetailsStack"
-                component={LeagueStackNavigator}
-                options={{ headerShown: false }} // Nascondi l'header per LeagueStackNavigator
-              />
-            </Stack.Navigator>
-            <GlobalLoadingIndicator />
-          </View>
-        </NavigationContainer>
-          <ToastContainer/>
-      </Provider>
-    </PaperProvider>
+      <PaperProvider theme={theme}>
+        <Provider store={store}>
+          <NavigationContainer>
+            <View style={{ flex: 1 }}>
+              <Stack.Navigator initialRouteName="SplashScreen">
+                <Stack.Screen
+                  name="SplashScreen"
+                  component={SplashScreen}
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="Onboarding"
+                  component={OnboardingScreen}
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="LoginScreen"
+                  component={LoginScreen}
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="SignupScreen"
+                  component={SignupScreen}
+                  options={{ headerShown: false }}
+                />
+                {/* Usa il DrawerNavigator una volta loggato */}
+                <Stack.Screen
+                  name="Home"
+                  component={DrawerNavigator}
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="LeagueDetailsStack"
+                  component={LeagueStackNavigator}
+                  options={{ headerShown: false }} // Nascondi l'header per LeagueStackNavigator
+                />
+                <Stack.Screen name="EmailVerificationScreen" component={EmailVerificationScreen} />
+
+              </Stack.Navigator>
+              <GlobalLoadingIndicator />
+            </View>
+          </NavigationContainer>
+          <ToastContainer />
+        </Provider>
+      </PaperProvider>
     </GestureHandlerRootView>
   );
 }
