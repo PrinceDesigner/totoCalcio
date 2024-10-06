@@ -58,17 +58,23 @@ async function fetchCurrentRound() {
 
 // Route per ottenere l'unico documento dalla raccolta 'nomeGiornataAttuale'
 router.get('/giornata-attuale', async (req, res) => {
-  try {
-    const currentRound = await fetchCurrentRound();
-    // const currentRoundFormatted = currentRound.toString().trim().replace(/\s+/g, '');
-    const currentRoundFormatted = currentRound.toString().trim().replace(/\s+/g, '');
 
-    // Restituisci il campo 'giornataAttuale'
-    res.status(200).json({ giornataAttuale: currentRoundFormatted });
-  } catch (error) {
-    console.error('Errore durante il recupero del documento:', error);
-    res.status(500).json({ message: 'Errore durante il recupero del documento.' });
-  }
+  try {
+    const snapshot = await firestore.collection('giornataAttuale').limit(1).get(); // Ottieni solo il primo documento
+
+    if (snapshot.empty) {
+        return res.status(404).json({ success: false, message: 'Nessun documento trovato.' });
+    }
+
+    // Estrai il primo documento dal risultato
+    const doc = snapshot.docs[0];
+    const data = doc.data();
+
+    res.status(200).json({giornataAttuale: data.giornataAttuale });
+} catch (error) {
+    console.error('Errore durante il recupero della giornata attuale:', error);
+    res.status(500).json({ success: false, message: 'Errore durante il recupero della giornata attuale.' });
+}
 });
 
 // Funzione per determinare il risultato finale (1, X, 2)

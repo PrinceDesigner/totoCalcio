@@ -294,6 +294,28 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
 
         await batch.commit();
 
+
+        // Aggiorna il campo giornataAttuale
+        const currentGiornataRef = firestore.collection('giornataAttuale').limit(1);
+        const currentGiornataSnapshot = await currentGiornataRef.get();
+        functions.logger.log('currentGiornataSnapshot.empty-->', currentGiornataSnapshot.empty);
+
+        if (!currentGiornataSnapshot.empty) {
+            const doc = currentGiornataSnapshot.docs[0];
+            const currentGiornataData = doc.data().giornataAttuale;
+
+            // Estrai il numero corrente e incrementalo
+            const currentGiornataNumber = parseInt(currentGiornataData.split('-')[1], 10);
+            const updatedGiornataNumber = currentGiornataNumber + 1;
+
+            // Costruisci il nuovo valore per giornataAttuale
+            const updatedGiornataAttuale = `RegularSeason-${updatedGiornataNumber}`;
+
+            // Aggiorna il documento
+            await doc.ref.update({ giornataAttuale: updatedGiornataAttuale });
+            functions.logger.log(`Giornata attuale aggiornata a: ${updatedGiornataAttuale}`);
+        }
+
         res.status(200).send({ success: true, message: "Partite aggiornate con successo" });
     } catch (error) {
         console.error('Errore durante l\'aggiornamento delle partite:', error);
