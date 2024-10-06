@@ -148,7 +148,7 @@ export default function App() {
                   component={LeagueStackNavigator}
                   options={{ headerShown: false }} // Nascondi l'header per LeagueStackNavigator
                 />
-                <Stack.Screen name="EmailVerificationScreen" component={EmailVerificationScreen} />
+                <Stack.Screen name="EmailVerificationScreen" component={EmailVerificationScreen} options={{ headerShown: false }} />
 
               </Stack.Navigator>
               <GlobalLoadingIndicator />

@@ -3,8 +3,10 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const serviceAccount = require('./firebase-service-account.json'); // Modifica il percorso se necessario
 const { google } = require('googleapis');
-const moment = require('moment');
 const { log } = require("firebase-functions/logger");
+const moment = require('moment')
+const axios = require('axios')
+const { auth } = require('google-auth-library');
 
 
 admin.initializeApp({
@@ -12,7 +14,7 @@ admin.initializeApp({
     databaseURL: "https://totocalcioreact-default-rtdb.europe-west1.firebasedatabase.app"
 });
 
-const db = admin.firestore();
+const firestore = admin.firestore();
 const rtdb = admin.database();
 
 // Funzione per calcolare i punti della giornata
@@ -25,9 +27,9 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
 
     // Crea l'ID del documento basato su leagueId e dayId
     const documentId = `${leagueId}_${dayId}`;
-
+    console.log(documentId);
     // Riferimento al documento specifico nella collection "giornateCalcolate"
-    const calcolateRef = db.collection('giornateCalcolate').doc(documentId);
+    const calcolateRef = firestore.collection('giornateCalcolate').doc(documentId);
     const lockRef = rtdb.ref(`locks/${leagueId}/${dayId}`);
 
     try {
@@ -50,9 +52,9 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
 
         // Esegui il recupero dei dati in parallelo utilizzando Promise.all()
         const [matchesSnapshot, predictionsSnapshot, leagueDoc] = await Promise.all([
-            db.collection('matches').where('dayId', '==', dayId).get(),
-            db.collection('predictions').where('leagueId', '==', leagueId).where('daysId', '==', dayId).get(),
-            db.collection('leagues').doc(leagueId).get()
+            firestore.collection('matches').where('dayId', '==', dayId).get(),
+            firestore.collection('predictions').where('leagueId', '==', leagueId).where('daysId', '==', dayId).get(),
+            firestore.collection('leagues').doc(leagueId).get()
         ]);
 
         if (matchesSnapshot.empty) {
@@ -68,7 +70,7 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
         }
 
         // Definisci leagueRef qui dopo aver ottenuto leagueDoc
-        const leagueRef = db.collection('leagues').doc(leagueId);
+        const leagueRef = firestore.collection('leagues').doc(leagueId);
 
         // Utilizza una mappa per una ricerca più efficiente dei match
         const matchesMap = new Map();
@@ -79,7 +81,7 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
 
         let batchCount = 0;
         const MAX_BATCH_SIZE = 500;
-        let currentBatch = db.batch();
+        let currentBatch = firestore.batch();
 
         const userPointsMap = {}; // Mappa per mantenere i punti accumulati da ogni utente
 
@@ -110,7 +112,7 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
             // Se raggiungi il limite, committa il batch e inizia un nuovo batch
             if (batchCount >= MAX_BATCH_SIZE) {
                 await currentBatch.commit();  // Fai il commit del batch
-                currentBatch = db.batch();    // Crea un nuovo batch
+                currentBatch = firestore.batch();    // Crea un nuovo batch
                 batchCount = 0;               // Resetta il conteggio
             }
         });
@@ -121,7 +123,7 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
         }
 
         // Inizia un nuovo batch per aggiornare la lega e la giornata calcolata
-        const finalBatch = db.batch();
+        const finalBatch = firestore.batch();
 
         // Aggiorna i punti dei membri della lega
         const leagueData = leagueDoc.data();
@@ -164,20 +166,22 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
 // Function per pianificare il task di aggiornamento per ogni giornata
 exports.scheduleDayUpdateTasks = functions.https.onCall(async (data, context) => {
     try {
-        const daysSnapshot = await db.collection('days').get();
+        const daysSnapshot = await firestore.collection('days').get();
 
         if (daysSnapshot.empty) {
             return { success: false, message: "Nessuna giornata trovata" };
         }
 
         const projectId = 'totocalcioreact'; // Usa l'ID del progetto Firebase
+        // Usa il GoogleAuth per ottenere l'authClient con i corretti scopes
         const auth = new google.auth.GoogleAuth({
-            scopes: ['https://www.googleapis.com/auth/cloud-platform']
+            scopes: ['https://www.googleapis.com/auth/cloud-scheduler', 'https://www.googleapis.com/auth/cloud-platform'],
         });
+
         const authClient = await auth.getClient();
+        // const authClient = await auth.getClient();
         const scheduler = google.cloudscheduler('v1', { auth: authClient });
 
-        console.log("authClient ", authClient)
         // Itera su ogni giornata per pianificare un task
         daysSnapshot.forEach(async (doc) => {
             const dayData = doc.data();
@@ -204,20 +208,24 @@ exports.scheduleDayUpdateTasks = functions.https.onCall(async (data, context) =>
             console.log('dayNumber ->', dayNumber);
 
             const job = {
-                name: `projects/${projectId}/locations/europe-west1/jobs/update-matches-${dayId}`,
+                name: `projects/${projectId}/locations/us-central1/jobs/update-matches-${dayId}`,
                 schedule: `${scheduleMinute} ${scheduleHour} ${scheduleDay} ${scheduleMonth} *`, // Configura l'orario con Moment
                 timeZone: 'Europe/Rome',
                 httpTarget: {
-                    uri: `https://${projectId}.cloudfunctions.net/updateMatches`,
+                    uri: `https://us-central1-${projectId}.cloudfunctions.net/updateMatches`,
                     httpMethod: 'POST',
                     body: Buffer.from(JSON.stringify({ dayId })).toString('base64'),
                     headers: { 'Content-Type': 'application/json' },
                 },
             };
 
+            functions.logger.info('JOB->', job)
+            functions.logger.info('Auth ->', authClient)
+
+
             try {
                 await scheduler.projects.locations.jobs.create({
-                    parent: `projects/${projectId}/locations/europe-west1`,
+                    parent: `projects/${projectId}/locations/us-central1`,
                     requestBody: job,
                     auth: authClient
                 });
@@ -238,7 +246,7 @@ exports.scheduleDayUpdateTasks = functions.https.onCall(async (data, context) =>
 // Function per aggiornare i risultati delle partite
 exports.updateMatches = functions.https.onRequest(async (req, res) => {
     const { dayId } = req.body;
-
+    functions.logger.log('START--->>>')
 
     function determineResult(homeGoals, awayGoals) {
         if (homeGoals > awayGoals) {
@@ -262,7 +270,8 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
             params: {
                 league: '135', // ID della lega che stai monitorando
                 season: '2024', // Anno della stagione
-                round: dayId.replace('Regular', 'Regular ').replace('Season', 'Season ').replace('-', '-  ') // Passa il dayId come round
+                round: dayId.replace('Regular', 'Regular ').replace('Season', 'Season ').replace('-', '- ') // Passa il dayId come round
+                // round: 'Regular Season - 6' // Passa il dayId come round
             },
             headers: {
                 'x-rapidapi-key': 'db73c3daeamshce50eba84993c27p1ebcadjsnb14d87bc676d',
@@ -271,11 +280,13 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
         });
 
         const fixtures = response.data.response;
+        functions.logger.log('FIXTURES-> ', dayId.replace('Regular', 'Regular ').replace('Season', 'Season ').replace('-', '- '), fixtures);
+        functions.logger.log('FIXTURES-> Risultati ', fixtures);
 
         // Itera su ogni match e aggiorna la collection matches
-        const batch = db.batch();
+        const batch = firestore.batch();
         fixtures.forEach(match => {
-            const matchRef = db.collection('matches').doc(match.fixture.id.toString());
+            const matchRef = firestore.collection('matches').doc(match.fixture.id.toString());
             batch.update(matchRef, {
                 result: determineResult(match.goals.home, match.goals.away), // Supponendo che tu abbia un campo "result" nella tua collection
             });

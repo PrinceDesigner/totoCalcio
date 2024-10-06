@@ -54,11 +54,6 @@ export default function LoginScreen({ navigation }) {
         const checkDeviceForHardware = async () => {
             const compatible = await LocalAuthentication.hasHardwareAsync();
             setIsBiometricSupported(compatible);
-
-            if (compatible) {
-                // Se compatibile, effettua l'autenticazione biometrica automatica al montaggio del componente
-                handleBiometricAuth();
-            }
         };
         checkDeviceForHardware();
     }, []);
