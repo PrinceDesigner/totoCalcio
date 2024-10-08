@@ -246,75 +246,89 @@ exports.scheduleDayUpdateTasks = functions.https.onCall(async (data, context) =>
 // Function per aggiornare i risultati delle partite
 exports.updateMatches = functions.https.onRequest(async (req, res) => {
     const { dayId } = req.body;
-    functions.logger.log('START--->>>')
-
-    function determineResult(homeGoals, awayGoals) {
-        if (homeGoals > awayGoals) {
-            return "1"; // Vittoria squadra di casa
-        } else if (homeGoals < awayGoals) {
-            return "2"; // Vittoria squadra ospite
-        } else {
-            return "X"; // Pareggio
-        }
-    }
+    functions.logger.log('START--->>>', dayId ) ;
 
     if (!dayId) {
-        res.status(400).send({ success: false, message: "dayId è richiesto" });
-        return;
+        return res.status(400).send({ success: false, message: "dayId è richiesto" });
     }
-
 
     try {
         // Ottieni i dati dalla API di football
         const response = await axios.get(`https://api-football-v1.p.rapidapi.com/v3/fixtures`, {
             params: {
-                league: '135', // ID della lega che stai monitorando
+                league: '135', // ID della lega
                 season: '2024', // Anno della stagione
-                round: dayId.replace('Regular', 'Regular ').replace('Season', 'Season ').replace('-', '- ') // Passa il dayId come round
-                // round: 'Regular Season - 6' // Passa il dayId come round
+                round: dayId.replace('Regular', 'Regular ').replace('Season', 'Season ').replace('-', '- '),
             },
             headers: {
                 'x-rapidapi-key': 'db73c3daeamshce50eba84993c27p1ebcadjsnb14d87bc676d',
-                'x-rapidapi-host': 'api-football-v1.p.rapidapi.com'
-            }
+                'x-rapidapi-host': 'api-football-v1.p.rapidapi.com',
+            },
         });
 
         const fixtures = response.data.response;
-        functions.logger.log('FIXTURES-> ', dayId.replace('Regular', 'Regular ').replace('Season', 'Season ').replace('-', '- '), fixtures);
-        functions.logger.log('FIXTURES-> Risultati ', fixtures);
+        functions.logger.log('FIXTURES->', fixtures);
 
-        // Itera su ogni match e aggiorna la collection matches
+        // Aggiorna la collection matches
         const batch = firestore.batch();
         fixtures.forEach(match => {
             const matchRef = firestore.collection('matches').doc(match.fixture.id.toString());
-            batch.update(matchRef, {
-                result: determineResult(match.goals.home, match.goals.away), // Supponendo che tu abbia un campo "result" nella tua collection
-            });
+            batch.update(matchRef, { result: determineResult(match.goals.home, match.goals.away) });
         });
 
         await batch.commit();
 
+        // Recupera tutte le leghe
+        const leaguesSnapshot = await firestore.collection('leagues').get();
+        const leagueIds = leaguesSnapshot.docs.map(doc => doc.id);
+        functions.logger.log('leagueIds', leagueIds)
+        functions.logger.log('dayId', dayId)
+
+        // Recupera le previsioni corrispondenti a questi ID di lega
+        const predictionsSnapshot = await firestore.collection('predictions')
+            .where('leagueId', 'in', leagueIds)
+            .where('daysId', '==', dayId)
+            .get();
+
+        // Crea una mappa per le leghe
+        const leagueMap = leagueIds.reduce((acc, leagueId) => {
+            acc[leagueId] = { calcolata: false };
+            return acc;
+        }, {});
+
+        // Crea un nuovo batch per gli inserimenti nella collezione giornateCalcolate
+        const giornateCalcolateBatch = firestore.batch();
+
+        const predictionsPromises = predictionsSnapshot.docs.map(async (doc) => {
+            const predictionData = doc.data();
+            functions.logger.log('predictionData', predictionData);
+
+            if (predictionData.leagueId in leagueMap) {
+                leagueMap[predictionData.leagueId].calcolata = true;
+
+                // Crea l'ID del documento per la collezione giornateCalcolate
+                const documentId = `${predictionData.leagueId}_${dayId}`;
+
+                // Aggiungi l'operazione al batch
+                giornateCalcolateBatch.set(firestore.collection('giornateCalcolate').doc(documentId), {
+                    calcolate: false, // Imposta su true
+                    dayId: dayId,
+                    leagueId: predictionData.leagueId,
+                });
+
+                functions.logger.log(`Documento aggiunto al batch per giornateCalcolate con ID: ${documentId}`);
+            } else {
+                functions.logger.log(`League ID non trovato in leagueMap: ${predictionData.leagueId}`);
+            }
+        });
+
+        // await Promise.all(predictionsPromises); // Aspetta che tutte le promesse siano risolte
+
+        // Esegui il batch commit per le giornateCalcolate
+        await giornateCalcolateBatch.commit();
 
         // Aggiorna il campo giornataAttuale
-        const currentGiornataRef = firestore.collection('giornataAttuale').limit(1);
-        const currentGiornataSnapshot = await currentGiornataRef.get();
-        functions.logger.log('currentGiornataSnapshot.empty-->', currentGiornataSnapshot.empty);
-
-        if (!currentGiornataSnapshot.empty) {
-            const doc = currentGiornataSnapshot.docs[0];
-            const currentGiornataData = doc.data().giornataAttuale;
-
-            // Estrai il numero corrente e incrementalo
-            const currentGiornataNumber = parseInt(currentGiornataData.split('-')[1], 10);
-            const updatedGiornataNumber = currentGiornataNumber + 1;
-
-            // Costruisci il nuovo valore per giornataAttuale
-            const updatedGiornataAttuale = `RegularSeason-${updatedGiornataNumber}`;
-
-            // Aggiorna il documento
-            await doc.ref.update({ giornataAttuale: updatedGiornataAttuale });
-            functions.logger.log(`Giornata attuale aggiornata a: ${updatedGiornataAttuale}`);
-        }
+        await updateCurrentGiornata();
 
         res.status(200).send({ success: true, message: "Partite aggiornate con successo" });
     } catch (error) {
@@ -322,6 +336,34 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
         res.status(500).send({ success: false, message: "Errore durante l'aggiornamento delle partite" });
     }
 });
+
+
+// Funzione per determinare il risultato
+function determineResult(homeGoals, awayGoals) {
+    if (homeGoals > awayGoals) return "1"; // Vittoria squadra di casa
+    if (homeGoals < awayGoals) return "2"; // Vittoria squadra ospite
+    return "X"; // Pareggio
+}
+
+// Funzione per aggiornare la giornata attuale
+async function updateCurrentGiornata() {
+    const currentGiornataRef = firestore.collection('giornataAttuale').limit(1);
+    const currentGiornataSnapshot = await currentGiornataRef.get();
+
+    if (!currentGiornataSnapshot.empty) {
+        const doc = currentGiornataSnapshot.docs[0];
+        const currentGiornataData = doc.data().giornataAttuale;
+
+        // Estrai e incrementa il numero corrente
+        const currentGiornataNumber = parseInt(currentGiornataData.split('-')[1], 10);
+        const updatedGiornataNumber = currentGiornataNumber + 1;
+        const updatedGiornataAttuale = `RegularSeason-${updatedGiornataNumber}`;
+
+        // Aggiorna il documento
+        await doc.ref.update({ giornataAttuale: updatedGiornataAttuale });
+        functions.logger.log(`Giornata attuale aggiornata a: ${updatedGiornataAttuale}`);
+    }
+}
 
 
 
