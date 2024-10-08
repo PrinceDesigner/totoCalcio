@@ -56,7 +56,7 @@ const selectStorico = (state) => state.storicoPerUtenteSelezionato.storico;
 // Selettore che accetta un dayId come argomento e filtra lo storico
 export const selectStoricoByDayId = (dayId) => createSelector(
   [selectStorico],
-  (storico) => storico.find(item => item.dayId === dayId)
+  (storico) => storico.find(item => item.daysId === dayId)
 );
 
 // Esporta le azioni generate automaticamente e il reducer

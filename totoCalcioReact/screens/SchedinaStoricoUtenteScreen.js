@@ -15,20 +15,20 @@ export default function GiornataSchedinaDetailsUserScreen({ route }) {
     // Funzione per rendere le predizioni
     const renderPrediction = () => {
         // Se non esiste una predizione per questa giornata
-        if (!storicoItem || !storicoItem.prediction || !storicoItem.prediction.schedina) {
+        if (!storicoItem ||  !storicoItem.schedina) {
             return (
                 <Text style={{ ...styles.noDataText, color: colors.text }}>Nessuna predizione per questa giornata.</Text>
             );
         }
 
-        const { prediction } = storicoItem;
+        const { schedina } = storicoItem;
 
         return (
             <View style={styles.sectionContainer}>
                 <Text style={{ ...styles.sectionTitle, color: colors.primary }}>
                     Esiti giornata {dayId.replace('RegularSeason-', '')}
                 </Text>
-                {prediction.schedina.map((item) => (
+                {schedina.map((item) => (
                     <Card key={item.matchId} style={{ ...styles.matchCard, backgroundColor: item.esitoGiocato === item.result ?  'green' : item.result === null ? colors.surface : 'red' }}>
                         <View style={styles.matchInfo}>
                             <Text style={[styles.matchText, { color: 'white' }]}>

@@ -108,24 +108,12 @@ router.post('/leagues', authMiddleware, async (req, res) => {
       createdAt: moment().utc().format('YYYY-MM-DDTHH:mm:ss+00:00'),
       members: [userId], // L'utente che crea la lega è anche il primo membro
       membersInfo: [{ id: userId, punti: 0 }],
-      giornate: [{ dayId: currentRoundFormatted, calcolata: false }],
     });
 
     const league = await leagueRef.get();
     const leagueId = league.id;
 
-    // Crea un nuovo documento nella collezione 'giornateCalcolate'
-    const calcolateData = {
-      calcolate: false,
-      dayId: currentRoundFormatted,
-      leagueId
-    };
-
-
-    // Usa l'ID combinato 'idLega_currentRound'
-    const giornateCalcolateId = `${leagueId}_${currentRoundFormatted}`;
-    await firestore.collection('giornateCalcolate').doc(giornateCalcolateId).set(calcolateData);
-
+  
     // Restituisci la risposta con i dati della lega appena creata
     res.status(201).json({ message: 'Lega creata con successo', leagueData: { ...league.data(), id: leagueId } });
   } catch (error) {

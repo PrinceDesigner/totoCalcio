@@ -44,7 +44,6 @@ const handleParticipantPress = async (participant) => {
 
         // Gestisci il risultato, ad esempio naviga a un'altra schermata o mostra un messaggio
         if (predictionData) {
-            showToast('success', 'Predizione trovata!');
             navigation.navigate('EsitiUtenteInseriti', {
                 prediction: predictionData, // Passa i dati della predizione
                 user: participant.displayName, // Passa i dettagli del partecipante se necessario

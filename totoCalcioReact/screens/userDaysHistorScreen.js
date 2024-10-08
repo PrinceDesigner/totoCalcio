@@ -29,10 +29,10 @@ export default function UserHistoryScreen({ route, navigation }) {
         <View style={{ flex: 1 }}>
             <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}>
                 {userHistory.map((giornata, index) => {
-                    if (giornata.dayId !== dayId || (giornata.dayId === dayId && isDatePast()) ) {        
+                    if (giornata.daysId !== dayId || (giornata.daysId === dayId && isDatePast()) ) {        
                     return (<TouchableOpacity
                         key={index + 1}
-                        onPress={() => navigation.navigate('GiornataSchedinaDetailsUserScreen', {dayId: giornata.dayId})} // Modifica in base alla logica che desideri
+                        onPress={() => navigation.navigate('GiornataSchedinaDetailsUserScreen', {dayId: giornata.daysId})} // Modifica in base alla logica che desideri
                         style={{ ...styles.cardTouchable }} // Modifica per includere lo stile
                     >
                         <Card style={styles.card}>
@@ -42,9 +42,9 @@ export default function UserHistoryScreen({ route, navigation }) {
                                     size={40}
                                     style={styles.avatar}
                                 />
-                                <Text style={{ ...styles.participantName, color: 'white' }}>Giornata {giornata.dayId.replace('RegularSeason-', '')}</Text>
+                                <Text style={{ ...styles.participantName, color: 'white' }}>Giornata {giornata.daysId.replace('RegularSeason-', '')}</Text>
 
-                                <Text style={{ ...styles.participantName, color: 'white' }}>{giornata.prediction.punti} punti</Text>
+                                <Text style={{ ...styles.participantName, color: 'white' }}>{giornata.punti} punti</Text>
                             </View>
                         </Card>
                     </TouchableOpacity>)

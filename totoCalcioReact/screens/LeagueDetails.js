@@ -41,11 +41,6 @@ export default function LeagueDetails({ navigation }) {
     const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
     const matchdayNumber = infogiornataAttuale.dayId && infogiornataAttuale.dayId.replace('RegularSeason-', '') || 0;
     const deadline = infogiornataAttuale && infogiornataAttuale.startDate; // Simuliamo una scadenza a 1 ora da adesso
-
-
-
-
-
     // Funzione per copiare l'ID della lega
     const copyToClipboard = async () => {
         await Clipboard.setStringAsync(leagueId);
@@ -198,7 +193,9 @@ export default function LeagueDetails({ navigation }) {
                 {/* Classifica Provvisoria */}
                 <Card style={{ ...styles.section, marginBottom: 0 }}>
                     <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica Provvisoria</Text>
-                    {provisionalRanking.map((player, index) => (
+                    {[...provisionalRanking]
+                    .sort((a, b) => b.punti - a.punti)
+                    .map((player, index) => (
                         <View key={index + 1} style={styles.rankItem}>
                             <View style={{ display: 'flex', flexDirection: 'row' }}>
                                 <Text style={styles.rankPosition}>{index + 1}</Text>
