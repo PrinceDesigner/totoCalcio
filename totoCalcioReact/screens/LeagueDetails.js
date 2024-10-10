@@ -1,7 +1,7 @@
 import moment from 'moment-timezone';
 import { useRoute } from '@react-navigation/native';
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, RefreshControl } from 'react-native';
 import { Card, Badge, useTheme, Button } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchDayDetails } from '../redux/slice/infogiornataAttualeSlice';
@@ -10,14 +10,16 @@ import { COLORJS } from '../theme/themeColor';
 import { fetchPrediction } from '../redux/slice/predictionsSlice';
 import { fetchParticipantsThunk } from '../redux/slice/partecipantsSlice';
 import { Image } from 'react-native'; // Importa il componente Image
-import { selectLeagueById } from '../redux/slice/leaguesSlice';
+import { getUserLeaguesThunk, selectLeagueById } from '../redux/slice/leaguesSlice';
 import * as Clipboard from 'expo-clipboard'; // Importa Clipboard
 import { Share } from 'react-native';
+import { getGiornataAttuale } from '../services/infoGiornataService';
 
 
 
 export default function LeagueDetails({ navigation }) {
     const { colors } = useTheme();
+    const [refreshing, setRefreshing] = useState(false);
 
     const dispatch = useDispatch();
     let [giornataAttuale, setGiornataAttuale] = useState();
@@ -30,7 +32,6 @@ export default function LeagueDetails({ navigation }) {
     const dayId = useSelector((state) => state.giornataAttuale.giornataAttuale);
 
     const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
-    const createdAt = selectedLeague.createdAt
 
     // id Partecipanti
     const userIds = selectedLeague.members;
@@ -83,7 +84,29 @@ export default function LeagueDetails({ navigation }) {
             return '..'
         }
     };
- 
+
+    const fetchLeagues = async () => {
+        try {
+            dispatch(showLoading()); // Mostra lo stato di caricamento
+            await dispatch(getUserLeaguesThunk()).unwrap(); // Attendi che il thunk termini
+        } catch (error) {
+            console.error('Errore durante il recupero delle leghe:', error);
+        } finally {
+            dispatch(hideLoading()); // Nascondi lo stato di caricamento
+        }
+    };
+
+    // Esempio di utilizzo all'interno di un useEffect in un componente
+    const fetchGiornataAttuale = async () => {
+        try {
+            const giornata = await getGiornataAttuale();
+            setGiornataAttuale(giornata)
+        } catch (error) {
+            console.error('Errore durante il recupero della giornata attuale:', error);
+        }
+    };
+
+
     const fetchDataInParallel = async () => {
         try {
             dispatch(showLoading()); // Mostra lo stato di caricamento
@@ -95,10 +118,12 @@ export default function LeagueDetails({ navigation }) {
                 dispatch(fetchParticipantsThunk({ userIds, leagueId })).unwrap(),
             ]);
 
+
         } catch (error) {
             console.error('Errore durante il recupero dei dati:', error);
         } finally {
-            dispatch(hideLoading()); // Nascondi lo stato di caricamento
+            setRefreshing(false); // Imposta il caricamento su false
+            dispatch(hideLoading());
         }
     };
     useEffect(() => {
@@ -108,6 +133,11 @@ export default function LeagueDetails({ navigation }) {
         }
     }, [dispatch, giornataAttuale, dayId, leagueId, userId, userIds]);
 
+    // Funzione per gestire il refresh
+    const onRefresh = () => {
+        fetchLeagues().then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
+        fetchGiornataAttuale().then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
+    };
 
     const matches = infogiornataAttuale.matches;
 
@@ -161,7 +191,7 @@ export default function LeagueDetails({ navigation }) {
                 </View>
 
                 {/* Countdown visual nello stile "10:10:10" */}
-                {!isDatePast(deadline)  ? <View style={styles.compactCountdownContainer}>
+                {!isDatePast(deadline) ? <View style={styles.compactCountdownContainer}>
                     <Text style={styles.countdownNumber}>
                         {countdown.days}d {countdown.hours}h {countdown.minutes}m
                     </Text>
@@ -189,21 +219,25 @@ export default function LeagueDetails({ navigation }) {
                 }
             </View>
 
-            <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}>
+            <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
+            >
                 {/* Classifica Provvisoria */}
                 <Card style={{ ...styles.section, marginBottom: 0 }}>
                     <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica Provvisoria</Text>
                     {[...provisionalRanking]
-                    .sort((a, b) => b.punti - a.punti)
-                    .map((player, index) => (
-                        <View key={index + 1} style={styles.rankItem}>
-                            <View style={{ display: 'flex', flexDirection: 'row' }}>
-                                <Text style={styles.rankPosition}>{index + 1}</Text>
-                                <Text style={styles.rankName}>{player.displayName}</Text>
+                        .sort((a, b) => b.punti - a.punti)
+                        .map((player, index) => (
+                            <View key={index + 1} style={styles.rankItem}>
+                                <View style={{ display: 'flex', flexDirection: 'row' }}>
+                                    <Text style={styles.rankPosition}>{index + 1}</Text>
+                                    <Text style={styles.rankName}>{player.displayName}</Text>
+                                </View>
+                                <Text style={{ ...styles.rankPoints, color: 'white' }}>{player.punti} punti</Text>
                             </View>
-                            <Text style={{ ...styles.rankPoints, color: 'white' }}>{player.punti} punti</Text>
-                        </View>
-                    ))}
+                        ))}
 
                     {/* Bottone per vedere la classifica completa */}
                     <Button
