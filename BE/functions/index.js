@@ -286,7 +286,10 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
 
         // Recupera le previsioni corrispondenti a questi ID di lega
         const predictionsSnapshot = await firestore.collection('predictions')
-            .where('leagueId', 'in', leagueIds)
+            /*.where('leagueId', 'in', leagueIds) non serve, faremo questo check:
+                                                    Se almeno una schedina è legata ad una lega estratta
+                                                    Allora il record può essere inserito
+                                                    Così evitiamo di avere il vincolo di estrarre max 30 record con le condizioni*/
             .where('daysId', '==', dayId)
             .get();
 
