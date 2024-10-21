@@ -4,6 +4,7 @@ import { Card, useTheme, Avatar } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import moment from 'moment-timezone';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { COLORJS } from '../theme/themeColor';
 
 export default function UserHistoryScreen({ route, navigation }) {
     const { colors } = useTheme();
@@ -26,7 +27,7 @@ export default function UserHistoryScreen({ route, navigation }) {
     return (
         <View style={{ flex: 1 }}>
             <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}>
-                
+
                 {/* Avviso in alto */}
                 <View style={styles.warningContainer}>
                     <MaterialIcons name="info-outline" size={24} color="yellow" />
@@ -36,14 +37,14 @@ export default function UserHistoryScreen({ route, navigation }) {
                 </View>
 
                 {userHistory.map((giornata, index) => {
-                    if (giornata.daysId !== dayId || (giornata.daysId === dayId && isDatePast()) ) {        
+                    if (giornata.daysId !== dayId || (giornata.daysId === dayId && isDatePast())) {
                         return (
                             <TouchableOpacity
                                 key={index + 1}
-                                onPress={() => navigation.navigate('GiornataSchedinaDetailsUserScreen', {dayId: giornata.daysId})} // Modifica in base alla logica che desideri
+                                onPress={() => navigation.navigate('GiornataSchedinaDetailsUserScreen', { dayId: giornata.daysId })} // Modifica in base alla logica che desideri
                                 style={{ ...styles.cardTouchable }} // Modifica per includere lo stile
                             >
-                                <Card style={styles.card}>
+                                <Card style={[styles.card, giornata.daysId === dayId ? styles.activeCard : {}]}>
                                     <View style={styles.participantRow}>
                                         <Avatar.Icon
                                             icon="calendar"
@@ -106,4 +107,7 @@ const styles = StyleSheet.create({
         textAlign: 'left',
         paddingLeft: 10,
     },
+    activeCard: {
+        backgroundColor: COLORJS.primary, // Colore di sfondo diverso per la giornata in corso (ad esempio arancione)
+    }
 });

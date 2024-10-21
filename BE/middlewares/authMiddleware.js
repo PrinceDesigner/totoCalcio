@@ -6,14 +6,14 @@ const authMiddleware = async (req, res, next) => {
 
   // Controlla se l'header Authorization è presente
   if (!authorizationHeader) {
-    return res.status(401).json({ message: 'Token mancante.' });
+    return res.status(401).json({ message: 'Token mancante.', status: 401 });
   }
 
   const token = authorizationHeader.split(' ')[1]; // Estrai il token dal formato 'Bearer <token>'
 
   // Se il token non è presente nell'header
   if (!token) {
-    return res.status(401).json({ message: 'Token mancante.' });
+    return res.status(401).json({ message: 'Token mancante.', status: 401 });
   }
 
   try {
@@ -27,7 +27,7 @@ const authMiddleware = async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Errore durante la verifica del token:', error);
-    return res.status(403).json({ message: 'Token non valido.' });
+    return res.status(403).json({ message: 'Token non valido.', status: 403 });
   }
 };
 
