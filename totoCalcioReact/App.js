@@ -17,7 +17,7 @@ import { MaterialIcons } from '@expo/vector-icons'; // Importa l'icona dell'hamb
 import CustomDrawerContent from './components/CustomDrawerContent';
 import LeagueStackNavigator from './navigation/LeagueStackNavigator';
 import CreateLeagueScreen from './screens/CreateLeagueScreen';
-import { CreateLeagueHeader, CustomHeader } from './navigation/customHeader/customHeader';
+import { CustomHeaderBackArrow, CustomHeader } from './navigation/customHeader/customHeader';
 
 import ProfileScreen from './screens/ProfileScreen';
 import SignupScreen from './screens/auth/SignupScreen';
@@ -73,7 +73,7 @@ function DrawerNavigator() {
         options={({ navigation }) => ({
           title: 'Crea una nuova lega',
           headerShown: true, // Mostra l'header solo per questa schermata
-          ...CreateLeagueHeader({ navigation }), // Applica l'header personalizzato con Go Back
+          ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
         })}
       />
       <Drawer.Screen
@@ -82,7 +82,7 @@ function DrawerNavigator() {
         options={({ navigation }) => ({
           title: 'Unisciti ad una lega',
           headerShown: true, // Mostra l'header solo per questa schermata
-          ...CreateLeagueHeader({ navigation }), // Applica l'header personalizzato con Go Back
+          ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
         })}
       />
       <Drawer.Screen
@@ -91,7 +91,7 @@ function DrawerNavigator() {
         options={({ navigation }) => ({
           title: 'Profilo',
           headerShown: true, // Mostra l'header solo per questa schermata
-          ...CreateLeagueHeader({ navigation }), // Applica l'header personalizzato con Go Back
+          ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
         })}
       />
       {/* Aggiungi altre schermate nel Drawer qui */}
@@ -141,7 +141,11 @@ export default function App() {
                 <Stack.Screen
                   name="ForgotPasswordScreen"
                   component={ForgotPasswordScreen}
-                  options={{ headerShown: false }}
+                  options={({ navigation }) => ({
+                    title: 'Password Dimenticata',
+                    headerShown: true, // Mostra l'header solo per questa schermata
+                    ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
+                  })}
                 />
                 {/* Usa il DrawerNavigator una volta loggato */}
                 <Stack.Screen

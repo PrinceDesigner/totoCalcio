@@ -44,7 +44,7 @@ export function CustomHeader({ navigation }) {
 }
 
 // Funzione per generare l'header con il Go Back per "CreateLeagueScreen"
-export function CreateLeagueHeader({ navigation }) {
+export function CustomHeaderBackArrow({ navigation }) {
   return {
     headerLeft: () => (
       <TouchableOpacity onPress={() => navigation.goBack()}>

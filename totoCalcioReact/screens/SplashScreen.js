@@ -5,6 +5,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { loginSuccess, logout } from '../redux/slice/authSlice';
 import { saveToken, removeToken } from '../AsyncStorage/AsyncStorage';
 import { useTheme } from 'react-native-paper';
+import { COLORJS } from '../theme/themeColor';
 
 const SplashScreen = ({ navigation }) => {
     const dispatch = useDispatch();
@@ -66,10 +67,10 @@ const SplashScreen = ({ navigation }) => {
                 style={styles.logo}
             />
 
-            <Text style={styles.title}>Benvenuto in TotoCalcio</Text>
+            <Text style={styles.title}>Caricamento in TotoCalcio</Text>
 
             {/* Spinner di caricamento */}
-            <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
+            <ActivityIndicator size="large" color={COLORJS.primary} style={styles.loader} />
         </View>
     );
 };
