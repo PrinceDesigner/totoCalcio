@@ -5,15 +5,15 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { deleteLeagueThunk, getUserLeaguesThunk } from '../redux/slice/leaguesSlice';
 import { showLoading, hideLoading } from '../redux/slice/uiSlice';
-import { Swipeable } from 'react-native-gesture-handler'; // Aggiungi Swipeable
-import { MaterialIcons } from '@expo/vector-icons'; // Aggiungi icone
+import { Swipeable } from 'react-native-gesture-handler';
+import { MaterialIcons } from '@expo/vector-icons';
 import { setSelectedLeagueGiornata } from '../redux/slice/selectedLeagueSlice';
-import { logout, updatePhotoUri } from '../redux/slice/authSlice';
-import { getAuth } from 'firebase/auth'; // Importa Firebase Authentication
+import { logout } from '../redux/slice/authSlice';
 import { getGiornataAttuale } from '../services/infoGiornataService';
 
 
-export default function HomeScreen() {
+// React.memo per ottimizzare il rendering di HomeScreen
+const HomeScreen = React.memo(() => {
     const { colors } = useTheme();
     const navigation = useNavigation();
     const dispatch = useDispatch();
@@ -21,20 +21,18 @@ export default function HomeScreen() {
 
     const leaguesState = useSelector((state) => state.leagues); // Stato delle leghe
     const loadingState = useSelector((state) => state.ui.loading); // Stato di caricamento
-    const userId = useSelector((state) => state.auth.user && state.auth.user.user.userId);
+    const userId = useSelector((state) => state.auth.user && state.auth.user.user.userId); // Recupera l'ID utente dallo stato
 
     const [giornataAttuale, setGiornataAttuale] = useState();
     const [refreshing, setRefreshing] = useState(false);
     const [selectedLeague, setSelectedLeague] = useState(null); // Stato per la lega selezionata per l'eliminazione
     const [isModalVisible, setModalVisible] = useState(false); // Stato per la visibilità della modale
 
-
-
     useEffect(() => {
         if (route.params?.refresh) {
-            fetchLeagues()
-            fetchGiornataAttuale();
-            navigation.setParams({ refresh: false });
+            fetchLeagues(); // Recupera le leghe se il parametro refresh è true
+            fetchGiornataAttuale(); // Recupera la giornata attuale
+            navigation.setParams({ refresh: false }); // Resetta il parametro refresh
         }
     }, [route.params?.refresh]);
 
@@ -49,8 +47,8 @@ export default function HomeScreen() {
             await dispatch(getUserLeaguesThunk()).unwrap(); // Attendi che il thunk termini
         } catch (error) {
             if (error.status === 401 || error.status === 403) {                
-                dispatch(logout())
-                navigation.navigate('LoginScreen')
+                dispatch(logout());
+                navigation.navigate('LoginScreen');
             }
             console.error('Errore durante il recupero delle leghe:', error);
         } finally {
@@ -62,7 +60,7 @@ export default function HomeScreen() {
     const fetchGiornataAttuale = async () => {
         try {
             const giornata = await getGiornataAttuale();
-            setGiornataAttuale(giornata)
+            setGiornataAttuale(giornata);
         } catch (error) {
             console.error('Errore durante il recupero della giornata attuale:', error);
         }
@@ -76,7 +74,7 @@ export default function HomeScreen() {
     const onRefresh = () => {
         setRefreshing(true);
         fetchLeagues().then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
-        fetchGiornataAttuale().then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
+        fetchGiornataAttuale().then(() => setRefreshing(false)); // Ricarica la giornata attuale e disabilita il refresh
     };
 
     // Funzione per gestire il click su una lega
@@ -85,6 +83,7 @@ export default function HomeScreen() {
         navigation.navigate('LeagueDetailsStack'); // Naviga alla schermata dei dettagli della lega
     };
 
+    // Funzione per eliminare una lega
     const handleDeleteLeague = async (leagueId) => {
         try {
             dispatch(showLoading());
@@ -104,18 +103,8 @@ export default function HomeScreen() {
         setModalVisible(true); // Mostra la modale
     };
 
-    // Renderizza la UI che appare durante lo swipe
-    const renderRightActions = (league) => (
-        <>
-            <TouchableOpacity style={styles.deleteButton} onPress={() => confirmDeleteLeague(league)}>
-                <MaterialIcons name="delete" size={30} color="white" />
-            </TouchableOpacity>
-        </>
-    );
-
-
-    // Renderizza ogni lega nella FlatList con swipeable
-    const renderLeagueItem = ({ item }) => {
+    // React.memo per ottimizzare il rendering di ogni lega
+    const RenderLeagueItem = React.memo(({ item, handleLeaguePress, renderRightActions, userId }) => {
         // Simula che l'utente è l'owner della lega
         const isOwner = item.ownerId === userId; // Cambia in base alla tua logica reale
 
@@ -133,6 +122,27 @@ export default function HomeScreen() {
                     </View>
                 </TouchableOpacity>
             </Swipeable>
+        );
+    });
+
+    // Renderizza la UI che appare durante lo swipe
+    const renderRightActions = (league) => (
+        <>
+            <TouchableOpacity style={styles.deleteButton} onPress={() => confirmDeleteLeague(league)}>
+                <MaterialIcons name="delete" size={30} color="white" />
+            </TouchableOpacity>
+        </>
+    );
+
+    // Renderizza ogni lega nella FlatList con swipeable
+    const renderLeagueItem = ({ item }) => {
+        return (
+            <RenderLeagueItem
+                item={item}
+                handleLeaguePress={handleLeaguePress}
+                renderRightActions={renderRightActions}
+                userId={userId}
+            />
         );
     };
 
@@ -196,7 +206,8 @@ export default function HomeScreen() {
             </Modal>
         </View>
     );
-}
+});
+
 
 const styles = StyleSheet.create({
     container: {
@@ -291,3 +302,5 @@ const styles = StyleSheet.create({
         marginHorizontal: 10,
     },
 });
+
+export default HomeScreen;
