@@ -1,14 +1,15 @@
 import moment from 'moment-timezone';
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, Alert } from 'react-native';
-import { Card, useTheme, Avatar, Button } from 'react-native-paper'; // Importa il bottone da react-native-paper
+import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { Card, useTheme, Avatar, Button } from 'react-native-paper'; 
 import { useDispatch, useSelector } from 'react-redux';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { fetchGiornateCalcolate } from '../services/storicoService';
-import { functions } from '../firebaseConfig'; // Importa le functions dal tuo file di configurazione
+import { functions } from '../firebaseConfig'; 
 import { httpsCallable } from 'firebase/functions';
 import { useNavigation } from '@react-navigation/native';
 import { showToast } from '../ToastContainer';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; // Importa Material Icons
 
 export default function ListGiornateDaCalcolareScreen() {
     const { colors } = useTheme();
@@ -20,40 +21,39 @@ export default function ListGiornateDaCalcolareScreen() {
     const [giornateCalcolate, setGiornateCalcolate] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [refreshing, setRefreshing] = useState(false); // Stato per gestire il refresh
+    const [refreshing, setRefreshing] = useState(false); 
 
     useEffect(() => {
         const getGiornateCalcolate = async () => {
             try {
-                dispatch(showLoading()); // Mostra il caricamento
+                dispatch(showLoading());
                 const data = await fetchGiornateCalcolate(leagueId);
                 setGiornateCalcolate(data);
             } catch (error) {
                 setError('Errore durante il recupero delle giornate calcolate');
             } finally {
-                dispatch(hideLoading()); // Nascondi il caricamento
+                dispatch(hideLoading());
             }
         };
 
         getGiornateCalcolate();
     }, [dispatch, leagueId]);
 
-    // Funzione per gestire il refresh
     const onRefresh = async () => {
-        setRefreshing(true); // Imposta lo stato di refresh su true
+        setRefreshing(true);
         try {
             const data = await fetchGiornateCalcolate(leagueId);
             setGiornateCalcolate(data);
         } catch (error) {
             setError('Errore durante il recupero delle giornate calcolate');
         } finally {
-            setRefreshing(false); // Termina il refresh
+            setRefreshing(false);
         }
     };
 
     const handleCalculatePoints = async (giornata) => {
         try {
-            dispatch(showLoading()); // Mostra il caricamento
+            dispatch(showLoading());
             const calcolaPuntiGiornata = httpsCallable(functions, 'calcolaPuntiGiornata');
             const result = await calcolaPuntiGiornata({ leagueId, dayId: giornata.dayId });
 
@@ -67,7 +67,7 @@ export default function ListGiornateDaCalcolareScreen() {
             console.error('Errore durante il calcolo dei punti:', error);
             showToast('error', 'Errore durante il calcolo dei punti');
         } finally {
-            dispatch(hideLoading()); // Nascondi il caricamento
+            dispatch(hideLoading());
         }
     };
 
@@ -92,7 +92,6 @@ export default function ListGiornateDaCalcolareScreen() {
     };
 
     const isDateAfter = (dayIdPar) => {
-        console.log('dayIdPar', dayId);
         return dayIdPar === dayId;
     };
 
@@ -102,14 +101,21 @@ export default function ListGiornateDaCalcolareScreen() {
                 style={{ ...styles.container, backgroundColor: colors.background }}
                 contentContainerStyle={{ paddingBottom: 60 }}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> // Aggiungi il RefreshControl
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
             >
+                {/* Avviso per le giornate calcolate */}
+                <View style={styles.warningContainer}>
+                    <Text style={{ color: 'yellow', fontSize: 16 }}>
+                        Le giornate con l'icona di spunta verde <MaterialIcons name="check-circle" size={16} color="green" /> sono già state calcolate.
+                    </Text>
+                </View>
+
                 {giornateCalcolate.map((giornata, index) => {
                     return !isDateAfter(giornata.dayId) ? (
                         <View
                             key={index + 1}
-                            style={{ ...styles.cardTouchable }} // Modifica per includere lo stile
+                            style={{ ...styles.cardTouchable }}
                         >
                             <Card style={styles.card}>
                                 <View style={styles.participantRow}>
@@ -121,8 +127,14 @@ export default function ListGiornateDaCalcolareScreen() {
                                     <Text style={{ ...styles.participantName, color: 'white' }}>
                                         Giornata {giornata.dayId.replace('RegularSeason-', '')}
                                     </Text>
+
+                                    {/* Aggiungi l'icona "check-circle" se la giornata è stata calcolata */}
+                                    {giornata.calcolate && (
+                                        <MaterialIcons name="check-circle" size={24} color="green" />
+                                    )}
                                 </View>
 
+                                {/* Mostra sempre i bottoni */}
                                 <Button
                                     mode="contained"
                                     onPress={() => handleCalculatePoints(giornata)}
@@ -177,5 +189,11 @@ const styles = StyleSheet.create({
     },
     calculateButton: {
         marginTop: 10,
+    },
+    warningContainer: {
+        marginBottom: 10,
+        padding: 10,
+        backgroundColor: '#333',
+        borderRadius: 5,
     },
 });
