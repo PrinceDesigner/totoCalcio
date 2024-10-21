@@ -25,6 +25,7 @@ import SplashScreen from './screens/SplashScreen';
 import { COLORJS } from './theme/themeColor';
 import ToastContainer from './ToastContainer';
 import EmailVerificationScreen from './screens/EmailVerificationScreen';
+import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator(); // Crea un Drawer Navigator
@@ -135,6 +136,11 @@ export default function App() {
                 <Stack.Screen
                   name="SignupScreen"
                   component={SignupScreen}
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="ForgotPasswordScreen"
+                  component={ForgotPasswordScreen}
                   options={{ headerShown: false }}
                 />
                 {/* Usa il DrawerNavigator una volta loggato */}

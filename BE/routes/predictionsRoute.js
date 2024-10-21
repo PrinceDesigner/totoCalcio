@@ -80,7 +80,7 @@ router.get('/check', async (req, res) => {
 
         if (predictionsSnapshot.empty) {
             // Nessuna predizione trovata
-            return res.status(404).json({ message: 'Nessuna predizione trovata' });
+            return res.status(200).json({});
         }
 
         // Se c'è almeno una predizione, restituiscila (assumo che ce ne sia solo una)

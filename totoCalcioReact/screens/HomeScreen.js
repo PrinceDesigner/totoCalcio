@@ -22,7 +22,7 @@ export default function HomeScreen() {
     const leaguesState = useSelector((state) => state.leagues); // Stato delle leghe
     const loadingState = useSelector((state) => state.ui.loading); // Stato di caricamento
     const userId = useSelector((state) => state.auth.user && state.auth.user.user.userId);
-    
+
     const [giornataAttuale, setGiornataAttuale] = useState();
     const [refreshing, setRefreshing] = useState(false);
     const [selectedLeague, setSelectedLeague] = useState(null); // Stato per la lega selezionata per l'eliminazione
@@ -34,7 +34,7 @@ export default function HomeScreen() {
         if (route.params?.refresh) {
             fetchLeagues()
             fetchGiornataAttuale();
-navigation.setParams({ refresh: false });
+            navigation.setParams({ refresh: false });
         }
     }, [route.params?.refresh]);
 
@@ -54,7 +54,7 @@ navigation.setParams({ refresh: false });
         }
     };
 
-    // Esempio di utilizzo all'interno di un useEffect in un componente
+    // Recupero GiornatAttuale da firebase await firestore.collection('giornataAttuale').limit(1).get()
     const fetchGiornataAttuale = async () => {
         try {
             const giornata = await getGiornataAttuale();
@@ -103,9 +103,9 @@ navigation.setParams({ refresh: false });
     // Renderizza la UI che appare durante lo swipe
     const renderRightActions = (league) => (
         <>
-        <TouchableOpacity style={styles.deleteButton} onPress={() => confirmDeleteLeague(league)}>
-            <MaterialIcons name="delete" size={30} color="white" />
-        </TouchableOpacity>
+            <TouchableOpacity style={styles.deleteButton} onPress={() => confirmDeleteLeague(league)}>
+                <MaterialIcons name="delete" size={30} color="white" />
+            </TouchableOpacity>
         </>
     );
 
@@ -117,7 +117,7 @@ navigation.setParams({ refresh: false });
 
         return (
             <Swipeable
-                renderRightActions={() => isOwner ? renderRightActions(item) : null}                
+                renderRightActions={() => isOwner ? renderRightActions(item) : null}
             >
                 <TouchableOpacity onPress={() => handleLeaguePress(item)}>
                     <View style={{ ...styles.leagueContainer, backgroundColor: colors.surface }}>

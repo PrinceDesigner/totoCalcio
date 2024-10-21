@@ -3,16 +3,18 @@ import { getFirestore } from 'firebase/firestore';
 import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions'; // Importa functions
+import Constants from 'expo-constants';
 
 
+// Configura Firebase utilizzando le variabili d'ambiente
 const firebaseConfig = {
-    apiKey: "AIzaSyAmvM9n8lLu_POr6in4R87-jv1MRvX1VN0",
-    authDomain: "totocalcioreact.firebaseapp.com",
-    projectId: "totocalcioreact",
-    storageBucket: "totocalcioreact.appspot.com",
-    messagingSenderId: "700309241728",
-    appId: "1:700309241728:web:38f12c82fb5f684e44cb65",
-    measurementId: "G-J1KBDWK4SS"
+  apiKey: Constants.expoConfig.extra.FIREBASE_API_KEY,
+  authDomain: Constants.expoConfig.extra.FIREBASE_AUTH_DOMAIN,
+  projectId: Constants.expoConfig.extra.FIREBASE_PROJECT_ID,
+  storageBucket: Constants.expoConfig.extra.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: Constants.expoConfig.extra.FIREBASE_MESSAGING_SENDER_ID,
+  appId: Constants.expoConfig.extra.FIREBASE_APP_ID,
+  measurementId: Constants.expoConfig.extra.FIREBASE_MEASUREMENT_ID,
 };
 
 const app = initializeApp(firebaseConfig);

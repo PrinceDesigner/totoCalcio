@@ -34,7 +34,7 @@ export default function LoginScreen({ navigation }) {
 
 
     const handleForgotPassword = () => {
-        console.log('Password dimenticata');
+        navigation.navigate('ForgotPasswordScreen');
     };
 
     const handleGoogleLogin = () => {

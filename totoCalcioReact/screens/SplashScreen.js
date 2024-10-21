@@ -44,13 +44,13 @@ const SplashScreen = ({ navigation }) => {
                     console.error('Errore durante il recupero del token:', error);
                     await removeToken(); // Se fallisce, rimuovi il token
                     dispatch(logout());
-                    navigation.replace('LoginScreen');
+                    navigation.replace('Onboarding');
                 }
             } else {
                 // L'utente non è autenticato, reindirizza alla schermata di login
                 await removeToken();
                 dispatch(logout());
-                navigation.replace('LoginScreen');
+                navigation.replace('Onboarding');
             }
         });
 

@@ -11,17 +11,28 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "extra": {
+      "FIREBASE_API_KEY": "AIzaSyAmvM9n8lLu_POr6in4R87-jv1MRvX1VN0",
+      "FIREBASE_AUTH_DOMAIN": "totocalcioreact.firebaseapp.com",
+      "FIREBASE_PROJECT_ID": "totocalcioreact",
+      "FIREBASE_STORAGE_BUCKET": "totocalcioreact.appspot.com",
+      "FIREBASE_MESSAGING_SENDER_ID": "700309241728",
+      "FIREBASE_APP_ID": "1:700309241728:web:38f12c82fb5f684e44cb65",
+      "FIREBASE_MEASUREMENT_ID": "G-J1KBDWK4SS"
+    },
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
         "NSFaceIDUsageDescription": "Questa app utilizza Face ID per autenticare l'utente."
-      }
+      },
+      "bundleIdentifier": "com.anonymous.totoCalcioReact"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.anonymous.totoCalcioReact"
     },
     "web": {
       "favicon": "./assets/favicon.png"
