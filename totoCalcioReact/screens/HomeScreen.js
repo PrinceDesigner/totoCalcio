@@ -8,7 +8,7 @@ import { showLoading, hideLoading } from '../redux/slice/uiSlice';
 import { Swipeable } from 'react-native-gesture-handler'; // Aggiungi Swipeable
 import { MaterialIcons } from '@expo/vector-icons'; // Aggiungi icone
 import { setSelectedLeagueGiornata } from '../redux/slice/selectedLeagueSlice';
-import { updatePhotoUri } from '../redux/slice/authSlice';
+import { logout, updatePhotoUri } from '../redux/slice/authSlice';
 import { getAuth } from 'firebase/auth'; // Importa Firebase Authentication
 import { getGiornataAttuale } from '../services/infoGiornataService';
 
@@ -48,6 +48,10 @@ export default function HomeScreen() {
             dispatch(showLoading()); // Mostra lo stato di caricamento
             await dispatch(getUserLeaguesThunk()).unwrap(); // Attendi che il thunk termini
         } catch (error) {
+            if (error.status === 401 || error.status === 403) {                
+                dispatch(logout())
+                navigation.navigate('LoginScreen')
+            }
             console.error('Errore durante il recupero delle leghe:', error);
         } finally {
             dispatch(hideLoading()); // Nascondi lo stato di caricamento
