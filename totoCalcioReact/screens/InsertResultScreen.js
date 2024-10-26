@@ -10,10 +10,10 @@ import { showToast } from '../ToastContainer';
 
 export default function InsertResultsScreen({ navigation }) {
     const { colors } = useTheme();
-    const matches = useSelector((state) => state.infogiornataAttuale.matches); // Stato delle leghe
-    const userId = useSelector((state) => state.auth.user.user.userId); // Stato delle leghe
-    const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata); // Stato delle leghe
-    const giornataSchedina = useSelector((state) => state.giornataAttuale.giornataAttuale); // Stato delle leghe
+    const matches = useSelector((state) => state.infogiornataAttuale.matches); 
+    const userId = useSelector((state) => state.auth.user.user.userId); 
+    const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata); 
+    const giornataSchedina = useSelector((state) => state.giornataAttuale.giornataAttuale); 
     const schedinaGiocata = useSelector((state) => state.insertPredictions.schedinaInserita.schedina);
     const dispatch = useDispatch();
 
@@ -91,9 +91,16 @@ export default function InsertResultsScreen({ navigation }) {
             navigation.navigate('LeagueDetails'); // Naviga alla schermata LeagueDetails
         } catch (error) {
             console.error('Errore durante il salvataggio delle predizioni:', error);
+            if (error.message === 'La giornata è già iniziata.') {
+                
+                showToast('error', 'La giornata è già iniziata.');
+                navigation.navigate('LeagueDetails', { refresh: true });
+                
+            } else {
+                showToast('error', 'Errore durante il salvataggio delle predizioni');
+            }
 
             // Mostra un toast di errore
-            showToast('error', 'Errore durante il salvataggio delle predizioni');
         } finally {
             dispatch(hideLoading()); // Nascondi lo stato di caricamento
             setModalVisible(false); // Chiudi la modale

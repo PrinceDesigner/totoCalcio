@@ -14,7 +14,6 @@ export default function JoinLeagueScreen({ navigation }) {
   const dispatch = useDispatch();
 
   const loading = useSelector((state) => state.ui.loading);
-  const error = useSelector((state) => state.leagues.error);
 
   const handleJoinLeague = async () => {
     if (leagueCode.trim()) {
@@ -25,7 +24,6 @@ export default function JoinLeagueScreen({ navigation }) {
         navigation.goBack();
       } catch (error) {
         // Controlla se l'errore è un oggetto e visualizza il messaggio correttamente
-        const errorMessage = error.message || 'Si è verificato un errore'; 
         showToast('error', error.message);
       } finally {
         dispatch(hideLoading());

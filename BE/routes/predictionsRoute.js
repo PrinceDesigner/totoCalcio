@@ -1,6 +1,7 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const authMiddleware = require('../middlewares/authMiddleware');
+const moment = require('moment-timezone'); // Importa moment per gestire le date e i fusi orari
 
 
 // Inizializza Firestore
@@ -10,9 +11,27 @@ const router = express.Router();
 // Route per inserire o aggiornare una predizione
 router.post('/add', authMiddleware, async (req, res) => {
     const { userId, leagueId, schedina, daysId } = req.body;
+    console.log('ROUTE-ADD daysId--->', daysId)
 
     if (!userId || !leagueId || !schedina || !daysId) {
         return res.status(400).json({ message: 'userId, leagueId, schedina e daysId sono obbligatori.' });
+    }
+
+    // Step 1: Controllo sulla startDate della giornata
+    const dayDoc = await firestore.collection('days').doc(daysId).get();
+
+    if (!dayDoc.exists) {
+        return res.status(404).json({ message: 'Giornata non trovata.' });
+    }
+
+    const startDate = dayDoc.data().startDate;
+
+    // Converti startDate e confronta con la data e ora attuali
+    const currentDate = moment().tz('Europe/Rome'); // Ottieni la data attuale nel fuso orario specificato
+    const matchStartDate = moment.tz(startDate, 'Europe/Rome');
+
+    if (currentDate.isAfter(matchStartDate)) {
+        return res.status(403).json({ message: 'La giornata è già iniziata.' });
     }
 
     try {

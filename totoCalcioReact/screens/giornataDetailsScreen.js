@@ -15,8 +15,6 @@ export default function GiornataDetailsScreen({ route }) {
 
     const navigation = useNavigation(); // Inizializza la navigazione
 
-
-    const userId = useSelector((state) => state.auth.user.user.userId);
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const dayId = useSelector((state) => state.giornataAttuale.giornataAttuale);
     const matchdayNumber = dayId.replace('RegularSeason-', '') || 0;

@@ -2,7 +2,7 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import LeagueDetailsTabs from './tabs/LeagueDetailsTabs';
 import InsertResultsScreen from '../screens/InsertResultScreen';
-import { CreateLeagueHeader } from './customHeader/customHeader';
+import { CustomHeaderBackArrow } from './customHeader/customHeader';
 import FullParticipantsRankingScreen from '../screens/FullParticipantsRankingScreen';
 import GiornataDetailsScreen from '../screens/giornataDetailsScreen';
 import GiornataDetailsUserScreen from '../screens/GiornataDetailsUserScreen';
@@ -29,7 +29,7 @@ export default function LeagueStackNavigator() {
                 options={({ navigation }) => ({
                     title: 'Inserisci esiti',
                     headerShown: true, // Mostra l'header solo per questa schermata
-                    ...CreateLeagueHeader({ navigation }), // Applica l'header personalizzato con Go Back
+                    ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
                 })}
             />
             <Stack.Screen
@@ -38,7 +38,7 @@ export default function LeagueStackNavigator() {
                 options={({ navigation }) => ({
                     title: 'Esiti Inseriti',
                     headerShown: true, // Mostra l'header solo per questa schermata
-                    ...CreateLeagueHeader({ navigation }), // Applica l'header personalizzato con Go Back
+                    ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
                 })}
             />
             <Stack.Screen
@@ -47,7 +47,7 @@ export default function LeagueStackNavigator() {
                 options={({ navigation, route }) => ({
                     title: route.params.user + ' Esiti',
                     headerShown: true, // Mostra l'header solo per questa schermata
-                    ...CreateLeagueHeader({ navigation }), // Applica l'header personalizzato con Go Back
+                    ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
                 })}
             />
             <Stack.Screen
@@ -56,7 +56,7 @@ export default function LeagueStackNavigator() {
                 options={({ navigation }) => ({
                     title: 'Classifica',
                     headerShown: true, // Mostra l'header solo per questa schermata
-                    ...CreateLeagueHeader({ navigation }), // Applica l'header personalizzato con Go Back
+                    ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
                 })}
             />
             <Stack.Screen
@@ -65,7 +65,7 @@ export default function LeagueStackNavigator() {
                 options={({ navigation }) => ({
                     title: 'Storia giornate',
                     headerShown: true, // Mostra l'header solo per questa schermata
-                    ...CreateLeagueHeader({ navigation }), // Applica l'header personalizzato con Go Back
+                    ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
                 })}
             />
             <Stack.Screen
@@ -74,7 +74,7 @@ export default function LeagueStackNavigator() {
                 options={({ navigation }) => ({
                     title: 'Storia giornate schedina',
                     headerShown: true, // Mostra l'header solo per questa schermata
-                    ...CreateLeagueHeader({ navigation }), // Applica l'header personalizzato con Go Back
+                    ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
                 })}
             />
             <Stack.Screen
@@ -83,7 +83,7 @@ export default function LeagueStackNavigator() {
                 options={({ navigation }) => ({
                     title: 'Modifica Lega',
                     headerShown: true, // Mostra l'header solo per questa schermata
-                    ...CreateLeagueHeader({ navigation }), // Applica l'header personalizzato con Go Back
+                    ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
                 })}
             />
         </Stack.Navigator>

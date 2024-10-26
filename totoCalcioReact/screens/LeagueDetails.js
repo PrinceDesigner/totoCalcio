@@ -1,6 +1,6 @@
 import moment from 'moment-timezone';
-import { useRoute } from '@react-navigation/native';
-import React, { useState, useEffect } from 'react';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, RefreshControl } from 'react-native';
 import { Card, Badge, useTheme, Button } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
@@ -17,9 +17,11 @@ import { getGiornataAttuale } from '../services/infoGiornataService';
 
 
 
-export default function LeagueDetails({ navigation }) {
+export default function LeagueDetails() {
     const { colors } = useTheme();
     const [refreshing, setRefreshing] = useState(false);
+
+    const navigation = useNavigation();
 
     const dispatch = useDispatch();
     let [giornataAttuale, setGiornataAttuale] = useState();
@@ -36,12 +38,16 @@ export default function LeagueDetails({ navigation }) {
     // id Partecipanti
     const userIds = selectedLeague.members;
 
+    const route = useRoute(); // Ottieni l'oggetto route
+
     //partecipanti
     const provisionalRanking = useSelector((state) => state.partecipantiLegaCorrente.participants);
 
     const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
     const matchdayNumber = infogiornataAttuale.dayId && infogiornataAttuale.dayId.replace('RegularSeason-', '') || 0;
-    const deadline = infogiornataAttuale && infogiornataAttuale.startDate; // Simuliamo una scadenza a 1 ora da adesso
+    const deadline = infogiornataAttuale && infogiornataAttuale.startDate;
+
+
     // Funzione per copiare l'ID della lega
     const copyToClipboard = async () => {
         await Clipboard.setStringAsync(leagueId);
@@ -68,6 +74,21 @@ export default function LeagueDetails({ navigation }) {
         }
     };
 
+    useFocusEffect(
+        useCallback(() => {
+            // Verifica che tutti i valori siano disponibili prima di effettuare le chiamate
+            if (giornataAttuale && dayId && leagueId && userId && userIds.length) {
+                // Se sono disponibili, esegui fetchDataInParallel
+                fetchDataInParallel();
+            }
+    
+            // Questa funzione serve per "pulire" l'effetto quando la schermata perde il focus
+            // Qui possiamo aggiungere del codice di cleanup se necessario
+            return () => {
+                // Se hai bisogno di pulire qualche stato o listener, fallo qui
+            };
+        }, [giornataAttuale, dayId, leagueId, userId, userIds, fetchDataInParallel])
+    );
 
 
     const isDatePast = (inputDate) => {
@@ -126,12 +147,7 @@ export default function LeagueDetails({ navigation }) {
             dispatch(hideLoading());
         }
     };
-    useEffect(() => {
-        // Verifica che tutti i valori siano disponibili prima di effettuare le chiamate
-        if (giornataAttuale && dayId && leagueId && userId && userIds) {
-            fetchDataInParallel();
-        }
-    }, [dispatch, giornataAttuale, dayId, leagueId, userId, userIds]);
+
 
     // Funzione per gestire il refresh
     const onRefresh = () => {
