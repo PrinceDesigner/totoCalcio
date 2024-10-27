@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal } from 'rea
 import { Card, Button, useTheme } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { savePrediction } from '../redux/slice/predictionsSlice';
+import { triggerRefresh } from '../redux/slice/refreshSlice';
 import { showLoading, hideLoading } from '../redux/slice/uiSlice';
 import { showToast } from '../ToastContainer';
 
@@ -92,6 +93,7 @@ export default function InsertResultsScreen({ navigation }) {
             if (error.message === 'La giornata è già iniziata.') {
                 
                 showToast('error', 'La giornata è già iniziata. Aggiorna la pagina');
+                dispatch(triggerRefresh());
                 navigation.navigate('LeagueDetails'); // Sostituisci la schermata per evitare duplicazioni
                 
             } else {

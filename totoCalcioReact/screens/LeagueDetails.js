@@ -14,6 +14,7 @@ import * as Clipboard from 'expo-clipboard'; // Importa Clipboard
 import { Share } from 'react-native';
 import { getGiornataAttuale } from '../services/infoGiornataService';
 import MatchItem from './componentScreen/MatchItem';
+import { clearRefresh } from '../redux/slice/refreshSlice';
 
 
 
@@ -39,6 +40,8 @@ export default function LeagueDetails({ navigation }) {
     const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
     const provisionalRanking = useSelector((state) => state.partecipantiLegaCorrente.participants);
     const provisionalRankingLoading = useSelector((state) => state.partecipantiLegaCorrente.loading);
+    // selettore di refreshdata
+    const refreshRequired = useSelector((state) => state.refresh.refreshRequired);
 
     // id Partecipanti
     const userIds = selectedLeague.members;
@@ -72,6 +75,18 @@ export default function LeagueDetails({ navigation }) {
             alert('Errore durante la condivisione: ' + error.message);
         }
     };
+
+    useEffect(() => {
+        if (refreshRequired) {
+            // Effettua la chiamata per aggiornare i dati
+            if (giornataAttuale && dayId && leagueId && userId && userIds.length) {
+                // Se sono disponibili, esegui fetchDataInParallel
+                fetchDataInParallel();
+            }
+            // Una volta ricaricati i dati, ripristina il flag di refresh
+            dispatch(clearRefresh());
+        }
+    }, [refreshRequired, dispatch]);
 
     useEffect(() => {
         console.log('cambio data');

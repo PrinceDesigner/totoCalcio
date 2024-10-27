@@ -9,6 +9,7 @@ import insertPredictionsReducer from '../redux/slice/predictionsSlice';
 import getPredictionsReducer from '../redux/slice/predictionsSlice';
 import participantsReducer from '../redux/slice/partecipantsSlice'; // Importa il reducer dei partecipanti
 import storicoPerUtenteSelezionatoReducer from '../redux/slice/storicoPerUtenteSelezionatoSlice'; // Importa il reducer dei partecipanti
+import refreshReducer from '../redux/slice/refreshSlice';
 
 
 const store = configureStore({
@@ -21,6 +22,7 @@ const store = configureStore({
     insertPredictions: insertPredictionsReducer,
     partecipantiLegaCorrente: participantsReducer, // Aggiungi il reducer dei partecipanti
     storicoPerUtenteSelezionato: storicoPerUtenteSelezionatoReducer,
+    refresh: refreshReducer,
 
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(logger), // Aggiungi redux-logger
