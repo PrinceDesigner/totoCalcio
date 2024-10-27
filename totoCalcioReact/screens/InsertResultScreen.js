@@ -14,7 +14,7 @@ export default function InsertResultsScreen({ navigation }) {
     const matches = useSelector((state) => state.infogiornataAttuale.matches); 
     const userId = useSelector((state) => state.auth.user.user.userId); 
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata); 
-    const giornataSchedina = useSelector((state) => state.giornataAttuale.giornataAttuale); 
+    const giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale); 
     const schedinaGiocata = useSelector((state) => state.insertPredictions.schedinaInserita.schedina);
     const dispatch = useDispatch();
 
@@ -64,7 +64,7 @@ export default function InsertResultsScreen({ navigation }) {
         const predictionData = {
             userId: userId,
             leagueId: leagueId,
-            daysId: giornataSchedina,
+            daysId: giornataAttuale,
             schedina: Object.values(results).map(result => ({
                 matchId: result.matchId,
                 result: null,

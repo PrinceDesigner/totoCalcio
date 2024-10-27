@@ -58,14 +58,28 @@ export const deleteLeague = async (leagueId) => {
 
 // Servizio per aggiornare il nome della lega
 export const updateLeagueName = async (leagueId, leagueName) => {
-    try {
-        const response = await axiosInstance.put(`/leagues/${leagueId}`, {
-          leagueName
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Errore durante l\'aggiornamento della lega:', error);
-        throw error;
-    }
+  try {
+    const response = await axiosInstance.put(`/leagues/${leagueId}`, {
+      leagueName
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Errore durante l\'aggiornamento della lega:', error);
+    throw error;
+  }
+};
+
+// Servizio per rimuovere un utente da una lega
+export const removeUserFromLeague = async (leagueId, userId) => {
+  try {
+    const response = await axiosInstance.post('/leagues/removeUserFromLeague', {
+      leagueId,
+      userId,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Errore durante la rimozione dell\'utente dalla lega:', error);
+    throw error;
+  }
 };
 

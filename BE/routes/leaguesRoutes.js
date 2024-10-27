@@ -434,7 +434,57 @@ router.get('/leagues/days/:dayId', async (req, res) => {
   }
 });
 
+// Route per eliminare un utente da una lega
+router.post('/leagues/removeUserFromLeague', async (req, res) => {
+  const { leagueId, userId } = req.body;
+  console.log('bodyyyy', req.body);
 
+  if (!leagueId || !userId) {
+    return res.status(400).json({ message: 'leagueId e userId sono obbligatori.' });
+  }
+
+  try {
+    // Ottieni la lega dalla collezione "leagues"
+    const leagueRef = firestore.collection('leagues').doc(leagueId);
+    const leagueDoc = await leagueRef.get();
+
+    if (!leagueDoc.exists) {
+      return res.status(404).json({ message: 'Lega non trovata.' });
+    }
+
+    const leagueData = leagueDoc.data();
+
+    // Rimuovi l'utente dall'array "members"
+    const updatedMembers = leagueData.members.filter((member) => member !== userId);
+    const updatedMembersInfo = leagueData.membersInfo.filter((memberInfo) => memberInfo.id !== userId);
+
+    // Aggiorna la lega con i membri aggiornati
+    await leagueRef.update({
+      members: updatedMembers,
+      membersInfo: updatedMembersInfo,
+    });
+
+    // Elimina tutte le predizioni dell'utente dalla collezione "predictions"
+    const predictionsSnapshot = await firestore.collection('predictions')
+      .where('leagueId', '==', leagueId)
+      .where('userId', '==', userId)
+      .get();
+
+    const batch = firestore.batch();
+
+    predictionsSnapshot.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    // Esegui l'operazione di batch per eliminare le predizioni
+    await batch.commit();
+
+    return res.status(200).json({ message: 'Utente rimosso dalla lega e predizioni eliminate con successo.' });
+  } catch (error) {
+    console.error('Errore durante la rimozione dell\'utente dalla lega:', error);
+    return res.status(500).json({ message: 'Errore durante la rimozione dell\'utente dalla lega.' });
+  }
+});
 
 
 

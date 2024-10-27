@@ -4,15 +4,19 @@ import { Card, useTheme, Avatar, Button } from 'react-native-paper';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; // Importa l'icona del cestino
 import { useDispatch, useSelector } from 'react-redux';
 import { selectLeagueById } from '../redux/slice/leaguesSlice';
+import { triggerRefresh } from '../redux/slice/refreshSlice';
 import { fetchStoricoPerUtenteSelezionato } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
+import { removeUserFromLeague } from '../services/leagueService';
+import { showToast } from '../ToastContainer';
 
-export default function ParticipantsListScreen({navigation}) {
+export default function ParticipantsListScreen({ navigation }) {
     const dispatch = useDispatch(); // Usa dispatch per inviare l'azione Redux
 
     const { colors } = useTheme();
     const [modalVisible, setModalVisible] = useState(false); // Stato per la visibilità della modale
     const [selectedParticipant, setSelectedParticipant] = useState(null); // Partecipante selezionato per l'eliminazione
+
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const userId = useSelector((state) => state.auth.user.user.userId);
     const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
@@ -26,9 +30,22 @@ export default function ParticipantsListScreen({navigation}) {
     };
 
     // Funzione per confermare l'eliminazione del partecipante
-    const confirmDeleteParticipant = () => {
+    // Funzione per confermare l'eliminazione del partecipante
+    const confirmDeleteParticipant = async () => {
+        if (!selectedParticipant) {
+            console.error('Nessun partecipante selezionato');
+            return;
+        }
+
+        const { leagueId, userId } = selectedParticipant;
+
+        // Chiudi la modale prima di procedere con l'operazione di rimozione
         setModalVisible(false);
-        // Aggiungi la logica per rimuovere il partecipante dalla lista
+
+        // Chiama handleRemoveUser per eseguire la rimozione
+        await handleRemoveUser(leagueId, userId);
+
+
     };
 
     // Funzione per chiudere la modale
@@ -40,27 +57,40 @@ export default function ParticipantsListScreen({navigation}) {
         try {
             // Mostra lo stato di caricamento
             dispatch(showLoading());
-    
+
             // Effettua la chiamata all'API
             await dispatch(fetchStoricoPerUtenteSelezionato({ leagueId, userId: participant.userId })).unwrap();
-    
+
             // Nascondi lo stato di caricamento
             dispatch(hideLoading());
-    
+
             // Naviga alla schermata successiva, ad esempio "UserHistoryScreen"
             navigation.navigate('UserHistoryScreen');
-            
+
             // Mostra un messaggio di successo se necessario
         } catch (error) {
             console.error('Errore durante il caricamento dei dati:', error);
-    
+
             // Nascondi lo stato di caricamento
             dispatch(hideLoading());
-    
+
             // Mostra un messaggio di errore
         }
     };
-    
+
+
+    const handleRemoveUser = async (leagueId, userId) => {
+        try {
+            const response = await removeUserFromLeague(leagueId, userId);
+            showToast('success', 'Utente rimosso con successo');
+            dispatch(triggerRefresh());
+            navigation.navigate('LeagueDetails',{ screen: 'Home Lega' }); // Sostituisci la schermata per evitare duplicazioni
+        } catch (error) {
+            console.error('Errore durante la rimozione dell\'utente dalla lega:', error);
+            // Mostra un errore all'utente se necessario
+        }
+    };
+
 
     return (
         <View style={{ flex: 1 }}>

@@ -81,7 +81,8 @@ export default function LeagueDetails({ navigation }) {
             // Effettua la chiamata per aggiornare i dati
             if (giornataAttuale && dayId && leagueId && userId && userIds.length) {
                 // Se sono disponibili, esegui fetchDataInParallel
-                fetchDataInParallel();
+                fetchLeagues()
+                fetchGiornataAttuale()
             }
             // Una volta ricaricati i dati, ripristina il flag di refresh
             dispatch(clearRefresh());
