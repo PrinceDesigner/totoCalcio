@@ -187,14 +187,14 @@ export default function SignupScreen({ navigation }) {
                 </Button>
 
                 {/* Separator Line with "or" */}
-                <View style={styles.separatorContainer}>
+                {/* <View style={styles.separatorContainer}>
                     <View style={styles.line} />
                     <Text style={styles.separatorText}>or</Text>
                     <View style={styles.line} />
-                </View>
+                </View> */}
 
                 {/* Pulsanti Google e Facebook */}
-                <View style={styles.socialButtonsContainer}>
+                {/* <View style={styles.socialButtonsContainer}>
                     <Button
                         mode="contained"
                         icon={() => <MaterialCommunityIcons name="google" size={24} color="white" />}
@@ -211,7 +211,7 @@ export default function SignupScreen({ navigation }) {
                     >
                         Facebook
                     </Button>
-                </View>
+                </View> */}
 
                 {/* Scritta "Hai già un account? Accedi" */}
                 <TouchableOpacity onPress={() => navigation.navigate('LoginScreen')}>

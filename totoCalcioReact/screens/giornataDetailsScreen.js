@@ -17,16 +17,12 @@ export default function GiornataDetailsScreen({ route }) {
 
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const dayId = useSelector((state) => state.giornataAttuale.giornataAttuale);
-    const matchdayNumber = dayId.replace('RegularSeason-', '') || 0;
     const matches = useSelector((state) => state.infogiornataAttuale.matches);
-
     const participants = useSelector((state) => state.partecipantiLegaCorrente.participants);
-
-
-    // Dati dal Redux store
     const prediction = useSelector((state) => state.insertPredictions.schedinaInserita);
     const loading = useSelector((state) => state.ui.loading);
-
+    
+    const matchdayNumber = dayId.replace('RegularSeason-', '') || 0;
 
 // Funzione per gestire il click su un partecipante
 const handleParticipantPress = async (participant) => {

@@ -10,7 +10,7 @@ const AuthErrors = {
     "auth/invalid-claims": "Attributi di rivendicazione personalizzati non validi.",
     "auth/invalid-continue-uri": "L'URL fornito non è valido.",
     "auth/invalid-creation-time": "La data di creazione non è valida.",
-    "auth/invalid-credential": "Le credenziali non sono valide per l'operazione richiesta.",
+    "auth/invalid-credential": "Email o Password errate",
     "auth/invalid-disabled-field": "Il valore fornito per il campo disabilitato non è valido.",
     "auth/invalid-display-name": "Il nome visualizzato fornito non è valido.",
     "auth/invalid-dynamic-link-domain": "Il dominio del link dinamico non è configurato correttamente.",
