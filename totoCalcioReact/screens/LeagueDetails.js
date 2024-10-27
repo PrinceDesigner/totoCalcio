@@ -17,15 +17,13 @@ import { getGiornataAttuale } from '../services/infoGiornataService';
 
 
 
-export default function LeagueDetails() {
+export default function LeagueDetails({ route, navigation }) {
     const { colors } = useTheme();
     const [refreshing, setRefreshing] = useState(false);
 
-    const navigation = useNavigation();
-
     const dispatch = useDispatch();
     let [giornataAttuale, setGiornataAttuale] = useState();
-    giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale); // Stato delle leghe
+    giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale);
     const infogiornataAttuale = useSelector((state) => state.infogiornataAttuale);
     const schedinaGiocata = useSelector((state) => state.insertPredictions.schedinaInserita.schedina);
     // Selettori per ottenere le informazioni necessarie
@@ -38,14 +36,12 @@ export default function LeagueDetails() {
     // id Partecipanti
     const userIds = selectedLeague.members;
 
-    const route = useRoute(); // Ottieni l'oggetto route
-
     //partecipanti
     const provisionalRanking = useSelector((state) => state.partecipantiLegaCorrente.participants);
 
     const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
     const matchdayNumber = infogiornataAttuale.dayId && infogiornataAttuale.dayId.replace('RegularSeason-', '') || 0;
-    const deadline = infogiornataAttuale && infogiornataAttuale.startDate;
+    const startDate = infogiornataAttuale && infogiornataAttuale.startDate;
 
 
     // Funzione per copiare l'ID della lega
@@ -74,25 +70,18 @@ export default function LeagueDetails() {
         }
     };
 
-    useFocusEffect(
-        useCallback(() => {
-            // Verifica che tutti i valori siano disponibili prima di effettuare le chiamate
-            if (giornataAttuale && dayId && leagueId && userId && userIds.length) {
-                // Se sono disponibili, esegui fetchDataInParallel
-                fetchDataInParallel();
-            }
-    
-            // Questa funzione serve per "pulire" l'effetto quando la schermata perde il focus
-            // Qui possiamo aggiungere del codice di cleanup se necessario
-            return () => {
-                // Se hai bisogno di pulire qualche stato o listener, fallo qui
-            };
-        }, [giornataAttuale, dayId, leagueId, userId, userIds, fetchDataInParallel])
-    );
+
+    useEffect(() => {
+        // Verifica che tutti i valori siano disponibili prima di effettuare le chiamate
+        if (giornataAttuale && dayId && leagueId && userId && userIds.length) {
+            // Se sono disponibili, esegui fetchDataInParallel
+            fetchDataInParallel();
+        }
+    }, [giornataAttuale, dayId, userIds]);
 
 
     const isDatePast = (inputDate) => {
-        if (deadline) {
+        if (startDate) {
             // Configura la data di input usando moment e imposta il fuso orario a "Europe/Rome"
             const date = moment.tz(inputDate, "Europe/Rome");
 
@@ -165,7 +154,7 @@ export default function LeagueDetails() {
     useEffect(() => {
         const interval = setInterval(() => {
             const now = moment().utc("Europe/Rome"); // Ottieni la data attuale
-            const targetTime = moment(deadline);
+            const targetTime = moment(startDate);
             const duration = moment.duration(targetTime.diff(now)); // Calcola la differenza tra deadline e ora attuale
 
             if (duration.asMilliseconds() <= 0) {
@@ -185,7 +174,7 @@ export default function LeagueDetails() {
         }, 1000); // Aggiorna ogni secondo
 
         return () => clearInterval(interval); // Pulisci l'interval quando il componente viene smontato
-    }, [deadline]);
+    }, [startDate]);
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }}>
@@ -207,14 +196,14 @@ export default function LeagueDetails() {
                 </View>
 
                 {/* Countdown visual nello stile "10:10:10" */}
-                {!isDatePast(deadline) ? <View style={styles.compactCountdownContainer}>
+                {!isDatePast(startDate) ? <View style={styles.compactCountdownContainer}>
                     <Text style={styles.countdownNumber}>
                         {countdown.days}d {countdown.hours}h {countdown.minutes}m
                     </Text>
                 </View> : null}
 
                 {/* Bottone "Inserisci Esiti" */}
-                {!isDatePast(deadline) ? <Button
+                {!isDatePast(startDate) ? <Button
                     mode="contained"
                     onPress={() => navigation.navigate('InsertResults')}
                     style={styles.insertButton}

@@ -93,8 +93,8 @@ export default function InsertResultsScreen({ navigation }) {
             console.error('Errore durante il salvataggio delle predizioni:', error);
             if (error.message === 'La giornata è già iniziata.') {
                 
-                showToast('error', 'La giornata è già iniziata.');
-                navigation.navigate('LeagueDetails', { refresh: true });
+                showToast('error', 'La giornata è già iniziata. Aggiorna la pagina');
+                navigation.navigate('LeagueDetails'); // Sostituisci la schermata per evitare duplicazioni
                 
             } else {
                 showToast('error', 'Errore durante il salvataggio delle predizioni');
