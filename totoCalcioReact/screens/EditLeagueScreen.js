@@ -27,7 +27,6 @@ export default function EditLeagueScreen({ route, navigation }) {
     if (leagueName.trim()) {
       try {
         dispatch(showLoading()); // Mostra il caricamento
-        console.log('handleUpdateLeague', leagueName);
         // Dispatcha il thunk per aggiornare la lega
         await dispatch(updateLeagueNameThunk({ leagueId, leagueName })).unwrap();
 

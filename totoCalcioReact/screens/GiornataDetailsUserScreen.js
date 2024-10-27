@@ -1,25 +1,16 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { useTheme, Card, Avatar } from 'react-native-paper';
-import { MaterialIcons } from '@expo/vector-icons';
-import { fetchPrediction } from '../redux/slice/predictionsSlice';
-import { showLoading, hideLoading } from '../redux/slice/uiSlice';
-import { showToast } from '../ToastContainer';
-import { checkPrediction } from '../services/predictionsService';
+import { useSelector } from 'react-redux';
+import { useTheme, Card } from 'react-native-paper';
 
 export default function GiornataDetailsUserScreen({ route }) {
     const { prediction, user } = route.params; // Recupera i parametri passati
 
     const { colors } = useTheme();
-    const dispatch = useDispatch();
 
     const dayId = useSelector((state) => state.giornataAttuale.giornataAttuale);
     const matchdayNumber = dayId.replace('RegularSeason-', '') || 0;
     const matches = useSelector((state) => state.infogiornataAttuale.matches);
-
-    const participants = useSelector((state) => state.partecipantiLegaCorrente.participants);
-
 
     // Dati dal Redux store
     // const prediction = useSelector((state) => state.insertPredictions.schedinaInserita);

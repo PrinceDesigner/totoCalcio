@@ -30,51 +30,42 @@ const HomeScreen = React.memo(() => {
 
     useEffect(() => {
         if (route.params?.refresh) {
-            fetchLeagues(); // Recupera le leghe se il parametro refresh è true
-            fetchGiornataAttuale(); // Recupera la giornata attuale
+            fetchAllData()
             navigation.setParams({ refresh: false }); // Resetta il parametro refresh
         }
     }, [route.params?.refresh]);
 
-    useEffect(() => {
-        fetchLeagues(); // Recupera le leghe quando la schermata viene caricata
-    }, []);
 
-    // Funzione per recuperare le leghe
-    const fetchLeagues = async () => {
+    // Funzione per recuperare entrambe le informazioni in parallelo
+    const fetchAllData = async () => {
         try {
             dispatch(showLoading()); // Mostra lo stato di caricamento
-            await dispatch(getUserLeaguesThunk()).unwrap(); // Attendi che il thunk termini
+
+            // Esegui fetchLeagues e fetchGiornataAttuale in parallelo
+            await Promise.all([
+                dispatch(getUserLeaguesThunk()).unwrap(), // Recupera le leghe
+                getGiornataAttuale().then((giornata) => setGiornataAttuale(giornata)) // Recupera la giornata attuale
+            ]);
         } catch (error) {
-            if (error.status === 401 || error.status === 403) {                
+            if (error.status === 401 || error.status === 403 || error.status === 500) {
                 dispatch(logout());
                 navigation.navigate('LoginScreen');
             }
-            console.error('Errore durante il recupero delle leghe:', error);
+            console.error('Errore durante il recupero dei dati:', error);
         } finally {
             dispatch(hideLoading()); // Nascondi lo stato di caricamento
         }
     };
 
-    // Recupero GiornatAttuale da firebase await firestore.collection('giornataAttuale').limit(1).get()
-    const fetchGiornataAttuale = async () => {
-        try {
-            const giornata = await getGiornataAttuale();
-            setGiornataAttuale(giornata);
-        } catch (error) {
-            console.error('Errore durante il recupero della giornata attuale:', error);
-        }
-    };
-
     useEffect(() => {
-        fetchGiornataAttuale();
+        fetchAllData();
     }, []);
+    
 
     // Funzione di refresh
     const onRefresh = () => {
         setRefreshing(true);
-        fetchLeagues().then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
-        fetchGiornataAttuale().then(() => setRefreshing(false)); // Ricarica la giornata attuale e disabilita il refresh
+        fetchAllData().then(() => setRefreshing(false))
     };
 
     // Funzione per gestire il click su una lega
@@ -88,7 +79,6 @@ const HomeScreen = React.memo(() => {
         try {
             dispatch(showLoading());
             await dispatch(deleteLeagueThunk(leagueId)).unwrap(); // Esegui il thunk per eliminare la lega
-            console.log('Lega eliminata con successo');
         } catch (error) {
             console.error('Errore durante l\'eliminazione della lega:', error);
         } finally {

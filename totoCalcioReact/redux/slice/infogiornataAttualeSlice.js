@@ -15,15 +15,16 @@ export const fetchDayDetails = createAsyncThunk(
 );
 
 const initialState = {
-  dayId: null,
-  dayNumber: '',
-  startDate: '',
-  endDate: '',
-  isCurrentDay: false,
-  matches: [],
   loading: false,
   error: null,
+  dayId: null,
+  dayNumber: null,
+  startDate: null,
+  endDate: null,
+  isCurrentDay: false,
+  matches: [],
 };
+
 
 const infogiornataAttualeSlice = createSlice({
   name: 'infogiornataAttuale',
@@ -32,21 +33,30 @@ const infogiornataAttualeSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchDayDetails.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        return {
+          ...state,
+          loading: true,
+          error: null,
+        };
       })
       .addCase(fetchDayDetails.fulfilled, (state, action) => {
-        state.loading = false;
-        state.dayId = action.payload.dayId;
-        state.dayNumber = action.payload.dayNumber;
-        state.startDate = action.payload.startDate;
-        state.endDate = action.payload.endDate;
-        state.isCurrentDay = action.payload.isCurrentDay;
-        state.matches = action.payload.matches;
+        return {
+          ...state,
+          loading: false,
+          dayId: action.payload.dayId,
+          dayNumber: action.payload.dayNumber,
+          startDate: action.payload.startDate,
+          endDate: action.payload.endDate,
+          isCurrentDay: action.payload.isCurrentDay,
+          matches: action.payload.matches,
+        };
       })
       .addCase(fetchDayDetails.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || 'Errore nel recupero della giornata';
+        return {
+          ...state,
+          loading: false,
+          error: action.payload || 'Errore nel recupero della giornata',
+        };
       });
   },
 });

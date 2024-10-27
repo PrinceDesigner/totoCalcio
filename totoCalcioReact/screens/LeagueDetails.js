@@ -2,44 +2,46 @@ import moment from 'moment-timezone';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, RefreshControl } from 'react-native';
-import { Card, Badge, useTheme, Button } from 'react-native-paper';
+import { Card, Badge, useTheme, Button, ActivityIndicator } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchDayDetails } from '../redux/slice/infogiornataAttualeSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { COLORJS } from '../theme/themeColor';
 import { fetchPrediction } from '../redux/slice/predictionsSlice';
 import { fetchParticipantsThunk } from '../redux/slice/partecipantsSlice';
-import { Image } from 'react-native'; // Importa il componente Image
 import { getUserLeaguesThunk, selectLeagueById } from '../redux/slice/leaguesSlice';
 import * as Clipboard from 'expo-clipboard'; // Importa Clipboard
 import { Share } from 'react-native';
 import { getGiornataAttuale } from '../services/infoGiornataService';
+import MatchItem from './componentScreen/MatchItem';
 
 
 
-export default function LeagueDetails({ route, navigation }) {
+export default function LeagueDetails({ navigation }) {
     const { colors } = useTheme();
-    const [refreshing, setRefreshing] = useState(false);
 
     const dispatch = useDispatch();
+
     let [giornataAttuale, setGiornataAttuale] = useState();
+    const [refreshing, setRefreshing] = useState(false);
+    const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
+    const [loading, setLoading] = useState(true); // Stato di loading per il cambiamento di isPast
+    const [isPast, setIsPast] = useState(false);  // Stato che indica se la giornata è passata
+
     giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale);
     const infogiornataAttuale = useSelector((state) => state.infogiornataAttuale);
     const schedinaGiocata = useSelector((state) => state.insertPredictions.schedinaInserita.schedina);
+
     // Selettori per ottenere le informazioni necessarie
     const userId = useSelector((state) => state.auth.user && state.auth.user.user.userId);
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const dayId = useSelector((state) => state.giornataAttuale.giornataAttuale);
-
     const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
+    const provisionalRanking = useSelector((state) => state.partecipantiLegaCorrente.participants);
 
     // id Partecipanti
     const userIds = selectedLeague.members;
 
-    //partecipanti
-    const provisionalRanking = useSelector((state) => state.partecipantiLegaCorrente.participants);
-
-    const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
     const matchdayNumber = infogiornataAttuale.dayId && infogiornataAttuale.dayId.replace('RegularSeason-', '') || 0;
     const startDate = infogiornataAttuale && infogiornataAttuale.startDate;
 
@@ -69,6 +71,24 @@ export default function LeagueDetails({ route, navigation }) {
             alert('Errore durante la condivisione: ' + error.message);
         }
     };
+
+    useEffect(() => {
+        // Simuliamo un delay per aggiornare isPast, ad esempio quando startDate cambia
+        const checkIsPast = async () => {
+            try {
+                setLoading(true);  // Imposta loading su true mentre si calcola
+                // Simulazione di calcolo asincrono
+                const result = isDatePast(startDate);
+                setIsPast(result);
+            } catch (error) {
+                console.error('Errore durante il controllo della data:', error);
+            } finally {
+                setLoading(false); // Imposta loading su false una volta terminato
+            }
+        };
+
+        checkIsPast();
+    }, [startDate]); // Ogni volta che cambia startDate, ricontrolla isPast
 
 
     useEffect(() => {
@@ -152,29 +172,77 @@ export default function LeagueDetails({ route, navigation }) {
     };
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            const now = moment().utc("Europe/Rome"); // Ottieni la data attuale
+        if (!startDate) return; // Assicurati che startDate sia definito prima di avviare il countdown.
+
+        // Definisci una funzione per calcolare il countdown rimanente
+        const calculateCountdown = () => {
+            const now = moment().tz("Europe/Rome"); // Ottieni la data attuale nel fuso orario corretto
             const targetTime = moment(startDate);
-            const duration = moment.duration(targetTime.diff(now)); // Calcola la differenza tra deadline e ora attuale
+            const duration = moment.duration(targetTime.diff(now));
 
             if (duration.asMilliseconds() <= 0) {
-                clearInterval(interval); // Ferma il timer se il countdown è finito
+                // Se il targetTime è passato, ferma il countdown
                 setCountdown({ days: '0', hours: '00', minutes: '00' });
-            } else {
-                const days = Math.floor(duration.asDays());
-                const hours = Math.floor(duration.asHours() % 24); // Restanti ore
-                const minutes = Math.floor(duration.asMinutes() % 60); // Restanti minuti
-
-                setCountdown({
-                    days: days.toString(),
-                    hours: hours < 10 ? `0${hours}` : hours.toString(), // Formatta con 2 cifre
-                    minutes: minutes < 10 ? `0${minutes}` : minutes.toString(), // Formatta con 2 cifre
-                });
+                return;
             }
-        }, 1000); // Aggiorna ogni secondo
+
+            // Aggiorna i valori del countdown
+            const days = Math.floor(duration.asDays());
+            const hours = Math.floor(duration.hours()); // Usa direttamente `.hours()` per maggiore chiarezza
+            const minutes = Math.floor(duration.minutes());
+
+            setCountdown({
+                days: days.toString(),
+                hours: hours < 10 ? `0${hours}` : hours.toString(),
+                minutes: minutes < 10 ? `0${minutes}` : minutes.toString(),
+            });
+        };
+
+        // Calcola immediatamente il countdown all'inizio
+        calculateCountdown();
+
+        // Imposta un intervallo per aggiornare il countdown ogni minuto, tranne nei minuti finali
+        const interval = setInterval(() => {
+            calculateCountdown();
+        }, 1000); // Ogni secondo (puoi fare ogni minuto con `60000` se preferisci ridurre le risorse)
 
         return () => clearInterval(interval); // Pulisci l'interval quando il componente viene smontato
     }, [startDate]);
+
+
+
+    // Sezione Countdown e Bottone
+    const countdownAndButton = (
+        <>
+            <View style={styles.compactCountdownContainer}>
+                <Text style={styles.countdownNumber}>
+                    {countdown.days}d {countdown.hours}h {countdown.minutes}m
+                </Text>
+            </View>
+            <Button
+                mode="contained"
+                onPress={() => navigation.navigate('InsertResults')}
+                style={styles.insertButton}
+            >
+                {schedinaGiocata ? 'Modifica Esiti' : 'Inserisci Esiti'}
+            </Button>
+        </>
+    );
+
+    // Sezione Live
+    const liveSection = (
+        <>
+            <Text style={{ textAlign: 'center', color: 'red', fontSize: 30 }}>LIVE</Text>
+            <Button
+                mode="contained"
+                onPress={() => navigation.navigate('EsitiInseriti')}
+                style={styles.insertButton}
+            >
+                Clicca per guardare i tuoi Esiti
+            </Button>
+        </>
+    );
+
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }}>
@@ -191,37 +259,18 @@ export default function LeagueDetails({ route, navigation }) {
 
                     {/* Numero di giornata */}
                     <View style={styles.leagueBadgeCountDown}>
-                        <Badge style={{ backgroundColor: colors.primary }}> Giornata {matchdayNumber}</Badge>
+                        <Badge style={{ backgroundColor: colors.primary }}> Giornata {matchdayNumber + loading}</Badge>
                     </View>
                 </View>
 
-                {/* Countdown visual nello stile "10:10:10" */}
-                {!isDatePast(startDate) ? <View style={styles.compactCountdownContainer}>
-                    <Text style={styles.countdownNumber}>
-                        {countdown.days}d {countdown.hours}h {countdown.minutes}m
-                    </Text>
-                </View> : null}
-
-                {/* Bottone "Inserisci Esiti" */}
-                {!isDatePast(startDate) ? <Button
-                    mode="contained"
-                    onPress={() => navigation.navigate('InsertResults')}
-                    style={styles.insertButton}
-                >
-                    {schedinaGiocata ? 'Modifica Esiti' : 'Inserisci Esiti'}
-                </Button> :
-                    <>
-                        <Text style={{ textAlign: 'center', color: 'red', fontSize: 30 }}>LIVE</Text>
-                        <Button
-                            mode="contained"
-                            onPress={() => navigation.navigate('EsitiInseriti')}
-                            style={styles.insertButton}
-                        >
-                            Clicca per guardare i tuoi Esiti
-                        </Button>
-                    </>
-
-                }
+                {/* Contenuto della sezione Countdown e Live */}
+                {loading ? (
+                    // Mostra l'indicatore di caricamento mentre si calcola lo stato `isPast`
+                    <ActivityIndicator size="large" color={colors.primary} />
+                ) : (
+                    // Mostra il contenuto appropriato basato su `isPast`
+                    !isPast ? countdownAndButton : liveSection
+                )}
             </View>
 
             <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}
@@ -284,44 +333,7 @@ export default function LeagueDetails({ route, navigation }) {
                         <Text style={{ color: 'white', fontSize: 25 }}>Giornata {matchdayNumber}</Text>
                     </View>
                     {matches.map((match) => (
-                        <View key={match.matchId} style={{ ...styles.matchItem, backgroundColor: colors.surface }}>
-                            {/* Dettaglio del match */}
-                            <View style={styles.matchDetails}>
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                                    <View style={styles.leagueBadgeContainer}>
-                                        <Badge style={{ backgroundColor: colors.primary }}>Serie A</Badge>
-                                    </View>
-                                    <View style={styles.leagueBadgeContainer}>
-                                        <Badge style={{ backgroundColor: colors.primary }}>{match.stadio}</Badge>
-                                    </View>
-                                </View>
-
-                                {/* Sezione con i loghi delle squadre e i nomi */}
-                                <View style={styles.teamContainer}>
-                                    <View style={styles.team}>
-                                        <Image
-                                            source={{ uri: match.homeLogo }}
-                                            style={styles.teamLogo}
-                                            resizeMode="contain"
-                                        />
-                                        <Text style={styles.teamName}>{match.homeTeam}</Text>
-                                    </View>
-
-                                    <Text style={styles.vsText}>vs</Text>
-
-                                    <View style={styles.team}>
-                                        <Image
-                                            source={{ uri: match.awayLogo }}
-                                            style={styles.teamLogo}
-                                            resizeMode="contain"
-                                        />
-                                        <Text style={styles.teamName}>{match.awayTeam}</Text>
-                                    </View>
-                                </View>
-
-                                <Text style={styles.matchTime}>{convertToItalianTime(match.startTime)}</Text>
-                            </View>
-                        </View>
+                        <MatchItem key={match.matchId} match={match} convertToItalianTime={convertToItalianTime} />
                     ))}
                 </Card>
 
@@ -358,10 +370,6 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         backgroundColor: COLORJS.primary,
 
-    },
-    matchdayText: {
-        fontSize: 14,
-        color: 'white',
     },
     compactCountdownContainer: {
         flexDirection: 'row',
@@ -412,65 +420,6 @@ const styles = StyleSheet.create({
     },
     fullRankingButton: {
         marginTop: 10,
-    },
-    leagueBadgeContainer: {
-        marginBottom: 10,
-        padding: 5,
-        borderRadius: 12,
-        backgroundColor: COLORJS.primary,
-    },
-
-    matchItem: {
-        marginVertical: 5,
-        borderRadius: 5,
-        fontSize: 14,
-        color: '#aaa',
-        padding: 10
-
-    },
-    matchDetails: {
-        // paddingHorizontal: 10,
-    },
-    leagueBadgeContainer: {
-        marginBottom: 5,
-    },
-    matchText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
-        textAlign: 'center',
-    },
-    matchTime: {
-        color: 'white',
-        fontSize: 14,
-        textAlign: 'center',
-        marginTop: 5,
-    },
-    teamContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginVertical: 5,
-    },
-    team: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginHorizontal: 10,
-    },
-    teamLogo: {
-        width: 30,
-        height: 30,
-        marginRight: 5,
-    },
-    teamName: {
-        color: 'white',
-        fontSize: 14,
-        fontWeight: 'bold',
-    },
-    vsText: {
-        color: 'white',
-        fontSize: 14,
-        marginHorizontal: 5,
-    },
+    }
 });
 

@@ -54,7 +54,6 @@ export const deleteLeagueThunk = createAsyncThunk('leagues/delete', async (leagu
 // Thunk asincrono per aggiornare il nome della lega
 export const updateLeagueNameThunk = createAsyncThunk('leagues/updateName', async ({ leagueId, leagueName }, { rejectWithValue }) => {
     try {
-        console.log('thunknime', leagueName);
         const response = await updateLeagueName(leagueId, leagueName);
         return response; // Torna i dettagli della lega aggiornata
     } catch (error) {

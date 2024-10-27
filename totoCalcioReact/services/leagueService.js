@@ -58,7 +58,6 @@ export const deleteLeague = async (leagueId) => {
 
 // Servizio per aggiornare il nome della lega
 export const updateLeagueName = async (leagueId, leagueName) => {
-  console.log('API-NOME', leagueName);
     try {
         const response = await axiosInstance.put(`/leagues/${leagueId}`, {
           leagueName

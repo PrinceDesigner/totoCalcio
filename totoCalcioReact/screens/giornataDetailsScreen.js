@@ -34,8 +34,6 @@ const handleParticipantPress = async (participant) => {
         // Mostra lo stato di caricamento
         dispatch(showLoading());
 
-        console.log('Request schedina', dayId, leagueId, participant.userId);
-
         // Chiama il servizio checkPrediction
         const predictionData = await checkPrediction(dayId, leagueId, participant.userId);
 

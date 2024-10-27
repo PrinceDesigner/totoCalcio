@@ -60,7 +60,6 @@ export default function SignupScreen({ navigation }) {
     const sendEmailVerificationMethod = async (user) => {
         try {
             await sendEmailVerification(user); // Invia l'email di verifica
-            console.log('Email di verifica inviata a:', user.email);
         } catch (error) {
             console.error('Errore durante l\'invio dell\'email di verifica:', error);
         }

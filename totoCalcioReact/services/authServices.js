@@ -7,7 +7,6 @@ const API_URL = 'http://192.168.1.26:5001/api/auth'; // Imposta il tuo URL API
 
 export const signup = async (email, password, displayName) => {
   try {
-    console.log(`${API_URL}/signup`);
     const response = await axios.post(`${API_URL}/signup`, {
       email,
       password,
@@ -25,7 +24,6 @@ export const signup = async (email, password, displayName) => {
 // Funzione per il login
 export const login = async (email, password) => {
   try {
-    console.log(`${API_URL}/login`);
     const response = await axios.post(`${API_URL}/login`, {
       email,
       password,

@@ -117,7 +117,6 @@ export default function LoginScreen({ navigation }) {
     };
 
     const handleLogin = async (emailInput = email, passwordInput = password) => {
-        console.log('creenzialiLog' ,emailInput);
         if (validateInputs(emailInput, passwordInput )) {
             try {
                 dispatch(showLoading());

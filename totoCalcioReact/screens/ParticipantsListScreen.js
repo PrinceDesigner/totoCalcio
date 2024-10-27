@@ -27,7 +27,6 @@ export default function ParticipantsListScreen({navigation}) {
 
     // Funzione per confermare l'eliminazione del partecipante
     const confirmDeleteParticipant = () => {
-        console.log(`Partecipante ${selectedParticipant.name} eliminato`);
         setModalVisible(false);
         // Aggiungi la logica per rimuovere il partecipante dalla lista
     };

@@ -143,14 +143,14 @@ export default function ListGiornateDaCalcolareScreen() {
                                 >
                                     Calcola Giornata
                                 </Button>
-                                <Button
+                                {/* <Button
                                     mode="contained"
                                     onPress={() => createTask(giornata)}
                                     style={styles.calculateButton}
                                     color={colors.primary}
                                 >
                                     Calcola Giornata 2
-                                </Button>
+                                </Button> */}
                             </Card>
                         </View>
                     ) : null;

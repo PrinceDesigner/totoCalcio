@@ -22,7 +22,6 @@ export default function InsertResultsScreen({ navigation }) {
 
     // Funzione per mappare l'array di predizioni in un oggetto compatibile con `setResults`
     const mapPredictionsToResults = (predictionsArray) => {
-        console.log('predictionsArray',predictionsArray);
         return predictionsArray.reduce((acc, curr) => {
             acc[curr.matchId] = {
                 matchId: curr.matchId,
@@ -47,7 +46,6 @@ export default function InsertResultsScreen({ navigation }) {
 
     // Funzione per gestire la selezione dell'esito
     const handleSelectResult = (match, result) => {
-        console.log('handleSelectResult', match);
         setResults(prevResults => ({
             ...prevResults,
             [match.matchId]: {

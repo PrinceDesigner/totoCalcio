@@ -39,7 +39,7 @@ export default function ProfileScreen({ navigation }) {
       const selectedImageUri = pickerResult.assets[0].uri;
       uploadImage(selectedImageUri);
     } else {
-      console.log('Immagine non selezionata o cancellata');
+     //console.log('Immagine non selezionata o cancellata');
     }
   };
 
