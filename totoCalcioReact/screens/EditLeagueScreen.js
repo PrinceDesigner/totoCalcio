@@ -21,7 +21,7 @@ export default function EditLeagueScreen({ route, navigation }) {
       Alert.alert('Errore', 'Lega non trovata');
       navigation.goBack();
     }
-  }, [league, navigation]);
+  }, []);
 
   const handleUpdateLeague = async () => {
     if (leagueName.trim()) {

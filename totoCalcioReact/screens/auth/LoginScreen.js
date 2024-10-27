@@ -17,7 +17,6 @@ export default function LoginScreen({ navigation }) {
     const { colors } = useTheme();
     const dispatch = useDispatch();
     const auth = getAuth(); // Ottieni l'istanza di Firebase Auth
-    const [pressed, setPressed] = React.useState(false);
 
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');

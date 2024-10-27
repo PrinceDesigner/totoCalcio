@@ -1,9 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, Text, FlatList, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTheme, Card, Avatar } from 'react-native-paper';
-import { MaterialIcons } from '@expo/vector-icons';
-import { fetchPrediction } from '../redux/slice/predictionsSlice';
 import { showLoading, hideLoading } from '../redux/slice/uiSlice';
 import { showToast } from '../ToastContainer';
 import { checkPrediction } from '../services/predictionsService';

@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Card, useTheme, Avatar } from 'react-native-paper';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import moment from 'moment-timezone';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { COLORJS } from '../theme/themeColor';

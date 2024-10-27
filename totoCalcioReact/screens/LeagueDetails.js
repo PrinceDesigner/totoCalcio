@@ -45,6 +45,7 @@ export default function LeagueDetails({ navigation }) {
 
     // id Partecipanti
     const userIds = selectedLeague.members;
+    const matches = infogiornataAttuale.matches;
 
     const matchdayNumber = infogiornataAttuale.dayId && infogiornataAttuale.dayId.replace('RegularSeason-', '') || 0;
     const startDate = infogiornataAttuale && infogiornataAttuale.startDate;
@@ -91,7 +92,6 @@ export default function LeagueDetails({ navigation }) {
     }, [refreshRequired, dispatch]);
 
     useEffect(() => {
-        console.log('cambio data');
         // Simuliamo un delay per aggiornare isPast, ad esempio quando startDate cambia
         const checkIsPast = async () => {
             try {
@@ -119,6 +119,44 @@ export default function LeagueDetails({ navigation }) {
             fetchDataInParallel();
         }
     }, [giornataAttuale, dayId]);
+
+    useEffect(() => {
+        if (!startDate) return; // Assicurati che startDate sia definito prima di avviare il countdown.
+
+        // Definisci una funzione per calcolare il countdown rimanente
+        const calculateCountdown = () => {
+            const now = moment().tz("Europe/Rome"); // Ottieni la data attuale nel fuso orario corretto
+            const targetTime = moment(startDate);
+            const duration = moment.duration(targetTime.diff(now));
+
+            if (duration.asMilliseconds() <= 0) {
+                // Se il targetTime è passato, ferma il countdown
+                setCountdown({ days: '0', hours: '00', minutes: '00' });
+                return;
+            }
+
+            // Aggiorna i valori del countdown
+            const days = Math.floor(duration.asDays());
+            const hours = Math.floor(duration.hours()); // Usa direttamente `.hours()` per maggiore chiarezza
+            const minutes = Math.floor(duration.minutes());
+
+            setCountdown({
+                days: days.toString(),
+                hours: hours < 10 ? `0${hours}` : hours.toString(),
+                minutes: minutes < 10 ? `0${minutes}` : minutes.toString(),
+            });
+        };
+
+        // Calcola immediatamente il countdown all'inizio
+        calculateCountdown();
+
+        // Imposta un intervallo per aggiornare il countdown ogni minuto, tranne nei minuti finali
+        const interval = setInterval(() => {
+            calculateCountdown();
+        }, 1000); // Ogni secondo (puoi fare ogni minuto con `60000` se preferisci ridurre le risorse)
+
+        return () => clearInterval(interval); // Pulisci l'interval quando il componente viene smontato
+    }, [startDate]);
 
 
     const isDatePast = (inputDate) => {
@@ -188,53 +226,15 @@ export default function LeagueDetails({ navigation }) {
         fetchDataInParallel();
     };
 
-    const matches = infogiornataAttuale.matches;
 
     const convertToItalianTime = (dateString) => {
         // Crea un nuovo oggetto Date dalla stringa ISO
         return moment(dateString).utc().format('HH:mm');
     };
 
-    useEffect(() => {
-        if (!startDate) return; // Assicurati che startDate sia definito prima di avviare il countdown.
-
-        // Definisci una funzione per calcolare il countdown rimanente
-        const calculateCountdown = () => {
-            const now = moment().tz("Europe/Rome"); // Ottieni la data attuale nel fuso orario corretto
-            const targetTime = moment(startDate);
-            const duration = moment.duration(targetTime.diff(now));
-
-            if (duration.asMilliseconds() <= 0) {
-                // Se il targetTime è passato, ferma il countdown
-                setCountdown({ days: '0', hours: '00', minutes: '00' });
-                return;
-            }
-
-            // Aggiorna i valori del countdown
-            const days = Math.floor(duration.asDays());
-            const hours = Math.floor(duration.hours()); // Usa direttamente `.hours()` per maggiore chiarezza
-            const minutes = Math.floor(duration.minutes());
-
-            setCountdown({
-                days: days.toString(),
-                hours: hours < 10 ? `0${hours}` : hours.toString(),
-                minutes: minutes < 10 ? `0${minutes}` : minutes.toString(),
-            });
-        };
-
-        // Calcola immediatamente il countdown all'inizio
-        calculateCountdown();
-
-        // Imposta un intervallo per aggiornare il countdown ogni minuto, tranne nei minuti finali
-        const interval = setInterval(() => {
-            calculateCountdown();
-        }, 1000); // Ogni secondo (puoi fare ogni minuto con `60000` se preferisci ridurre le risorse)
-
-        return () => clearInterval(interval); // Pulisci l'interval quando il componente viene smontato
-    }, [startDate]);
 
 
-    const renderContent = () => {
+    const renderConuntDown = () => {
         if (loading) {
             // Mostra un indicatore di caricamento mentre si sta calcolando `isPast`
             return <ActivityIndicator size="large" color={colors.primary} />;
@@ -302,8 +302,7 @@ export default function LeagueDetails({ navigation }) {
                 </View>
 
                 {/* Contenuto della sezione Countdown e Live */}
-                {renderContent()
-                }
+                {renderConuntDown()}
             </View>
 
             <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}
@@ -311,7 +310,6 @@ export default function LeagueDetails({ navigation }) {
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
             >
-                {/* Classifica Provvisoria */}
                 {/* Classifica Provvisoria */}
                 <Card style={{ ...styles.section, marginBottom: 0 }}>
                     <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica Provvisoria</Text>
