@@ -9,6 +9,7 @@ import GiornataDetailsUserScreen from '../screens/GiornataDetailsUserScreen';
 import UserHistoryScreen from '../screens/userDaysHistorScreen';
 import GiornataSchedinaDetailsUserScreen from '../screens/SchedinaStoricoUtenteScreen';
 import EditLeagueScreen from '../screens/EditLeagueScreen';
+import FormazioneScreen from '../screens/FormazioneScreen';
 
 const Stack = createStackNavigator();
 
@@ -26,6 +27,15 @@ export default function LeagueStackNavigator() {
             <Stack.Screen
                 name="InsertResults"
                 component={InsertResultsScreen}
+                options={({ navigation }) => ({
+                    title: 'Inserisci esiti',
+                    headerShown: true, // Mostra l'header solo per questa schermata
+                    ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
+                })}
+            />
+            <Stack.Screen
+                name="FormazioneScreen"
+                component={FormazioneScreen}
                 options={({ navigation }) => ({
                     title: 'Inserisci esiti',
                     headerShown: true, // Mostra l'header solo per questa schermata

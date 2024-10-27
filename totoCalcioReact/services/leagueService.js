@@ -83,3 +83,14 @@ export const removeUserFromLeague = async (leagueId, userId) => {
   }
 };
 
+
+// Servizio per recuperare le lineups di una partita specifica
+export const getMatchLineup = async (fixtureId) => {
+  try {
+    const response = await axiosInstance.get(`/match-lineup/${fixtureId}`);
+    return response.data; // Restituisce i dati di lineup per la partita specifica
+  } catch (error) {
+    console.error('Errore durante il recupero della formazione:', error);
+    throw error;
+  }
+};

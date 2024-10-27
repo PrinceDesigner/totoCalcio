@@ -1,49 +1,64 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Badge, useTheme } from 'react-native-paper';
+import moment from 'moment-timezone';
+import { useNavigation } from '@react-navigation/native';
 
-const MatchItem = ({ match, convertToItalianTime }) => {
+const MatchItem = ({ match }) => {
     const { colors } = useTheme();
+    const navigation = useNavigation();
+
+    const convertToItalianTime = (dateString) => {
+        // Crea un nuovo oggetto Date dalla stringa ISO
+        return moment(dateString).utc().format('HH:mm');
+    };
+
+    const handlePress = () => {
+        // Naviga alla schermata di formazione quando viene premuto il MatchItem
+        // navigation.navigate('FormazioneScreen', { fixtureId: match.matchId });
+    };
 
     return (
-        <View style={{ ...styles.matchItem, backgroundColor: colors.surface }}>
-            {/* Dettaglio del match */}
-            <View style={styles.matchDetails}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                    <View style={styles.leagueBadgeContainer}>
-                        <Badge style={{ backgroundColor: colors.primary }}>Serie A</Badge>
+        <TouchableOpacity onPress={handlePress}>
+            <View style={{ ...styles.matchItem, backgroundColor: colors.surface }}>
+                {/* Dettaglio del match */}
+                <View style={styles.matchDetails}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                        <View style={styles.leagueBadgeContainer}>
+                            <Badge style={{ backgroundColor: colors.primary }}>Serie A</Badge>
+                        </View>
+                        <View style={styles.leagueBadgeContainer}>
+                            <Badge style={{ backgroundColor: colors.primary }}>{match.stadio}</Badge>
+                        </View>
                     </View>
-                    <View style={styles.leagueBadgeContainer}>
-                        <Badge style={{ backgroundColor: colors.primary }}>{match.stadio}</Badge>
+
+                    {/* Sezione con i loghi delle squadre e i nomi */}
+                    <View style={styles.teamContainer}>
+                        <View style={styles.team}>
+                            <Image
+                                source={{ uri: match.homeLogo }}
+                                style={styles.teamLogo}
+                                resizeMode="contain"
+                            />
+                            <Text style={styles.teamName}>{match.homeTeam}</Text>
+                        </View>
+
+                        <Text style={styles.vsText}>vs</Text>
+
+                        <View style={styles.team}>
+                            <Image
+                                source={{ uri: match.awayLogo }}
+                                style={styles.teamLogo}
+                                resizeMode="contain"
+                            />
+                            <Text style={styles.teamName}>{match.awayTeam}</Text>
+                        </View>
                     </View>
+
+                    <Text style={styles.matchTime}>{convertToItalianTime(match.startTime)}</Text>
                 </View>
-
-                {/* Sezione con i loghi delle squadre e i nomi */}
-                <View style={styles.teamContainer}>
-                    <View style={styles.team}>
-                        <Image
-                            source={{ uri: match.homeLogo }}
-                            style={styles.teamLogo}
-                            resizeMode="contain"
-                        />
-                        <Text style={styles.teamName}>{match.homeTeam}</Text>
-                    </View>
-
-                    <Text style={styles.vsText}>vs</Text>
-
-                    <View style={styles.team}>
-                        <Image
-                            source={{ uri: match.awayLogo }}
-                            style={styles.teamLogo}
-                            resizeMode="contain"
-                        />
-                        <Text style={styles.teamName}>{match.awayTeam}</Text>
-                    </View>
-                </View>
-
-                <Text style={styles.matchTime}>{convertToItalianTime(match.startTime)}</Text>
             </View>
-        </View>
+        </TouchableOpacity>
     );
 };
 

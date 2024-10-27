@@ -55,6 +55,36 @@ async function fetchCurrentRound() {
 }
 
 
+async function fetchMatchLineup(fixtureId) {
+  try {
+    // Effettua una richiesta GET per ottenere le formazioni della partita specificata
+    const response = await axios.get('https://api-football-v1.p.rapidapi.com/v3/fixtures/lineups', {
+      params: {
+        fixture: fixtureId
+      },
+      headers: {
+        'x-rapidapi-key': 'db73c3daeamshce50eba84993c27p1ebcadjsnb14d87bc676d',
+        'x-rapidapi-host': 'api-football-v1.p.rapidapi.com'
+      }
+    });
+
+    return response.data.response; // Restituisce le formazioni delle squadre
+  } catch (error) {
+    console.error('Errore durante il recupero della formazione:', error);
+    throw error; // Propaga l'errore per essere gestito dal chiamante
+  }
+}
+
+router.get('/match-lineup/:fixtureId', async (req, res) => {
+  const { fixtureId } = req.params;
+
+  try {
+    const lineupData = await fetchMatchLineup(fixtureId);
+    res.json(lineupData); // Invia la risposta JSON al client con i dati delle formazioni
+  } catch (error) {
+    res.status(500).json({ error: 'Errore durante il recupero della formazione' });
+  }
+});
 
 // Route per ottenere l'unico documento dalla raccolta 'nomeGiornataAttuale'
 router.get('/giornata-attuale', async (req, res) => {
@@ -63,18 +93,18 @@ router.get('/giornata-attuale', async (req, res) => {
     const snapshot = await firestore.collection('giornataAttuale').limit(1).get(); // Ottieni solo il primo documento
 
     if (snapshot.empty) {
-        return res.status(404).json({ success: false, message: 'Nessun documento trovato.' });
+      return res.status(404).json({ success: false, message: 'Nessun documento trovato.' });
     }
 
     // Estrai il primo documento dal risultato
     const doc = snapshot.docs[0];
     const data = doc.data();
 
-    res.status(200).json({giornataAttuale: data.giornataAttuale });
-} catch (error) {
+    res.status(200).json({ giornataAttuale: data.giornataAttuale });
+  } catch (error) {
     console.error('Errore durante il recupero della giornata attuale:', error);
     res.status(500).json({ success: false, message: 'Errore durante il recupero della giornata attuale.' });
-}
+  }
 });
 
 // Funzione per determinare il risultato finale (1, X, 2)
@@ -113,7 +143,7 @@ router.post('/leagues', authMiddleware, async (req, res) => {
     const league = await leagueRef.get();
     const leagueId = league.id;
 
-  
+
     // Restituisci la risposta con i dati della lega appena creata
     res.status(201).json({ message: 'Lega creata con successo', leagueData: { ...league.data(), id: leagueId } });
   } catch (error) {
@@ -328,8 +358,8 @@ router.post('/leagues/upload-days', async (req, res) => {
         dayId,
         dayNumber: day.dayNumber,
         matches: day.matches,
-        startDate: moment.tz(day.startDate,"Europe/Rome").format('YYYY-MM-DDTHH:mm:ss+00:00'),   // Prima partita della giornata
-        endDate: moment.tz(day.endDate,"Europe/Rome").format('YYYY-MM-DDTHH:mm:ss+00:00'),       // Ultima partita della giornata
+        startDate: moment.tz(day.startDate, "Europe/Rome").format('YYYY-MM-DDTHH:mm:ss+00:00'),   // Prima partita della giornata
+        endDate: moment.tz(day.endDate, "Europe/Rome").format('YYYY-MM-DDTHH:mm:ss+00:00'),       // Ultima partita della giornata
         isCurrentDay               // Booleano per indicare se è la giornata attuale
       };
 
@@ -380,7 +410,7 @@ router.post('/leagues/upload-matches', async (req, res) => {
         stadio: fixture.fixture.venue.name,
         result,  // Risultato, `null` se la partita non è ancora finita
         dayId: fixture.league.round.toString().trim().replace(/\s+/g, ''),  // Giornata a cui appartiene la partita (stesso valore usato per la giornata)
-        startTime: moment.tz(fixture.fixture.date,"Europe/Rome").format('YYYY-MM-DDTHH:mm:ss+00:00')  // Data e ora di inizio della partita
+        startTime: moment.tz(fixture.fixture.date, "Europe/Rome").format('YYYY-MM-DDTHH:mm:ss+00:00')  // Data e ora di inizio della partita
       };
 
       // Carica il match su Firestore usando lo stesso matchId già presente nella collezione 'days'
@@ -479,7 +509,7 @@ router.post('/leagues/removeUserFromLeague', async (req, res) => {
     // Esegui l'operazione di batch per eliminare le predizioni
     await batch.commit();
 
-    return res.status(200).json({ message: 'Utente rimosso dalla lega e predizioni eliminate con successo.', data: userId  });
+    return res.status(200).json({ message: 'Utente rimosso dalla lega e predizioni eliminate con successo.', data: userId });
   } catch (error) {
     console.error('Errore durante la rimozione dell\'utente dalla lega:', error);
     return res.status(500).json({ message: 'Errore durante la rimozione dell\'utente dalla lega.' });

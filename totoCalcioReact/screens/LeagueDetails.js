@@ -226,14 +226,6 @@ export default function LeagueDetails({ navigation }) {
         fetchDataInParallel();
     };
 
-
-    const convertToItalianTime = (dateString) => {
-        // Crea un nuovo oggetto Date dalla stringa ISO
-        return moment(dateString).utc().format('HH:mm');
-    };
-
-
-
     const renderConuntDown = () => {
         if (loading) {
             // Mostra un indicatore di caricamento mentre si sta calcolando `isPast`
@@ -372,7 +364,7 @@ export default function LeagueDetails({ navigation }) {
                         <Text style={{ color: 'white', fontSize: 25 }}>Giornata {matchdayNumber}</Text>
                     </View>
                     {matches.map((match) => (
-                        <MatchItem key={match.matchId} match={match} convertToItalianTime={convertToItalianTime} />
+                        <MatchItem key={match.matchId} match={match} />
                     ))}
                 </Card>
 
