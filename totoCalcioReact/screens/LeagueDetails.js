@@ -73,12 +73,16 @@ export default function LeagueDetails({ navigation }) {
     };
 
     useEffect(() => {
+        console.log('cambio data');
         // Simuliamo un delay per aggiornare isPast, ad esempio quando startDate cambia
         const checkIsPast = async () => {
             try {
                 setLoading(true);  // Imposta loading su true mentre si calcola
-                // Simulazione di calcolo asincrono
+                
+                // Calcola se la data è passata
                 const result = isDatePast(startDate);
+                
+                // Aggiorna lo stato isPast con il risultato calcolato
                 setIsPast(result);
             } catch (error) {
                 console.error('Errore durante il controllo della data:', error);
@@ -86,10 +90,9 @@ export default function LeagueDetails({ navigation }) {
                 setLoading(false); // Imposta loading su false una volta terminato
             }
         };
-
+    
         checkIsPast();
     }, [startDate]); // Ogni volta che cambia startDate, ricontrolla isPast
-
 
     useEffect(() => {
         // Verifica che tutti i valori siano disponibili prima di effettuare le chiamate
@@ -101,19 +104,21 @@ export default function LeagueDetails({ navigation }) {
 
 
     const isDatePast = (inputDate) => {
-        if (startDate) {
-            // Configura la data di input usando moment e imposta il fuso orario a "Europe/Rome"
-            const date = moment.tz(inputDate, "Europe/Rome");
-
-            // Ottieni l'orario attuale e imposta il fuso orario a "Europe/Rome"
-            const currentDate = moment.tz("Europe/Rome").format('YYYY-MM-DDTHH:mm:ss+00:00');
-
-            // Confronta le date e restituisci true se la data di input è minore dell'orario attuale
-            return date.isBefore(currentDate);
-        } else {
-            return '..'
+        if (!inputDate) {
+            // Se la data di input non è valida, restituisci null
+            return null;
         }
+
+        // Configura la data di input usando moment e imposta il fuso orario a "Europe/Rome"
+        const date = moment.tz(inputDate, "Europe/Rome");
+
+        // Ottieni l'orario attuale e imposta il fuso orario a "Europe/Rome"
+        const currentDate = moment.tz("Europe/Rome");
+
+        // Confronta le date e restituisci true se la data di input è minore dell'orario attuale
+        return date.isBefore(currentDate);
     };
+
 
     const fetchLeagues = async () => {
         try {
@@ -210,6 +215,20 @@ export default function LeagueDetails({ navigation }) {
     }, [startDate]);
 
 
+    const renderContent = () => {
+        if (loading) {
+            // Mostra un indicatore di caricamento mentre si sta calcolando `isPast`
+            return <ActivityIndicator size="large" color={colors.primary} />;
+        }
+
+        if (isPast === null) {
+            // Se `isPast` è null (cioè non c'è una data valida), puoi mostrare qualcosa come un placeholder o un messaggio
+            return <ActivityIndicator size="large" color={colors.primary} />;
+        }
+
+        return isPast ? liveSection : countdownAndButton;
+    };
+
 
     // Sezione Countdown e Bottone
     const countdownAndButton = (
@@ -259,18 +278,13 @@ export default function LeagueDetails({ navigation }) {
 
                     {/* Numero di giornata */}
                     <View style={styles.leagueBadgeCountDown}>
-                        <Badge style={{ backgroundColor: colors.primary }}> Giornata {matchdayNumber + loading}</Badge>
+                        <Badge style={{ backgroundColor: colors.primary }}> Giornata {matchdayNumber}</Badge>
                     </View>
                 </View>
 
                 {/* Contenuto della sezione Countdown e Live */}
-                {loading ? (
-                    // Mostra l'indicatore di caricamento mentre si calcola lo stato `isPast`
-                    <ActivityIndicator size="large" color={colors.primary} />
-                ) : (
-                    // Mostra il contenuto appropriato basato su `isPast`
-                    !isPast ? countdownAndButton : liveSection
-                )}
+                {renderContent()
+                }
             </View>
 
             <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}
