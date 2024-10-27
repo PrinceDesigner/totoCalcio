@@ -30,7 +30,7 @@ router.post('/add', authMiddleware, async (req, res) => {
     const matchStartDate = moment.tz(startDate, 'Europe/Rome');
 
     if (currentDate.isAfter(matchStartDate)) {
-        return res.status(403).json({ message: 'La giornata è già iniziata.' });
+        return res.status(403).json({ message: 'La giornata è già iniziata.', data: matchStartDate });
     }
 
     try {

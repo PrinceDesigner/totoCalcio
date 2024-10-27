@@ -83,6 +83,7 @@ export default function LeagueDetails({ navigation }) {
                 // Se sono disponibili, esegui fetchDataInParallel
                 fetchLeagues()
                 fetchGiornataAttuale()
+                fetchDataInParallel()
             }
             // Una volta ricaricati i dati, ripristina il flag di refresh
             dispatch(clearRefresh());

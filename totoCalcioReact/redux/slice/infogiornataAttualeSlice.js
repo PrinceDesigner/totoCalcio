@@ -29,7 +29,11 @@ const initialState = {
 const infogiornataAttualeSlice = createSlice({
   name: 'infogiornataAttuale',
   initialState,
-  reducers: {},
+  reducers: {
+    updateStartDate: (state, action) => {
+      state.startDate = action.payload.startDate; // Aggiorna solo la startDate
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchDayDetails.pending, (state) => {
@@ -60,5 +64,7 @@ const infogiornataAttualeSlice = createSlice({
       });
   },
 });
+
+export const { updateStartDate } = infogiornataAttualeSlice.actions;
 
 export default infogiornataAttualeSlice.reducer;

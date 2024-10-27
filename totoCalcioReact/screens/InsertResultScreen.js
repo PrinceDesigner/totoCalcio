@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal } from 'react-native';
 import { Card, Button, useTheme } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
+import { updateStartDate } from '../redux/slice/infogiornataAttualeSlice';
 import { savePrediction } from '../redux/slice/predictionsSlice';
 import { triggerRefresh } from '../redux/slice/refreshSlice';
 import { showLoading, hideLoading } from '../redux/slice/uiSlice';
@@ -92,8 +93,9 @@ export default function InsertResultsScreen({ navigation }) {
             console.error('Errore durante il salvataggio delle predizioni:', error);
             if (error.message === 'La giornata è già iniziata.') {
                 
-                showToast('error', 'La giornata è già iniziata. Aggiorna la pagina');
-                dispatch(triggerRefresh());
+                showToast('error', 'La giornata è già iniziata. Aggiorna la pagina' + error.data);
+                dispatch(updateStartDate({ startDate: error.data }));
+
                 navigation.navigate('LeagueDetails'); // Sostituisci la schermata per evitare duplicazioni
                 
             } else {
