@@ -38,6 +38,7 @@ export default function LeagueDetails({ navigation }) {
     const dayId = useSelector((state) => state.giornataAttuale.giornataAttuale);
     const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
     const provisionalRanking = useSelector((state) => state.partecipantiLegaCorrente.participants);
+    const provisionalRankingLoading = useSelector((state) => state.partecipantiLegaCorrente.loading);
 
     // id Partecipanti
     const userIds = selectedLeague.members;
@@ -78,10 +79,10 @@ export default function LeagueDetails({ navigation }) {
         const checkIsPast = async () => {
             try {
                 setLoading(true);  // Imposta loading su true mentre si calcola
-                
+
                 // Calcola se la data è passata
                 const result = isDatePast(startDate);
-                
+
                 // Aggiorna lo stato isPast con il risultato calcolato
                 setIsPast(result);
             } catch (error) {
@@ -90,7 +91,7 @@ export default function LeagueDetails({ navigation }) {
                 setLoading(false); // Imposta loading su false una volta terminato
             }
         };
-    
+
         checkIsPast();
     }, [startDate]); // Ogni volta che cambia startDate, ricontrolla isPast
 
@@ -293,28 +294,36 @@ export default function LeagueDetails({ navigation }) {
                 }
             >
                 {/* Classifica Provvisoria */}
+                {/* Classifica Provvisoria */}
                 <Card style={{ ...styles.section, marginBottom: 0 }}>
                     <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica Provvisoria</Text>
-                    {[...provisionalRanking]
-                        .sort((a, b) => b.punti - a.punti)
-                        .map((player, index) => (
-                            <View key={index + 1} style={styles.rankItem}>
-                                <View style={{ display: 'flex', flexDirection: 'row' }}>
-                                    <Text style={styles.rankPosition}>{index + 1}</Text>
-                                    <Text style={styles.rankName}>{player.displayName}</Text>
-                                </View>
-                                <Text style={{ ...styles.rankPoints, color: 'white' }}>{player.punti} punti</Text>
-                            </View>
-                        ))}
 
-                    {/* Bottone per vedere la classifica completa */}
-                    <Button
-                        mode="contained"
-                        onPress={() => navigation.navigate('FullParticipantsRankingScreen')}
-                        style={styles.fullRankingButton}
-                    >
-                        Classifica Completa
-                    </Button>
+                    {provisionalRankingLoading ? (
+                        <ActivityIndicator size="large" color={colors.primary} />
+                    ) : (
+                        <>
+                            {[...provisionalRanking]
+                                .sort((a, b) => b.punti - a.punti)
+                                .map((player, index) => (
+                                    <View key={index + 1} style={styles.rankItem}>
+                                        <View style={{ display: 'flex', flexDirection: 'row' }}>
+                                            <Text style={styles.rankPosition}>{index + 1}</Text>
+                                            <Text style={styles.rankName}>{player.displayName}</Text>
+                                        </View>
+                                        <Text style={{ ...styles.rankPoints, color: 'white' }}>{player.punti} punti</Text>
+                                    </View>
+                                ))}
+
+                            {/* Bottone per vedere la classifica completa */}
+                            <Button
+                                mode="contained"
+                                onPress={() => navigation.navigate('FullParticipantsRankingScreen')}
+                                style={styles.fullRankingButton}
+                            >
+                                Classifica Completa
+                            </Button>
+                        </>
+                    )}
                 </Card>
 
                 {/* Sezione per copiare e condividere l'ID della lega */}
