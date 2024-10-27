@@ -3,8 +3,8 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'rea
 import { Card, useTheme, Avatar, Button } from 'react-native-paper';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; // Importa l'icona del cestino
 import { useDispatch, useSelector } from 'react-redux';
-import { selectLeagueById } from '../redux/slice/leaguesSlice';
-import { triggerRefresh } from '../redux/slice/refreshSlice';
+import { removeUserFromLeagueReducer, selectLeagueById } from '../redux/slice/leaguesSlice';
+import { removeParticipant } from '../redux/slice/partecipantsSlice';
 import { fetchStoricoPerUtenteSelezionato } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { removeUserFromLeague } from '../services/leagueService';
@@ -83,8 +83,10 @@ export default function ParticipantsListScreen({ navigation }) {
         try {
             const response = await removeUserFromLeague(leagueId, userId);
             showToast('success', 'Utente rimosso con successo');
-            dispatch(triggerRefresh());
-            navigation.navigate('LeagueDetails',{ screen: 'Home Lega' }); // Sostituisci la schermata per evitare duplicazioni
+            dispatch(removeParticipant(userId));
+            dispatch(removeUserFromLeagueReducer({ leagueId, userId }));
+
+            navigation.navigate('LeagueDetails', { screen: 'Home Lega' }); // Sostituisci la schermata per evitare duplicazioni
         } catch (error) {
             console.error('Errore durante la rimozione dell\'utente dalla lega:', error);
             // Mostra un errore all'utente se necessario

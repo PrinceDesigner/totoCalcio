@@ -26,6 +26,10 @@ const participantsSlice = createSlice({
   },
   reducers: {
     // Puoi aggiungere altri reducers qui se necessario
+    removeParticipant: (state, action) => {
+      const userIdToRemove = action.payload;
+      state.participants = state.participants.filter(participant => participant.userId !== userIdToRemove);
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -45,4 +49,5 @@ const participantsSlice = createSlice({
   },
 });
 
+export const { removeParticipant } = participantsSlice.actions;
 export default participantsSlice.reducer;

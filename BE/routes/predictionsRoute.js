@@ -11,7 +11,6 @@ const router = express.Router();
 // Route per inserire o aggiornare una predizione
 router.post('/add', authMiddleware, async (req, res) => {
     const { userId, leagueId, schedina, daysId } = req.body;
-    console.log('ROUTE-ADD daysId--->', daysId)
 
     if (!userId || !leagueId || !schedina || !daysId) {
         return res.status(400).json({ message: 'userId, leagueId, schedina e daysId sono obbligatori.' });

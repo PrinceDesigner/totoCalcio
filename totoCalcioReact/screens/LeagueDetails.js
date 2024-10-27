@@ -117,7 +117,7 @@ export default function LeagueDetails({ navigation }) {
             // Se sono disponibili, esegui fetchDataInParallel
             fetchDataInParallel();
         }
-    }, [giornataAttuale, dayId, userIds]);
+    }, [giornataAttuale, dayId]);
 
 
     const isDatePast = (inputDate) => {
@@ -184,6 +184,7 @@ export default function LeagueDetails({ navigation }) {
     const onRefresh = () => {
         fetchLeagues().then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
         fetchGiornataAttuale().then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
+        fetchDataInParallel();
     };
 
     const matches = infogiornataAttuale.matches;

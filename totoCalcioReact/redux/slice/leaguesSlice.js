@@ -73,8 +73,28 @@ const leaguesSlice = createSlice({
     reducers: {
         clearError: (state) => {
             state.error = null; // Pulisci l'errore
-        }
-    },
+        },
+        removeUserFromLeagueReducer: (state, action) => {
+            const { leagueId, userId } = action.payload;
+
+            // Trova la lega con l'ID specificato
+            const existingLeagueIndex = state.leagues.findIndex(
+                (league) => league.id === leagueId
+            );
+
+            if (existingLeagueIndex !== -1) {
+                // Rimuove l'utente dalla lista dei membri
+                state.leagues[existingLeagueIndex].members = state.leagues[existingLeagueIndex].members.filter(
+                    (member) => member !== userId
+                );
+
+                // Rimuove l'utente dalla lista membersInfo
+                state.leagues[existingLeagueIndex].membersInfo = state.leagues[existingLeagueIndex].membersInfo.filter(
+                    (memberInfo) => memberInfo.id !== userId
+                );
+            }
+        },
+},
     extraReducers: (builder) => {
         builder
             .addCase(createLeagueThunk.pending, (state) => {
@@ -182,5 +202,5 @@ export const selectLeagueById = (leagueId) => createSelector(
     (leagues) => leagues.find(league => league.id === leagueId)
 );
 
-export const { clearError } = leaguesSlice.actions;
+export const { clearError, removeUserFromLeagueReducer } = leaguesSlice.actions;
 export default leaguesSlice.reducer;

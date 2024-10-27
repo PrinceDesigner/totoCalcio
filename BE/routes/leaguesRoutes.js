@@ -479,7 +479,7 @@ router.post('/leagues/removeUserFromLeague', async (req, res) => {
     // Esegui l'operazione di batch per eliminare le predizioni
     await batch.commit();
 
-    return res.status(200).json({ message: 'Utente rimosso dalla lega e predizioni eliminate con successo.' });
+    return res.status(200).json({ message: 'Utente rimosso dalla lega e predizioni eliminate con successo.', data: userId  });
   } catch (error) {
     console.error('Errore durante la rimozione dell\'utente dalla lega:', error);
     return res.status(500).json({ message: 'Errore durante la rimozione dell\'utente dalla lega.' });
