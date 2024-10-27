@@ -3,18 +3,20 @@ import { View, ScrollView, StyleSheet, Modal, TouchableOpacity, Image, Text } fr
 import { Button, TextInput, Avatar, useTheme } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker'; // Libreria per selezionare immagini
 import { useDispatch, useSelector } from 'react-redux';
-import { updateProfilePhoto, updateProfileThunk } from '../redux/slice/authSlice';
+import { updateProfilePhoto, updateProfileThunk, logout } from '../redux/slice/authSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { showToast } from '../ToastContainer';
 import { COLORJS } from '../theme/themeColor';
+import { getAuth } from 'firebase/auth';
 
 export default function ProfileScreen({ navigation }) {
-  const userDetail = useSelector((state) => state.auth.user && state.auth.user.user); // Stato delle leghe
-  const photoProfile = useSelector((state) => state.auth.photoUri); // Foto profilo dal Redux store
-  const [userName, setUserName] = useState(userDetail && userDetail.fullName); // Stato per il nome utente
-  const [userEmail, setUserEmail] = useState(userDetail && userDetail.email); // Stato per l'email
-  const [profileImage, setProfileImage] = useState(null); // Stato per l'immagine del profilo
-  const [isImageModalVisible, setImageModalVisible] = useState(false); // Stato per mostrare/nascondere la modale dell'immagine
+  const userDetail = useSelector((state) => state.auth.user && state.auth.user.user);
+  const photoProfile = useSelector((state) => state.auth.photoUri);
+  const [userName, setUserName] = useState(userDetail && userDetail.fullName);
+  const [userEmail, setUserEmail] = useState(userDetail && userDetail.email);
+  const [profileImage, setProfileImage] = useState(null);
+  const [isImageModalVisible, setImageModalVisible] = useState(false);
+  const [isDeleteModalVisible, setDeleteModalVisible] = useState(false); // Stato per mostrare/nascondere la modale di eliminazione dell'account
 
   const dispatch = useDispatch();
   const { colors } = useTheme();
@@ -35,7 +37,7 @@ export default function ProfileScreen({ navigation }) {
 
     if (!pickerResult.canceled && pickerResult.assets && pickerResult.assets.length > 0) {
       const selectedImageUri = pickerResult.assets[0].uri;
-      uploadImage(selectedImageUri); // Carica l'immagine su Firebase
+      uploadImage(selectedImageUri);
     } else {
       console.log('Immagine non selezionata o cancellata');
     }
@@ -78,6 +80,40 @@ export default function ProfileScreen({ navigation }) {
     setImageModalVisible(false);
   };
 
+  // Funzione per aprire la modale di eliminazione dell'account
+  const openDeleteModal = () => {
+    setDeleteModalVisible(true);
+  };
+
+  // Funzione per chiudere la modale di eliminazione dell'account
+  const closeDeleteModal = () => {
+    setDeleteModalVisible(false);
+  };
+
+  // Funzione per gestire l'eliminazione dell'account
+  const handleDeleteAccount = async () => {
+    try {
+      dispatch(showLoading());
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      if (user) {
+        await user.delete(); // Elimina l'account da Firebase Auth
+        dispatch(logout()); // Logout dallo stato Redux
+        navigation.navigate('LoginScreen'); // Naviga alla schermata di login
+        showToast('success', 'Account eliminato con successo');
+      } else {
+        throw new Error('Utente non trovato');
+      }
+    } catch (error) {
+      console.error('Errore durante l\'eliminazione dell\'account:', error);
+      showToast('error', 'Errore durante l\'eliminazione dell\'account. Devi prima autenticarti di nuovo.');
+    } finally {
+      dispatch(hideLoading());
+      closeDeleteModal(); // Chiudi la modale di conferma
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={{ ...styles.container, backgroundColor: colors.background }}>
@@ -90,7 +126,7 @@ export default function ProfileScreen({ navigation }) {
             />
           </TouchableOpacity>
 
-          <Button mode="text" mode="contained" onPress={handleChangeImage} style={styles.changeImageButton}>
+          <Button mode="text" onPress={handleChangeImage} style={styles.changeImageButton}>
             Cambia immagine
           </Button>
 
@@ -114,6 +150,10 @@ export default function ProfileScreen({ navigation }) {
           <Button mode="contained" onPress={handleSaveProfile} style={styles.saveButton}>
             Salva modifiche
           </Button>
+
+          <Button mode="contained" onPress={openDeleteModal} style={styles.deleteButton}>
+            Elimina Account
+          </Button>
         </View>
       </View>
 
@@ -130,6 +170,27 @@ export default function ProfileScreen({ navigation }) {
           />
         </TouchableOpacity>
       </Modal>
+
+      {/* Modale per la conferma di eliminazione dell'account */}
+      <Modal
+        visible={isDeleteModalVisible}
+        transparent={true}
+        onRequestClose={closeDeleteModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.deleteModalContent}>
+            <Text style={styles.modalText}>Sei sicuro di voler eliminare il tuo account? Questa operazione è irreversibile.</Text>
+            <View style={styles.modalButtons}>
+              <Button mode="contained" onPress={handleDeleteAccount} style={styles.modalButton}>
+                Elimina
+              </Button>
+              <Button mode="outlined" onPress={closeDeleteModal} style={styles.modalButton}>
+                Annulla
+              </Button>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -138,7 +199,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     paddingBottom: 50,
-    backgroundColor: COLORJS.background
+    backgroundColor: COLORJS.background,
   },
   container: {
     flex: 1,
@@ -160,11 +221,11 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingVertical: 10,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
+  deleteButton: {
+    width: '100%',
+    marginTop: 20,
+    paddingVertical: 10,
+    backgroundColor: 'red',
   },
   modalOverlay: {
     flex: 1,
@@ -175,6 +236,27 @@ const styles = StyleSheet.create({
   fullScreenImage: {
     width: '90%',
     height: '90%',
-    resizeMode: 'contain', // Ridimensiona l'immagine senza deformarla
+    resizeMode: 'contain',
+  },
+  deleteModalContent: {
+    width: 300,
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalText: {
+    fontSize: 18,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  modalButton: {
+    flex: 1,
+    marginHorizontal: 10,
   },
 });
