@@ -4,7 +4,7 @@ import { getToken } from '../AsyncStorage/AsyncStorage';
 // Configura l'istanza di Axios
 const axiosInstance = axios.create({
   // baseURL: 'https://totocalcioreact.uc.r.appspot.com/api', // Imposta il tuo URL backend // testata e funzionante
-  baseURL: 'http://192.168.1.15:5001/api', // Imposta il tuo URL backend
+  baseURL: 'http://192.168.1.107:5001/api', // Imposta il tuo URL backend
 });
 
 // Aggiungi un interceptor per includere automaticamente il token JWT

@@ -18,7 +18,7 @@ export default function UserHistoryScreen({ route, navigation }) {
         const date = moment.tz(inizioGiornata, "Europe/Rome");
 
         // Ottieni l'orario attuale e imposta il fuso orario a "Europe/Rome"
-        const currentDate = moment.tz("Europe/Rome");
+        const currentDate = moment().utc(true).tz("Europe/Rome");
 
         // Confronta le date e restituisci true se la data di input è minore dell'orario attuale
         return date.isBefore(currentDate);

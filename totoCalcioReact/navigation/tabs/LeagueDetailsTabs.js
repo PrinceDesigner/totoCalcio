@@ -18,7 +18,7 @@ export default function LeagueDetailsTabs() {
     const userId = useSelector((state) => state.auth.user && state.auth.user.user.userId);
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
-    const ownerid = selectedLeague.ownerId
+    const ownerid = selectedLeague?.ownerId
     const navigation = useNavigation(); // Ottieni l'oggetto di navigazione
 
 

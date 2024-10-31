@@ -42,9 +42,23 @@ export default function ParticipantsListScreen({ navigation }) {
         // Chiudi la modale prima di procedere con l'operazione di rimozione
         setModalVisible(false);
 
-        // Chiama handleRemoveUser per eseguire la rimozione
-        await handleRemoveUser(leagueId, userId);
+        try {
+            // Mostra il caricamento
+            dispatch(showLoading());
 
+            // Chiama handleRemoveUser per eseguire la rimozione
+            await handleRemoveUser(leagueId, userId);
+
+            // Mostra un messaggio di successo o altre azioni necessarie post-rimozione
+            showToast('success', 'Partecipante rimosso con successo');
+        } catch (error) {
+            // Gestisci eventuali errori
+            console.error('Errore durante la rimozione del partecipante:', error);
+            showToast('error', 'Errore durante la rimozione del partecipante');
+        } finally {
+            // Nascondi il caricamento
+            dispatch(hideLoading());
+        }
 
     };
 

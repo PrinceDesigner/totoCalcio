@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
-import { createLeague, joinLeague, getUserLeagues, getLeagueStandings, deleteLeague, updateLeagueName } from '../../services/leagueService';
+import { createLeague, joinLeague, getUserLeagues, getLeagueStandings, deleteLeague, updateLeagueName, getUserLeagueById } from '../../services/leagueService';
 
 // Creazione di una nuova lega
 export const createLeagueThunk = createAsyncThunk('leagues/create', async (name, { rejectWithValue }) => {
@@ -26,6 +26,16 @@ export const getUserLeaguesThunk = createAsyncThunk('leagues/getUserLeagues', as
     try {
         const leagues = await getUserLeagues();
         return leagues;
+    } catch (error) {
+        return rejectWithValue(error.response.data);
+    }
+});
+
+// Recupera tutte le leghe a cui l'utente partecipa
+export const getUserLeaguesByIdThunk = createAsyncThunk('leagues/getUserLeagueById', async (leagueId, { rejectWithValue }) => {
+    try {
+        const league = await getUserLeagueById(leagueId);
+        return league;
     } catch (error) {
         return rejectWithValue(error.response.data);
     }
@@ -147,6 +157,24 @@ const leaguesSlice = createSlice({
                 state.leagues = action.payload; // Salva le leghe recuperate nello store
             })
             .addCase(getUserLeaguesThunk.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            // leaga byid
+            .addCase(getUserLeaguesByIdThunk.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(getUserLeaguesByIdThunk.fulfilled, (state, action) => {
+                state.loading = false;
+                const fetchedLeague = action.payload;
+                const existingLeagueIndex = state.leagues.findIndex(league => league.id === fetchedLeague.id);
+                if (existingLeagueIndex !== -1) {
+                  state.leagues[existingLeagueIndex] = fetchedLeague;
+                } else {
+                  state.leagues.push(fetchedLeague);
+                }
+              })
+            .addCase(getUserLeaguesByIdThunk.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })

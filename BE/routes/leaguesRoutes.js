@@ -253,6 +253,27 @@ router.get('/leagues', authMiddleware, async (req, res) => {
   }
 });
 
+// prendi una legaById
+// Recupera una lega specifica utilizzando il suo ID
+router.get('/leagues/:leagueId', async (req, res) => {
+  const leagueId = req.params.leagueId;
+
+  try {
+    const leagueDoc = await firestore.collection('leagues').doc(leagueId).get();
+
+    if (!leagueDoc.exists) {
+      return res.status(404).json({ message: 'Lega non trovata' });
+    }
+
+    const leagueData = leagueDoc.data();
+
+    res.status(200).json({ message: 'Lega recuperata con successo', league: { id: leagueDoc.id, ...leagueData } });
+  } catch (error) {
+    console.error('Errore durante il recupero della lega:', error);
+    res.status(500).json({ message: 'Errore durante il recupero della lega' });
+  }
+});
+
 // Visualizza la classifica di una lega
 router.get('/leagues/:leagueId/standings', authMiddleware, async (req, res) => {
   const { leagueId } = req.params;

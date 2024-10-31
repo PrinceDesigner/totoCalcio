@@ -9,12 +9,13 @@ import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { COLORJS } from '../theme/themeColor';
 import { fetchPrediction } from '../redux/slice/predictionsSlice';
 import { fetchParticipantsThunk } from '../redux/slice/partecipantsSlice';
-import { getUserLeaguesThunk, selectLeagueById } from '../redux/slice/leaguesSlice';
+import { getUserLeaguesByIdThunk, getUserLeaguesThunk, selectLeagueById } from '../redux/slice/leaguesSlice';
 import * as Clipboard from 'expo-clipboard'; // Importa Clipboard
 import { Share } from 'react-native';
 import { getGiornataAttuale } from '../services/infoGiornataService';
 import MatchItem from './componentScreen/MatchItem';
 import { clearRefresh } from '../redux/slice/refreshSlice';
+import { setSelectedLeagueGiornata } from '../redux/slice/selectedLeagueSlice';
 
 
 
@@ -44,7 +45,7 @@ export default function LeagueDetails({ navigation }) {
     const refreshRequired = useSelector((state) => state.refresh.refreshRequired);
 
     // id Partecipanti
-    const userIds = selectedLeague.members;
+    const userIds = selectedLeague?.members;
     const matches = infogiornataAttuale.matches;
 
     const matchdayNumber = infogiornataAttuale.dayId && infogiornataAttuale.dayId.replace('RegularSeason-', '') || 0;
@@ -78,11 +79,24 @@ export default function LeagueDetails({ navigation }) {
     };
 
     useEffect(() => {
+        const checkUserMembership = () => {
+          const userIds = selectedLeague?.members;
+          if (!userIds.includes(userId)) {
+            navigation.navigate('Home1', { refresh: true });
+        }
+        };
+      
+        if (selectedLeague) {
+          checkUserMembership();
+        }
+      }, [selectedLeague]);
+
+    useEffect(() => {
         if (refreshRequired) {
             // Effettua la chiamata per aggiornare i dati
             if (giornataAttuale && dayId && leagueId && userId && userIds.length) {
                 // Se sono disponibili, esegui fetchDataInParallel
-                fetchLeagues()
+                fetchLeagueById(leagueId)
                 fetchGiornataAttuale()
                 fetchDataInParallel()
             }
@@ -125,7 +139,7 @@ export default function LeagueDetails({ navigation }) {
 
         // Definisci una funzione per calcolare il countdown rimanente
         const calculateCountdown = () => {
-            const now = moment().tz("Europe/Rome"); // Ottieni la data attuale nel fuso orario corretto
+            const now = moment().utc(true).tz("Europe/Rome");
             const targetTime = moment(startDate);
             const duration = moment.duration(targetTime.diff(now));
 
@@ -169,19 +183,20 @@ export default function LeagueDetails({ navigation }) {
         const date = moment.tz(inputDate, "Europe/Rome");
 
         // Ottieni l'orario attuale e imposta il fuso orario a "Europe/Rome"
-        const currentDate = moment.tz("Europe/Rome");
+        const currentDate = moment().utc(true).tz("Europe/Rome");
 
         // Confronta le date e restituisci true se la data di input è minore dell'orario attuale
         return date.isBefore(currentDate);
     };
 
 
-    const fetchLeagues = async () => {
+    // Fetch specific league by ID
+    const fetchLeagueById = async (leagueId) => {
         try {
             dispatch(showLoading()); // Mostra lo stato di caricamento
-            await dispatch(getUserLeaguesThunk()).unwrap(); // Attendi che il thunk termini
+            await dispatch(getUserLeaguesByIdThunk(leagueId)).unwrap(); // Attendi che il thunk termini
         } catch (error) {
-            console.error('Errore durante il recupero delle leghe:', error);
+            console.error('Errore durante il recupero della lega:', error);
         } finally {
             dispatch(hideLoading()); // Nascondi lo stato di caricamento
         }
@@ -221,7 +236,7 @@ export default function LeagueDetails({ navigation }) {
 
     // Funzione per gestire il refresh
     const onRefresh = () => {
-        fetchLeagues().then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
+        fetchLeagueById(leagueId).then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
         fetchGiornataAttuale().then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
         fetchDataInParallel();
     };
@@ -284,7 +299,7 @@ export default function LeagueDetails({ navigation }) {
                         <Badge style={{ backgroundColor: colors.primary }}>Serie A</Badge>
                     </View>
                     <View >
-                        <Text style={{ color: 'white' }}>{selectedLeague.name}</Text>
+                        <Text style={{ color: 'white' }}>{selectedLeague?.name}</Text>
                     </View>
 
                     {/* Numero di giornata */}

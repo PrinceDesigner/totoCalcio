@@ -31,6 +31,18 @@ export const getUserLeagues = async () => {
     console.error('Errore durante il recupero delle leghe:', error);
     throw error;
   }
+}; 
+
+// Recupera una lega byId
+export const getUserLeagueById = async (leagueId) => {
+  try {
+    const response = await axiosInstance.get(`/leagues/${leagueId}`);
+    console.log('Lega nuova', response.data.league);
+    return response.data.league;
+  } catch (error) {
+    console.error('Errore durante il recupero delle leghe:', error);
+    throw error;
+  }
 };
 
 // Recupera la classifica di una lega

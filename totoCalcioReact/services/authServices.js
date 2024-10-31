@@ -3,7 +3,7 @@
 import axios from 'axios'; // Usa axios per fare le richieste HTTP
 import axiosInstance from './axiosInterceptor'; // Importa il tuo axiosInterceptor
 
-const API_URL = 'http://192.168.1.26:5001/api/auth'; // Imposta il tuo URL API
+const API_URL = 'http://192.168.1.107:5001/api/auth'; // Imposta il tuo URL API
 
 export const signup = async (email, password, displayName) => {
   try {
