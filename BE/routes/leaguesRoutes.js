@@ -120,7 +120,6 @@ function determineResult(homeGoals, awayGoals) {
 
 
 // Creazione di una nuova lega
-// Creazione di una nuova lega
 router.post('/leagues', authMiddleware, async (req, res) => {
   const { name } = req.body;
   const userId = req.user.uid; // Ottieni l'ID utente dal token verificato
@@ -134,7 +133,7 @@ router.post('/leagues', authMiddleware, async (req, res) => {
     // Crea una nuova lega in Firestore con la giornata attuale
     const leagueRef = await firestore.collection('leagues').add({
       name,
-      ownerId: userId,
+      ownerId: [userId],
       createdAt: moment().utc().format('YYYY-MM-DDTHH:mm:ss+00:00'),
       members: [userId], // L'utente che crea la lega è anche il primo membro
       membersInfo: [{ id: userId, punti: 0 }],
@@ -308,7 +307,7 @@ router.delete('/leagues/:leagueId', authMiddleware, async (req, res) => {
       return res.status(404).json({ message: 'Lega non trovata' });
     }
 
-    if (league.data().ownerId !== userId) {
+    if (!league.data().ownerId.includes(userId)) {
       return res.status(403).json({ message: 'Non sei autorizzato a eliminare questa lega' });
     }
 

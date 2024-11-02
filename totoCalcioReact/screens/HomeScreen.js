@@ -97,7 +97,7 @@ const HomeScreen = React.memo(() => {
     // React.memo per ottimizzare il rendering di ogni lega
     const RenderLeagueItem = React.memo(({ item, handleLeaguePress, renderRightActions, userId }) => {
         // Simula che l'utente è l'owner della lega
-        const isOwner = item.ownerId === userId; // Cambia in base alla tua logica reale
+        const isOwner = item.ownerId.includes(userId); // Cambia in base alla tua logica reale
 
         return (
             <Swipeable

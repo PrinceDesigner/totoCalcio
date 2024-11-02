@@ -21,7 +21,6 @@ export default function LeagueDetailsTabs() {
     const ownerid = selectedLeague?.ownerId
     const navigation = useNavigation(); // Ottieni l'oggetto di navigazione
 
-
     return (
         <Tab.Navigator
         initialRouteName="Home Lega"
@@ -76,7 +75,7 @@ export default function LeagueDetailsTabs() {
                     },
                 }}
             />
-            {userId === ownerid && (
+            {ownerid.includes(userId) && (
                 <Tab.Screen
                     name="Calcolo Giornate"
                     component={ListGiornateDaCalcolareScreen}
