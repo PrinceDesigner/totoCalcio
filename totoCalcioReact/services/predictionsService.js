@@ -24,3 +24,16 @@ export const checkPrediction = async (dayId, leagueId, userId) => {
     throw error;
   }
 };
+
+// Servizio per ottenere le predizioni per uno specifico giorno e lega
+export const getPredictionsForDay = async (leagueId, daysId) => {
+  try {
+    const response = await axiosInstance.get(`/predictions/predictionsForDayId/`, {
+      params: { leagueId, daysId }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Errore durante il recupero delle predizioni:', error);
+    throw error;
+  }
+};

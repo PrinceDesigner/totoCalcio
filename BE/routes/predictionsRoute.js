@@ -111,5 +111,41 @@ router.get('/check', async (req, res) => {
 });
 
 
+// Route per ottenere le predictions in base a leagueId e daysId
+router.get('/predictionsForDayId', async (req, res) => {
+    try {
+        // Otteniamo i parametri dalla query string
+        const { leagueId, daysId } = req.query;
+
+        if (!leagueId || !daysId) {
+            return res.status(400).json({ error: 'leagueId e daysId sono richiesti.' });
+        }
+
+        // Accediamo alla collezione predictions
+        const predictionsRef = firestore.collection('predictions');
+        const snapshot = await predictionsRef
+            .where('leagueId', '==', leagueId)
+            .where('daysId', '==', daysId)
+            .get();
+
+        let predictions = {};
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const userId = data.userId;
+            if (!predictions[userId]) {
+                predictions[userId] = [];
+            }
+            predictions[userId] = { id: doc.id, ...data };
+        });
+
+        // Rispondiamo con le predictions trovate o un array vuoto
+        res.status(200).json(predictions);
+    } catch (error) {
+        console.error('Errore durante il recupero delle predictions:', error);
+        res.status(500).json({ error: 'Errore del server durante il recupero delle predictions.' });
+    }
+});
+
+
 
 module.exports = router;

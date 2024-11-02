@@ -8,6 +8,7 @@ import { COLORJS } from '../theme/themeColor';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { fetchStoricoPerUtenteSelezionato } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
 import RankingList from './componentScreen/RankingList';
+import { getPredictionsForDay } from '../services/predictionsService';
 
 export default function FullParticipantsRankingScreen({ navigation }) {
     const { colors } = useTheme();
@@ -16,6 +17,7 @@ export default function FullParticipantsRankingScreen({ navigation }) {
     const dispatch = useDispatch();
     const [selectedTab, setSelectedTab] = useState('Generale'); // Stato per selezionare il tab attivo
     const [selectedGiornata, setSelectedGiornata] = useState('1'); // Stato per selezionare la giornata attiva
+    const [updatedParticipants, setiUpdatedParticipants] = useState([]); // Stato per selezionare la giornata attiva
     const [open, setOpen] = useState(false);
     const [giornate, setGiornate] = useState(
         [...Array(38).keys()].map((giornata) => ({ label: `Giornata ${giornata + 1}`, value: `${giornata + 1}` }))
@@ -25,45 +27,35 @@ export default function FullParticipantsRankingScreen({ navigation }) {
         if (selectedTab === 'Giornate') {
             handleGiornataChange(selectedGiornata);
         }
-    }, [selectedGiornata]);
-
-    const handleParticipantPress = async (participant) => {
-        try {
-            // Mostra lo stato di caricamento
-            dispatch(showLoading());
-
-            // Effettua la chiamata all'API
-            await dispatch(fetchStoricoPerUtenteSelezionato({ leagueId, userId: participant.userId })).unwrap();
-
-            // Nascondi lo stato di caricamento
-            dispatch(hideLoading());
-
-            // Naviga alla schermata successiva, ad esempio "UserHistoryScreen"
-            navigation.navigate('UserHistoryScreen');
-
-        } catch (error) {
-            console.error('Errore durante il caricamento dei dati:', error);
-
-            // Nascondi lo stato di caricamento
-            dispatch(hideLoading());
-
-            // Mostra un messaggio di errore
-        }
-    };
+    }, [selectedGiornata, selectedTab]);
 
     const handleGiornataChange = async (giornata) => {
         try {
+            console.log('TAB-GIORNATA');
             // Mostra lo stato di caricamento
             dispatch(showLoading());
 
-            // Effettua la chiamata all'API (immaginando che esista un'azione per ottenere dati per la giornata specifica)
-            // await dispatch(fetchDataPerGiornata({ leagueId, giornata })).unwrap();
+            if (selectedTab === 'Giornate') {
+                const predictions = await getPredictionsForDay(leagueId, `RegularSeason-${giornata}`);
+                console.log('Predizioni recuperate:', predictions);
+
+                // Crea un nuovo array con gli userId che sono presenti sia in predictions che in participants
+                setiUpdatedParticipants(participants.map(participant => {
+                    console.log(participant.userId);
+                    const prediction = predictions[participant.userId]
+                    return {
+                        ...participant,
+                        punti: prediction ? prediction.punti : 0
+                    };
+                }))
+                console.log('Nuovo array di partecipanti aggiornati:', updatedParticipants);
+            }
 
             // Nascondi lo stato di caricamento
             dispatch(hideLoading());
-
         } catch (error) {
             console.error('Errore durante il caricamento dei dati per la giornata:', error);
+            setiUpdatedParticipants([])
             // Nascondi lo stato di caricamento
             dispatch(hideLoading());
         }
@@ -110,9 +102,10 @@ export default function FullParticipantsRankingScreen({ navigation }) {
                 textStyle={{ color: 'black' }}
             />
 
-            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            {/* <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                 <Text style={{ color: 'white', fontSize: 18 }}>Classifica per Giornata {selectedGiornata} - In costruzione</Text>
-            </View>
+            </View> */}
+            <RankingList ranking={updatedParticipants} />
         </View>
     );
 
