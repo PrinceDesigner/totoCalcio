@@ -15,7 +15,7 @@ import { Share } from 'react-native';
 import { getGiornataAttuale } from '../services/infoGiornataService';
 import MatchItem from './componentScreen/MatchItem';
 import { clearRefresh } from '../redux/slice/refreshSlice';
-import { setSelectedLeagueGiornata } from '../redux/slice/selectedLeagueSlice';
+import RankingList from './componentScreen/RankingList';
 
 
 
@@ -80,16 +80,16 @@ export default function LeagueDetails({ navigation }) {
 
     useEffect(() => {
         const checkUserMembership = () => {
-          const userIds = selectedLeague?.members;
-          if (!userIds.includes(userId)) {
-            navigation.navigate('Home1', { refresh: true });
-        }
+            const userIds = selectedLeague?.members;
+            if (!userIds.includes(userId)) {
+                navigation.navigate('Home1', { refresh: true });
+            }
         };
-      
+
         if (selectedLeague) {
-          checkUserMembership();
+            checkUserMembership();
         }
-      }, [selectedLeague]);
+    }, [selectedLeague]);
 
     useEffect(() => {
         if (refreshRequired) {
@@ -325,7 +325,7 @@ export default function LeagueDetails({ navigation }) {
                         <ActivityIndicator size="large" color={colors.primary} />
                     ) : (
                         <>
-                            {[...provisionalRanking]
+                            {/* {[...provisionalRanking]
                                 .sort((a, b) => b.punti - a.punti)
                                 .map((player, index) => (
                                     <View key={index + 1} style={styles.rankItem}>
@@ -335,7 +335,8 @@ export default function LeagueDetails({ navigation }) {
                                         </View>
                                         <Text style={{ ...styles.rankPoints, color: 'white' }}>{player.punti} punti</Text>
                                     </View>
-                                ))}
+                                ))} */}
+                            <RankingList ranking={provisionalRanking} showAvatar={false} />
 
                             {/* Bottone per vedere la classifica completa */}
                             <Button

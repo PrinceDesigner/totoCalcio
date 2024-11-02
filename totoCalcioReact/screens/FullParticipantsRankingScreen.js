@@ -7,6 +7,7 @@ import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { COLORJS } from '../theme/themeColor';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { fetchStoricoPerUtenteSelezionato } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
+import RankingList from './componentScreen/RankingList';
 
 export default function FullParticipantsRankingScreen({ navigation }) {
     const { colors } = useTheme();
@@ -70,7 +71,7 @@ export default function FullParticipantsRankingScreen({ navigation }) {
 
     const renderGeneraleTab = () => (
         <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 100 }}>
-            {[...participants]
+            {/* {[...participants]
                 .sort((a, b) => b.punti - a.punti)
                 .map((participant, index) => (
                     <TouchableOpacity key={index + 1} onPress={() => handleParticipantPress(participant)}>
@@ -86,8 +87,11 @@ export default function FullParticipantsRankingScreen({ navigation }) {
                                 <Text style={{ ...styles.points, color: colors.primary }}>{participant.punti}pt</Text>
                             </View>
                         </Card>
+                        <RankingList ranking={participants} />
+
                     </TouchableOpacity>
-                ))}
+                ))} */}
+            <RankingList ranking={participants} />
         </ScrollView>
     );
 
