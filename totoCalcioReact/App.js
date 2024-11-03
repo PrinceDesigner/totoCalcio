@@ -30,6 +30,9 @@ import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator(); // Crea un Drawer Navigator
 
+
+
+
 function GlobalLoadingIndicator() {
   const loading = useSelector((state) => state.ui.loading); // Ottieni lo stato di loading dal Redux store
   const { colors } = useTheme(); // Usa il tema per il colore del caricamento

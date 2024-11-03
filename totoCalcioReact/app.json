@@ -1,5 +1,6 @@
 {
   "expo": {
+    "entryPoint": "./totoCalcioReact/App.js",
     "name": "totoCalcioReact",
     "slug": "totoCalcioReact",
     "version": "1.0.0",
@@ -18,7 +19,10 @@
       "FIREBASE_STORAGE_BUCKET": "totocalcioreact.appspot.com",
       "FIREBASE_MESSAGING_SENDER_ID": "700309241728",
       "FIREBASE_APP_ID": "1:700309241728:web:38f12c82fb5f684e44cb65",
-      "FIREBASE_MEASUREMENT_ID": "G-J1KBDWK4SS"
+      "FIREBASE_MEASUREMENT_ID": "G-J1KBDWK4SS",
+      "eas": {
+        "projectId": "6a5c53bf-0ddd-4d1a-87f4-35f7e119cba0"
+      }
     },
     "ios": {
       "supportsTablet": true,

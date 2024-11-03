@@ -27,7 +27,7 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
 
     if (isLocked) {
         console.log("Il documento è già bloccato.");
-        return { success: false, message: "Il documento è già bloccato." };
+        return { success: false, message: "Gornata già calcolata" };
     }
     await lockRef.set(true); // Blocca il documento
 
