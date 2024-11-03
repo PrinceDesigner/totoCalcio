@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Card, useTheme, Avatar } from 'react-native-paper';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { Card, useTheme, Avatar, Button } from 'react-native-paper';
 import { useSelector } from 'react-redux';
 import moment from 'moment-timezone';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -17,6 +17,7 @@ export default function UserHistoryScreen({ route, navigation }) {
     const dayId = useSelector((state) => state.infogiornataAttuale.dayId);
     const [selectedTab, setSelectedTab] = useState('Storico'); // Stato per selezionare il tab attivo
     const user = useSelector(selectUser);
+    const [isModalVisible, setIsModalVisible] = useState(false);
 
     // Configurazione dei tab
     const tabs = [
@@ -40,7 +41,6 @@ export default function UserHistoryScreen({ route, navigation }) {
         // Confronta le date e restituisci true se la data di input è minore dell'orario attuale
         return date.isBefore(currentDate);
     };
-
 
     const renderStoricoTab = () => (
         <>
@@ -79,19 +79,51 @@ export default function UserHistoryScreen({ route, navigation }) {
             })}
         </>
     );
+
     const renderProfiloTab = () => (
-        <ProfileCard fullName={user.displayName} photoProfile={user.photoURL}  />
+        <>
+            <ProfileCard fullName={user.displayName} photoProfile={user.photoURL} />
+            <Button
+                style={styles.button}
+                mode='contained'
+                onPress={() => setIsModalVisible(true)}
+            >Rendi amministratore</Button>
+        </>
     );
+
+    const handleConfirmAdmin = () => {
+        // Logica per rendere l'utente amministratore
+        console.log('Utente reso amministratore');
+        setIsModalVisible(false);
+    };
 
     return (
         <View style={{ flex: 1 }}>
             {/* Tab Custom */}
             <TabContainer tabs={tabs} />
             <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}>
-
                 {selectedTab === 'Storico' ? renderStoricoTab() : renderProfiloTab()}
-
             </ScrollView>
+
+            {/* Modale di conferma */}
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={isModalVisible}
+                onRequestClose={() => setIsModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContainer}>
+                        <Text style={styles.modalText}>Sei sicuro di voler rendere questo utente amministratore?</Text>
+                        <View style={styles.modalButtonContainer}>
+                            <Button style={styles.button}
+                                mode='contained' onPress={handleConfirmAdmin} color='white' >Conferma</Button>
+                            <Button style={styles.button}
+                                mode='outlined' onPress={() => setIsModalVisible(false)} color='white' > Annulla</Button>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -154,6 +186,32 @@ const styles = StyleSheet.create({
         paddingLeft: 10,
     },
     activeCard: {
-        backgroundColor: COLORJS.primary, 
-    }
+        backgroundColor: COLORJS.primary,
+    },
+    adminButton: {
+        marginTop: 20,
+    },
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContainer: {
+        backgroundColor: 'white',
+        padding: 20,
+        margin: 20,
+        borderRadius: 10,
+    },
+    modalText: {
+        fontSize: 16,
+        marginBottom: 20,
+    },
+    modalButtonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    button: {
+        color: COLORJS.background,
+    },
 });

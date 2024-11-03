@@ -95,6 +95,19 @@ export const removeUserFromLeague = async (leagueId, userId) => {
   }
 };
 
+// Servizio per rendere un utente amministratore di una lega
+export const makeUserAdmin = async (leagueId, userId) => {
+  try {
+    const response = await axiosInstance.post('/leagues/make-admin', {
+      leagueId,
+      userId,
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Errore durante l'assegnazione del ruolo di amministratore:`, error);
+    throw error;
+  }
+};
 
 // Servizio per recuperare le lineups di una partita specifica
 export const getMatchLineup = async (fixtureId) => {
@@ -106,3 +119,5 @@ export const getMatchLineup = async (fixtureId) => {
     throw error;
   }
 };
+
+

@@ -97,7 +97,9 @@ export default function FullParticipantsRankingScreen({ navigation }) {
             {/* <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                 <Text style={{ color: 'white', fontSize: 18 }}>Classifica per Giornata {selectedGiornata} - In costruzione</Text>
             </View> */}
-            <RankingList ranking={updatedParticipants} />
+            <ScrollView style={{backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 100 }}>
+                <RankingList ranking={updatedParticipants} />
+            </ScrollView>
         </View>
     );
 

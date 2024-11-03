@@ -536,6 +536,43 @@ router.post('/leagues/removeUserFromLeague', async (req, res) => {
   }
 });
 
+// Rendi un utente amministratore di una lega
+router.post('/leagues/make-admin', authMiddleware, async (req, res) => {
+  const { leagueId, userId } = req.body; // Ottieni l'ID della lega e dell'utente dal body della richiesta
+
+  // Verifica se leagueId e userId sono stati forniti
+  if (!leagueId || !userId) {
+    return res.status(400).json({ message: 'ID della lega e ID dell\'utente sono obbligatori.' });
+  }
+
+  try {
+    // Ottieni il riferimento al documento della lega
+    const leagueRef = firestore.collection('leagues').doc(leagueId);
+    const leagueDoc = await leagueRef.get();
+
+    // Verifica se la lega esiste
+    if (!leagueDoc.exists) {
+      return res.status(404).json({ message: 'Lega non trovata.' });
+    }
+
+    const leagueData = leagueDoc.data();
+
+    // Verifica se l'utente è un membro della lega
+    if (!leagueData.members.includes(userId)) {
+      return res.status(400).json({ message: 'L\'utente non è un membro della lega.' });
+    }
+
+    // Aggiorna l'ownerId della lega aggiungendo l'ID dell'utente specificato
+    await leagueRef.update({
+      ownerId: FieldValue.arrayUnion(userId)
+    });
+
+    res.status(200).json({ message: 'Utente reso amministratore con successo.', leagueId, userId });
+  } catch (error) {
+    console.error('Errore durante l\'assegnazione del ruolo di amministratore:', error);
+    res.status(500).json({ message: 'Errore durante l\'assegnazione del ruolo di amministratore.' });
+  }
+});
 
 
 module.exports = router;

@@ -104,7 +104,23 @@ const leaguesSlice = createSlice({
                 );
             }
         },
-},
+        makeUserAdminReducer: (state, action) => {
+            const { leagueId, userId } = action.payload;
+
+            // Trova la lega con l'ID specificato
+            const existingLeagueIndex = state.leagues.findIndex(
+                (league) => league.id === leagueId
+            );
+
+            if (existingLeagueIndex !== -1) {
+                // Aggiungi l'utente all'array ownerId se non è già presente
+                const ownerIdArray = state.leagues[existingLeagueIndex].ownerId;
+                if (!ownerIdArray.includes(userId)) {
+                    ownerIdArray.push(userId);
+                }
+            }
+        }
+    },
     extraReducers: (builder) => {
         builder
             .addCase(createLeagueThunk.pending, (state) => {
@@ -169,11 +185,11 @@ const leaguesSlice = createSlice({
                 const fetchedLeague = action.payload;
                 const existingLeagueIndex = state.leagues.findIndex(league => league.id === fetchedLeague.id);
                 if (existingLeagueIndex !== -1) {
-                  state.leagues[existingLeagueIndex] = fetchedLeague;
+                    state.leagues[existingLeagueIndex] = fetchedLeague;
                 } else {
-                  state.leagues.push(fetchedLeague);
+                    state.leagues.push(fetchedLeague);
                 }
-              })
+            })
             .addCase(getUserLeaguesByIdThunk.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
