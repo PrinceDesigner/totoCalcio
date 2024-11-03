@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, Modal, TouchableOpacity, Image, Text } from 'react-native';
-import { Button, TextInput, Avatar, useTheme } from 'react-native-paper';
+import { View, ScrollView, StyleSheet, Modal, TouchableOpacity, Image, Text, TouchableWithoutFeedback } from 'react-native';
+import { Button, TextInput, Avatar, useTheme, IconButton } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker'; // Libreria per selezionare immagini
 import { useDispatch, useSelector } from 'react-redux';
 import { updateProfilePhoto, updateProfileThunk, logout } from '../redux/slice/authSlice';
@@ -14,9 +14,9 @@ export default function ProfileScreen({ navigation }) {
   const photoProfile = useSelector((state) => state.auth.photoUri);
   const [userName, setUserName] = useState(userDetail && userDetail.fullName);
   const [userEmail, setUserEmail] = useState(userDetail && userDetail.email);
-  const [profileImage, setProfileImage] = useState(null);
   const [isImageModalVisible, setImageModalVisible] = useState(false);
-  const [isDeleteModalVisible, setDeleteModalVisible] = useState(false); // Stato per mostrare/nascondere la modale di eliminazione dell'account
+  const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState('other');
 
   const dispatch = useDispatch();
   const { colors } = useTheme();
@@ -31,15 +31,13 @@ export default function ProfileScreen({ navigation }) {
     const pickerResult = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [1, 1], // Mantieni un aspetto quadrato per l'immagine
+      aspect: [1, 1],
       quality: 1,
     });
 
     if (!pickerResult.canceled && pickerResult.assets && pickerResult.assets.length > 0) {
       const selectedImageUri = pickerResult.assets[0].uri;
       uploadImage(selectedImageUri);
-    } else {
-     //console.log('Immagine non selezionata o cancellata');
     }
   };
 
@@ -75,22 +73,18 @@ export default function ProfileScreen({ navigation }) {
     setImageModalVisible(true);
   };
 
-  // Funzione per chiudere la modale
   const closeImageModal = () => {
     setImageModalVisible(false);
   };
 
-  // Funzione per aprire la modale di eliminazione dell'account
   const openDeleteModal = () => {
     setDeleteModalVisible(true);
   };
 
-  // Funzione per chiudere la modale di eliminazione dell'account
   const closeDeleteModal = () => {
     setDeleteModalVisible(false);
   };
 
-  // Funzione per gestire l'eliminazione dell'account
   const handleDeleteAccount = async () => {
     try {
       dispatch(showLoading());
@@ -106,8 +100,8 @@ export default function ProfileScreen({ navigation }) {
         throw new Error('Utente non trovato');
       }
     } catch (error) {
-      console.error('Errore durante l\'eliminazione dell\'account:', error);
-      showToast('error', 'Errore durante l\'eliminazione dell\'account. Devi prima autenticarti di nuovo.');
+      console.error(`Errore durante l'eliminazione dell'account:`, error);
+      showToast('error', `Errore durante l'eliminazione dell'account. Devi prima autenticarti di nuovo.`);
     } finally {
       dispatch(hideLoading());
       closeDeleteModal(); // Chiudi la modale di conferma
@@ -117,44 +111,70 @@ export default function ProfileScreen({ navigation }) {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={{ ...styles.container, backgroundColor: colors.background }}>
-        <View style={styles.profileSection}>
-          {/* Mostra l'avatar dell'utente */}
-          <TouchableOpacity onPress={openImageModal}>
-            <Avatar.Image
-              size={100}
-              source={photoProfile ? { uri: photoProfile } : { uri: 'https://via.placeholder.com/150' }}
-            />
-          </TouchableOpacity>
+        <View style={styles.profileSectionRow}>
+          <View style={styles.avatarContainer}>
+            <TouchableOpacity onPress={handleChangeImage}>
 
-          <Button mode="text" onPress={handleChangeImage} style={styles.changeImageButton}>
-            Cambia immagine
-          </Button>
+              <Avatar.Image
+                size={80}
+                source={photoProfile ? { uri: photoProfile } : { uri: 'https://via.placeholder.com/150' }}
+                style={styles.avatar}
+              />
+            </TouchableOpacity>
 
-          <TextInput
-            label="Nome"
-            value={userName}
-            onChangeText={setUserName}
-            mode="outlined"
-            style={styles.input}
-          />
-
-          <TextInput
-            label="Email"
-            value={userEmail}
-            onChangeText={setUserEmail}
-            mode="outlined"
-            style={styles.input}
-            keyboardType="email-address"
-          />
-
-          <Button mode="contained" onPress={handleSaveProfile} style={styles.saveButton}>
-            Salva modifiche
-          </Button>
-
-          <Button mode="contained" onPress={openDeleteModal} style={styles.deleteButton}>
-            Elimina Account
-          </Button>
+          </View>
+          <View style={styles.profileInfoContainer}>
+            <Text style={styles.userNameText}>{userName}</Text>
+            <Button mode="outlined" onPress={() => { }} style={styles.inviteButton}>
+              Invita amici
+            </Button>
+          </View>
         </View>
+
+        <View style={styles.tabsContainer}>
+          <TouchableWithoutFeedback onPress={() => setActiveTab('other')}>
+            <View style={[styles.tab, activeTab === 'other' && styles.activeTab]}>
+              <Text style={[styles.tabText, activeTab === 'other' && styles.activeTabText]}>Altro</Text>
+            </View>
+          </TouchableWithoutFeedback>
+          <TouchableWithoutFeedback onPress={() => setActiveTab('info')}>
+            <View style={[styles.tab, activeTab === 'info' && styles.activeTab]}>
+              <Text style={[styles.tabText, activeTab === 'info' && styles.activeTabText]}>Informazioni</Text>
+            </View>
+          </TouchableWithoutFeedback>
+        </View>
+
+        {activeTab === 'info' && (
+          <View style={styles.tabContent}>
+            <TextInput
+              label="Nome"
+              value={userName}
+              onChangeText={setUserName}
+              mode="outlined"
+              style={styles.input}
+            />
+            <TextInput
+              label="Email"
+              value={userEmail}
+              onChangeText={setUserEmail}
+              mode="outlined"
+              style={styles.input}
+              keyboardType="email-address"
+            />
+            <Button mode="contained" onPress={handleSaveProfile} style={styles.saveButton}>
+              Salva modifiche
+            </Button>
+            <Button mode="contained" onPress={openDeleteModal} style={styles.deleteButton}>
+              Elimina Account
+            </Button>
+          </View>
+        )}
+
+        {activeTab === 'other' && (
+          <View style={styles.tabContent}>
+            <Text>Contenuto del tab "Altro" (da definire).</Text>
+          </View>
+        )}
       </View>
 
       {/* Modale per l'immagine ingrandita */}
@@ -205,12 +225,67 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-  profileSection: {
+  profileSectionRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 20,
+    backgroundColor: COLORJS.primary,
+    padding: 15,
+    borderRadius: 10,
   },
-  changeImageButton: {
-    marginTop: 10,
+  avatarContainer: {
+    position: 'relative',
+  },
+  avatar: {
+    marginRight: 20,
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  changeImageIcon: {
+    position: 'absolute',
+    bottom: -5,
+    right: -5,
+    backgroundColor: 'white',
+  },
+  profileInfoContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  userNameText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 5,
+  },
+  inviteButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'white',
+    color: COLORJS.primary,
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  activeTab: {
+    borderBottomColor: COLORJS.primary,
+  },
+  tabText: {
+    fontSize: 16,
+    color: 'gray',
+  },
+  activeTabText: {
+    color: COLORJS.primary,
+    fontWeight: 'bold',
+  },
+  tabContent: {
+    marginTop: 20,
   },
   input: {
     width: '100%',
@@ -231,7 +306,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)', // Sfondo semitrasparente per la modale
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
   },
   fullScreenImage: {
     width: '90%',

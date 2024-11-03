@@ -10,10 +10,13 @@ import UserHistoryScreen from '../screens/userDaysHistorScreen';
 import GiornataSchedinaDetailsUserScreen from '../screens/SchedinaStoricoUtenteScreen';
 import EditLeagueScreen from '../screens/EditLeagueScreen';
 import FormazioneScreen from '../screens/FormazioneScreen';
+import { useSelector } from 'react-redux';
 
 const Stack = createStackNavigator();
 
 export default function LeagueStackNavigator() {
+    const userDetail = useSelector((state) => state.auth.user && state.auth.user.user);
+
     return (
         <Stack.Navigator>
             {/* Schermata LeagueDetails con i tab */}
@@ -73,7 +76,7 @@ export default function LeagueStackNavigator() {
                 name="UserHistoryScreen"
                 component={UserHistoryScreen}
                 options={({ navigation }) => ({
-                    title: 'Storia giornate',
+                    title: `${userDetail.fullName}`,
                     headerShown: true, // Mostra l'header solo per questa schermata
                     ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
                 })}

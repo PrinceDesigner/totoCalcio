@@ -9,6 +9,7 @@ import DropDownPicker from 'react-native-dropdown-picker';
 import { fetchStoricoPerUtenteSelezionato } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
 import RankingList from './componentScreen/RankingList';
 import { getPredictionsForDay } from '../services/predictionsService';
+import TabContainer from '../components/Tabs/TabContainer';
 
 export default function FullParticipantsRankingScreen({ navigation }) {
     const { colors } = useTheme();
@@ -22,6 +23,17 @@ export default function FullParticipantsRankingScreen({ navigation }) {
     const [giornate, setGiornate] = useState(
         [...Array(38).keys()].map((giornata) => ({ label: `Giornata ${giornata + 1}`, value: `${giornata + 1}` }))
     );
+
+    const tabs = [
+        {
+            label: 'Generale',
+            onPress: () => setSelectedTab('Generale'),
+        },
+        {
+            label: 'Giornate',
+            onPress: () => setSelectedTab('Giornate'),
+        },
+    ];
 
     useEffect(() => {
         if (selectedTab === 'Giornate') {
@@ -63,26 +75,6 @@ export default function FullParticipantsRankingScreen({ navigation }) {
 
     const renderGeneraleTab = () => (
         <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 100 }}>
-            {/* {[...participants]
-                .sort((a, b) => b.punti - a.punti)
-                .map((participant, index) => (
-                    <TouchableOpacity key={index + 1} onPress={() => handleParticipantPress(participant)}>
-                        <Card style={{ ...styles.card, backgroundColor: colors.surface }}>
-                            <View style={styles.rankRow}>
-                                <Text style={{ color: 'white', fontSize: 20 }}>{index + 1}</Text>
-                                <Avatar.Image
-                                    source={{ uri: participant.photoURL }}
-                                    size={40}
-                                    style={styles.avatar}
-                                />
-                                <Text style={{ ...styles.participantName, color: 'white' }}>{participant.displayName}</Text>
-                                <Text style={{ ...styles.points, color: colors.primary }}>{participant.punti}pt</Text>
-                            </View>
-                        </Card>
-                        <RankingList ranking={participants} />
-
-                    </TouchableOpacity>
-                ))} */}
             <RankingList ranking={participants} />
         </ScrollView>
     );
@@ -112,23 +104,10 @@ export default function FullParticipantsRankingScreen({ navigation }) {
     return (
         <View style={{ flex: 1 }}>
             {/* Tab Custom */}
-            <View style={styles.tabContainer}>
-                <TouchableOpacity
-                    style={[styles.tabButton, selectedTab === 'Generale' && styles.activeTab]}
-                    onPress={() => setSelectedTab('Generale')}
-                >
-                    <Text style={[styles.tabText, { color: selectedTab === 'Generale' ? 'white' : colors.text }]}>Generale</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.tabButton, selectedTab === 'Giornate' && styles.activeTab]}
-                    onPress={() => setSelectedTab('Giornate')}
-                >
-                    <Text style={[styles.tabText, { color: selectedTab === 'Giornate' ? 'white' : colors.text }]}>Giornate</Text>
-                </TouchableOpacity>
-            </View>
-
+            <TabContainer tabs={tabs} />
             {/* Contenuto del Tab */}
             {selectedTab === 'Generale' ? renderGeneraleTab() : renderGiornateTab()}
+            {/* Contenuto del Tab */}
         </View>
     );
 }
