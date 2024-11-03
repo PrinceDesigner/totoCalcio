@@ -6,6 +6,7 @@ import moment from 'moment-timezone';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { COLORJS } from '../theme/themeColor';
 import TabContainer from '../components/Tabs/TabContainer';
+import { selectUser } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
 
 export default function UserHistoryScreen({ route, navigation }) {
     const { colors } = useTheme();
@@ -14,6 +15,7 @@ export default function UserHistoryScreen({ route, navigation }) {
     const inizioGiornata = useSelector((state) => state.infogiornataAttuale.startDate);
     const dayId = useSelector((state) => state.infogiornataAttuale.dayId);
     const [selectedTab, setSelectedTab] = useState('Storico'); // Stato per selezionare il tab attivo
+    const user = useSelector(selectUser);
 
     // Configurazione dei tab
     const tabs = [
@@ -76,6 +78,11 @@ export default function UserHistoryScreen({ route, navigation }) {
             })}
         </>
     );
+    const renderProfiloTab = () => (
+     <>
+     <Text>yopoooo{user.displayName}</Text>
+     </>
+    );
 
     return (
         <View style={{ flex: 1 }}>
@@ -83,7 +90,7 @@ export default function UserHistoryScreen({ route, navigation }) {
             <TabContainer tabs={tabs} />
             <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}>
 
-                {selectedTab === 'Storico' ? renderStoricoTab() : null}
+                {selectedTab === 'Storico' ? renderStoricoTab() : renderProfiloTab()}
 
             </ScrollView>
         </View>

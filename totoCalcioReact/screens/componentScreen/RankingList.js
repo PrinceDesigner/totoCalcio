@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import PropTypes from 'prop-types';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
-import { fetchStoricoPerUtenteSelezionato } from '../../redux/slice/storicoPerUtenteSelezionatoSlice';
+import { fetchStoricoPerUtenteSelezionato, setUser } from '../../redux/slice/storicoPerUtenteSelezionatoSlice';
 import { hideLoading, showLoading } from '../../redux/slice/uiSlice';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { Avatar } from 'react-native-paper';
@@ -23,6 +23,7 @@ const RankingList = ({ ranking, showAvatar = true }) => {
 
             // Effettua la chiamata all'API
             await dispatch(fetchStoricoPerUtenteSelezionato({ leagueId, userId: participant.userId })).unwrap();
+            dispatch(setUser({...participant}));
 
             // Nascondi lo stato di caricamento
             dispatch(hideLoading());

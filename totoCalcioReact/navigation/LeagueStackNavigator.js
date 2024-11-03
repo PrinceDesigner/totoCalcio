@@ -76,7 +76,7 @@ export default function LeagueStackNavigator() {
                 name="UserHistoryScreen"
                 component={UserHistoryScreen}
                 options={({ navigation }) => ({
-                    title: `${userDetail.fullName}`,
+                    title: `Storia e Profilo`,
                     headerShown: true, // Mostra l'header solo per questa schermata
                     ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
                 })}

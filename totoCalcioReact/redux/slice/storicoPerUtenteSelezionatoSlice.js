@@ -20,10 +20,14 @@ const storicoPerUtenteSelezionatoSlice = createSlice({
   name: 'storicoPerUtenteSelezionato',
   initialState: {
     storico: [],
+    user: {},
     loading: false,
     error: null,
   },
   reducers: {
+  setUser: (state, action) => {
+    state.user = action.payload;
+  },
     // Puoi aggiungere altri reducers qui, se necessario
     clearStorico: (state) => {
       state.storico = [];
@@ -59,6 +63,8 @@ export const selectStoricoByDayId = (dayId) => createSelector(
   (storico) => storico.find(item => item.daysId === dayId)
 );
 
+export const selectUser = (state) => state.storicoPerUtenteSelezionato.user;
+
 // Esporta le azioni generate automaticamente e il reducer
-export const { clearStorico } = storicoPerUtenteSelezionatoSlice.actions;
+export const { clearStorico, setUser } = storicoPerUtenteSelezionatoSlice.actions;
 export default storicoPerUtenteSelezionatoSlice.reducer;

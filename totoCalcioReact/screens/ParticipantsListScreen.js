@@ -5,7 +5,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; // Importa 
 import { useDispatch, useSelector } from 'react-redux';
 import { removeUserFromLeagueReducer, selectLeagueById } from '../redux/slice/leaguesSlice';
 import { removeParticipant } from '../redux/slice/partecipantsSlice';
-import { fetchStoricoPerUtenteSelezionato } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
+import { fetchStoricoPerUtenteSelezionato, setUser } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { removeUserFromLeague } from '../services/leagueService';
 import { showToast } from '../ToastContainer';
@@ -74,6 +74,8 @@ export default function ParticipantsListScreen({ navigation }) {
 
             // Effettua la chiamata all'API
             await dispatch(fetchStoricoPerUtenteSelezionato({ leagueId, userId: participant.userId })).unwrap();
+
+            dispatch(setUser({...participant}));
 
             // Nascondi lo stato di caricamento
             dispatch(hideLoading());
