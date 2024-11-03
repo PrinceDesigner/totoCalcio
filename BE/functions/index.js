@@ -36,8 +36,8 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
         // Caricamento dei dati
         console.time("Caricamento dati (matches, predictions, leagueDoc)");
         const [matchesSnapshot, predictionsSnapshot, leagueDoc] = await Promise.all([
-            firestore.collection('matches').where('dayId', '==', dayId).get(),
-            firestore.collection('predictions').where('leagueId', '==', leagueId).where('daysId', '==', dayId).get(),
+            firestore.collection('matches').where('dayId', '==', dayId).select('matchId', 'result').get(),
+            firestore.collection('predictions').where('leagueId', '==', leagueId).where('daysId', '==', dayId).select('userId', 'schedina').get(),
             firestore.collection('leagues').doc(leagueId).get()
         ]);
         console.timeEnd("Caricamento dati (matches, predictions, leagueDoc)");
@@ -103,9 +103,10 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
 
         // Commit di tutti i batch
         console.time("Commit batch");
-        for (const batch of batchArray) {
+        /*for (const batch of batchArray) {
             await batch.commit();
-        }
+        }*/
+        await Promise.all(batchArray.map(batch => batch.commit()));//fa più batch in parallelo - LIMITE 500 scritture per secondo
         console.timeEnd("Commit batch");
 
         console.timeEnd("Tempo totale calcolaPuntiGiornata");
@@ -176,7 +177,6 @@ exports.scheduleDayUpdateTasks = functions.https.onCall(async (data, context) =>
             functions.logger.info('JOB->', job)
             functions.logger.info('Auth ->', authClient)
 
-
             try {
                 await scheduler.projects.locations.jobs.create({
                     parent: `projects/${projectId}/locations/us-central1`,
@@ -197,6 +197,7 @@ exports.scheduleDayUpdateTasks = functions.https.onCall(async (data, context) =>
 });
 
 exports.updateMatches = functions.https.onRequest(async (req, res) => {
+    console.time('Data Retrieval Time');
     const { dayId } = req.body;
     functions.logger.log('START--->>>', dayId);
 
@@ -220,21 +221,40 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
 
         const fixtures = response.data.response;
         functions.logger.log('FIXTURES->', fixtures);
-
-        // Inizializza un array per i batch
-        const batchArray = [firestore.batch()];
-        let batchIndex = 0;
-        let operationCount = 0; // Contatore delle operazioni nel batch
-        const MAX_BATCH_SIZE = 499; // Dimensione massima del batch
+         // Esegui le query per ottenere i dati da Firestore in parallelo
+        const [leaguesSnapshot, predictionsSnapshot] = await Promise.all([
+            firestore.collection('leagues').get(),
+            firestore.collection('predictions').where('daysId', '==', dayId).select('leagueId').get() // Recupera solo leagueId
+        ]);
 
         // Aggiorna la collection matches e prepara gli inserimenti in giornateCalcolate
         const predictions = []; // Array per le previsioni da inserire
-        const leaguesSnapshot = await firestore.collection('leagues').get();
+        //const leaguesSnapshot = await firestore.collection('leagues').get();
         const leagueIds = leaguesSnapshot.docs.map(doc => doc.id);
         const leagueMap = leagueIds.reduce((acc, leagueId) => {
             acc[leagueId] = { calcolata: false };
             return acc;
         }, {});
+
+       // const predictionsSnapshot = await firestore.collection('predictions').where('daysId', '==', dayId).get();
+        // Aggiungi logica per le previsioni
+        predictionsSnapshot.forEach(doc => {
+            const predictionData = doc.data();
+            if (predictionData.leagueId in leagueMap) {
+                leagueMap[predictionData.leagueId].calcolata = true;
+                const documentId = `${predictionData.leagueId}_${dayId}`;
+                predictions.push({ documentId, leagueId: predictionData.leagueId });
+            }
+        });
+
+        console.timeEnd('Data Retrieval Time');
+
+        console.time('Popolamento Batch');
+        // Inizializza un array per i batch
+        const batchArray = [firestore.batch()];
+        let batchIndex = 0;
+        let operationCount = 0; // Contatore delle operazioni nel batch
+        const MAX_BATCH_SIZE = 499; // Dimensione massima del batch
 
         // Aggiorna i risultati delle partite e raccogli le previsioni
         for (const match of fixtures) {
@@ -250,18 +270,9 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
             }
         }
 
-        const predictionsSnapshot = await firestore.collection('predictions').where('daysId', '==', dayId).get();
-        // Aggiungi logica per le previsioni
-        predictionsSnapshot.forEach(doc => {
-            const predictionData = doc.data();
-            if (predictionData.leagueId in leagueMap) {
-                leagueMap[predictionData.leagueId].calcolata = true;
-                const documentId = `${predictionData.leagueId}_${dayId}`;
-                predictions.push({ documentId, leagueId: predictionData.leagueId });
-            }
-        });
-
         batchIndex++;
+        // Aggiungi le previsioni a 'giornateCalcolate'
+        let predictionBatchCount = 0;
         predictions.forEach(prediction => {
             // Imposta il documento nel batch corrente
             batchArray[batchIndex].set(firestore.collection('giornateCalcolate').doc(prediction.documentId), {
@@ -275,14 +286,17 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
             if (predictionBatchCount >= MAX_BATCH_SIZE) {
                 batchArray.push(firestore.batch());
                 batchIndex++;
-                predictionBatchCount = 0;
+                predictionBatchCount = 0; // Resetta il contatore
             }
         });
+        console.timeEnd('Popolamento Batch');
 
+        console.time('Batch commit sequenziale');
         // Esegui il commit di tutti i batch
         for (const batch of batchArray) {
             await batch.commit();
         }
+        console.timeEnd('Batch commit sequenziale');
 
         // Aggiorna il campo giornataAttuale
         await updateCurrentGiornata();
@@ -298,7 +312,8 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
 function determineResult(homeGoals, awayGoals) {
     if (homeGoals > awayGoals) return "1"; // Vittoria squadra di casa
     if (homeGoals < awayGoals) return "2"; // Vittoria squadra ospite
-    return "X"; // Pareggio
+    if(homeGoals == awayGoals)  return "X"; // Pareggio
+    return "";//-> nel caso di partita rinviata
 }
 
 // Funzione per aggiornare la giornata attuale
