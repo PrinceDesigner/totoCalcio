@@ -109,8 +109,6 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
         console.timeEnd("Commit batch");
 
         console.timeEnd("Tempo totale calcolaPuntiGiornata");
-        await lockRef.remove(); // Blocca il documento
-
         return { success: true, message: "Calcolo punti completato con successo." };
 
     }catch (error) {
