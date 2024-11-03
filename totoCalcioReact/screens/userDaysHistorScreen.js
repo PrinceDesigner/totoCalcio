@@ -7,6 +7,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { COLORJS } from '../theme/themeColor';
 import TabContainer from '../components/Tabs/TabContainer';
 import { selectUser } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
+import ProfileCard from './componentScreen/ProfilCard';
 
 export default function UserHistoryScreen({ route, navigation }) {
     const { colors } = useTheme();
@@ -79,9 +80,7 @@ export default function UserHistoryScreen({ route, navigation }) {
         </>
     );
     const renderProfiloTab = () => (
-     <>
-     <Text>yopoooo{user.displayName}</Text>
-     </>
+        <ProfileCard fullName={user.displayName} photoProfile={user.photoURL}  />
     );
 
     return (
@@ -145,7 +144,7 @@ const styles = StyleSheet.create({
     },
     avatar: {
         marginHorizontal: 10,
-        backgroundColor: '#6200ea', // Colore dell'avatar
+        backgroundColor: '#6200ea',
     },
     participantName: {
         fontSize: 16,
@@ -155,6 +154,6 @@ const styles = StyleSheet.create({
         paddingLeft: 10,
     },
     activeCard: {
-        backgroundColor: COLORJS.primary, // Colore di sfondo diverso per la giornata in corso (ad esempio arancione)
+        backgroundColor: COLORJS.primary, 
     }
 });

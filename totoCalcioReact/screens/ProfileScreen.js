@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, Modal, TouchableOpacity, Image, Text, TouchableWithoutFeedback } from 'react-native';
-import { Button, TextInput, Avatar, useTheme, IconButton } from 'react-native-paper';
+import { Button, TextInput,useTheme } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker'; // Libreria per selezionare immagini
 import { useDispatch, useSelector } from 'react-redux';
 import { updateProfilePhoto, updateProfileThunk, logout } from '../redux/slice/authSlice';
@@ -8,6 +8,7 @@ import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { showToast } from '../ToastContainer';
 import { COLORJS } from '../theme/themeColor';
 import { getAuth } from 'firebase/auth';
+import ProfileCard from './componentScreen/ProfilCard';
 
 export default function ProfileScreen({ navigation }) {
   const userDetail = useSelector((state) => state.auth.user && state.auth.user.user);
@@ -111,26 +112,7 @@ export default function ProfileScreen({ navigation }) {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={{ ...styles.container, backgroundColor: colors.background }}>
-        <View style={styles.profileSectionRow}>
-          <View style={styles.avatarContainer}>
-            <TouchableOpacity onPress={handleChangeImage}>
-
-              <Avatar.Image
-                size={80}
-                source={photoProfile ? { uri: photoProfile } : { uri: 'https://via.placeholder.com/150' }}
-                style={styles.avatar}
-              />
-            </TouchableOpacity>
-
-          </View>
-          <View style={styles.profileInfoContainer}>
-            <Text style={styles.userNameText}>{userName}</Text>
-            <Button mode="outlined" onPress={() => { }} style={styles.inviteButton}>
-              Invita amici
-            </Button>
-          </View>
-        </View>
-
+        <ProfileCard onAvatarPress={handleChangeImage} fullName={userDetail.fullName} photoProfile={photoProfile} />
         <View style={styles.tabsContainer}>
           <TouchableWithoutFeedback onPress={() => setActiveTab('other')}>
             <View style={[styles.tab, activeTab === 'other' && styles.activeTab]}>
@@ -225,42 +207,11 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-  profileSectionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    backgroundColor: COLORJS.primary,
-    padding: 15,
-    borderRadius: 10,
-  },
-  avatarContainer: {
-    position: 'relative',
-  },
-  avatar: {
-    marginRight: 20,
-    borderWidth: 2,
-    borderColor: 'white',
-  },
-  changeImageIcon: {
-    position: 'absolute',
-    bottom: -5,
-    right: -5,
-    backgroundColor: 'white',
-  },
-  profileInfoContainer: {
-    flex: 1,
-    justifyContent: 'center',
-  },
   userNameText: {
     fontSize: 20,
     fontWeight: 'bold',
     color: 'white',
     marginBottom: 5,
-  },
-  inviteButton: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'white',
-    color: COLORJS.primary,
   },
   tabsContainer: {
     flexDirection: 'row',
