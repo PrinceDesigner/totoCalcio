@@ -336,7 +336,7 @@ export default function LeagueDetails({ navigation }) {
                                         <Text style={{ ...styles.rankPoints, color: 'white' }}>{player.punti} punti</Text>
                                     </View>
                                 ))} */}
-                            <RankingList ranking={provisionalRanking} showAvatar={false} />
+                            <RankingList ranking={provisionalRanking.slice(0, 6)} showAvatar={false} />
 
                             {/* Bottone per vedere la classifica completa */}
                             <Button
@@ -376,8 +376,23 @@ export default function LeagueDetails({ navigation }) {
 
                 {/* Schema delle Partite */}
                 <Card style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginBottom: 10 }}>
-                    <View>
+                    <View style={styles.flexRow}>
                         <Text style={{ color: 'white', fontSize: 25 }}>Giornata {matchdayNumber}</Text>
+{/* 
+                        <Button
+
+                            mode="contained"
+                            style={{
+                                ...styles.insertButton,
+                                minWidth: 80, // Larghezza minima, puoi adattarla come preferisci
+
+                            }}
+                            labelStyle={{
+                                fontSize: 10, // Diminuisce la dimensione del testo
+                            }}
+                        >
+                            Calendario
+                        </Button> */}
                     </View>
                     {matches.map((match) => (
                         <MatchItem key={match.matchId} match={match} />
@@ -467,6 +482,12 @@ const styles = StyleSheet.create({
     },
     fullRankingButton: {
         marginTop: 10,
+    },
+    flexRow: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between'
     }
 });
 

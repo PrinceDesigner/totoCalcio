@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
         width: '100%',
         height: 49,
         border: '0',
-        borderRadius: '24px',
+        borderRadius: 24,
         fontSize: 16,
         fontWeight: 500,
         fontFamily: 'Helvetica',
