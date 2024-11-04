@@ -40,7 +40,7 @@ export default function LeagueStackNavigator() {
                 name="FormazioneScreen"
                 component={FormazioneScreen}
                 options={({ navigation }) => ({
-                    title: 'Inserisci esiti',
+                    title: 'Formazioni',
                     headerShown: true, // Mostra l'header solo per questa schermata
                     ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
                 })}
