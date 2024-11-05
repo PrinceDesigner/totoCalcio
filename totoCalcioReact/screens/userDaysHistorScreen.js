@@ -8,7 +8,7 @@ import { COLORJS } from '../theme/themeColor';
 import TabContainer from '../components/Tabs/TabContainer';
 import { selectUser } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
 import ProfileCard from './componentScreen/ProfilCard';
-import { makeUserAdminReducer, selectLeagueById } from '../redux/slice/leaguesSlice';
+import { makeUserAdminReducer, removeUserAdminReducer, selectLeagueById } from '../redux/slice/leaguesSlice';
 import { makeUserAdmin } from '../services/leagueService';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 
@@ -19,10 +19,13 @@ export default function UserHistoryScreen({ route, navigation }) {
     const inizioGiornata = useSelector((state) => state.infogiornataAttuale.startDate);
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
+    // UTENTE LOGGATO
+    const userIdLogged = useSelector((state) => state.auth.user && state.auth.user.user.userId);
     const dayId = useSelector((state) => state.infogiornataAttuale.dayId);
     const [selectedTab, setSelectedTab] = useState('Storico'); // Stato per selezionare il tab attivo
     const user = useSelector(selectUser);
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [isModalVisibleRemove, setIsModalVisibleRemove] = useState(false);
 
     const dispatch = useDispatch();
 
@@ -88,19 +91,39 @@ export default function UserHistoryScreen({ route, navigation }) {
         </>
     );
 
+    const buttonMakeRemoveAdmin = () => {
+        if (user.userId === userIdLogged) {
+            return
+        }
+
+        if (selectedLeague.ownerId.includes(user.userId)) {
+            return <Button
+                style={styles.button}
+                mode='contained'
+                onPress={() => setIsModalVisibleRemove(true)}
+            >
+                Rimuovi amministratore
+            </Button>
+        }
+        return <Button
+            style={styles.button}
+            mode='contained'
+            onPress={() => setIsModalVisible(true)}
+        >
+            Rendi amministratore
+        </Button>
+    }
+
     const renderProfiloTab = () => (
         <>
             <ProfileCard fullName={user.displayName} photoProfile={user.photoURL} />
-            <Button
-                style={styles.button}
-                mode='contained'
-                onPress={() => setIsModalVisible(true)}
-            >Rendi amministratore {selectedLeague.ownerId.includes(user.userId) ? 'lo è' : 'NO'} </Button>
+            {buttonMakeRemoveAdmin()}
         </>
     );
 
     const handleConfirmAdmin = async () => {
         try {
+            setIsModalVisible(false);
             dispatch(showLoading());
 
             // Call the makeUserAdmin function to assign admin role to the user
@@ -111,7 +134,25 @@ export default function UserHistoryScreen({ route, navigation }) {
             console.log('Utente reso amministratore --->', result);
 
             // Close the modal after success
-            setIsModalVisible(false);
+            dispatch(hideLoading());
+
+        } catch (error) {
+            dispatch(hideLoading());
+
+            console.error('Errore durante l\'assegnazione del ruolo di amministratore:', error);
+            // Handle any error notification or UI updates here if necessary
+        }
+    };
+    const handleConfirmRemoveAdmin = async () => {
+        try {
+            setIsModalVisibleRemove(false);
+            dispatch(showLoading());
+
+            dispatch(removeUserAdminReducer({ leagueId, userId: user.userId }));
+
+            console.log('Utente tolto amministratore --->', leagueId);
+
+            // Close the modal after success
             dispatch(hideLoading());
 
         } catch (error) {
@@ -145,6 +186,26 @@ export default function UserHistoryScreen({ route, navigation }) {
                                 mode='contained' onPress={handleConfirmAdmin} color='white' >Conferma</Button>
                             <Button style={styles.button}
                                 mode='outlined' onPress={() => setIsModalVisible(false)} color='white' > Annulla</Button>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Modale di conferma Rimuovi*/}
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={isModalVisibleRemove}
+                onRequestClose={() => setIsModalVisibleRemove(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContainer}>
+                        <Text style={styles.modalText}>Sei sicuro di voler rimuovere il ruolo a questo utente?</Text>
+                        <View style={styles.modalButtonContainer}>
+                            <Button style={styles.button}
+                                mode='contained' onPress={handleConfirmRemoveAdmin} color='white' >Conferma</Button>
+                            <Button style={styles.button}
+                                mode='outlined' onPress={() => setIsModalVisibleRemove(false)} color='white' > Annulla</Button>
                         </View>
                     </View>
                 </View>

@@ -119,6 +119,23 @@ const leaguesSlice = createSlice({
                     ownerIdArray.push(userId);
                 }
             }
+        },
+        removeUserAdminReducer: (state, action) => {
+            const { leagueId, userId } = action.payload;
+
+            // Trova la lega con l'ID specificato
+            const existingLeagueIndex = state.leagues.findIndex(
+                (league) => league.id === leagueId
+            );
+
+            if (existingLeagueIndex !== -1) {
+                // Rimuovi l'utente dall'array ownerId se è presente
+                const ownerIdArray = state.leagues[existingLeagueIndex].ownerId;
+                const userIndex = ownerIdArray.indexOf(userId);
+                if (userIndex !== -1) {
+                    ownerIdArray.splice(userIndex, 1);
+                }
+            }
         }
     },
     extraReducers: (builder) => {
@@ -246,5 +263,5 @@ export const selectLeagueById = (leagueId) => createSelector(
     (leagues) => leagues.find(league => league.id === leagueId)
 );
 
-export const { clearError, removeUserFromLeagueReducer, makeUserAdminReducer } = leaguesSlice.actions;
+export const { clearError, removeUserFromLeagueReducer, makeUserAdminReducer, removeUserAdminReducer } = leaguesSlice.actions;
 export default leaguesSlice.reducer;
