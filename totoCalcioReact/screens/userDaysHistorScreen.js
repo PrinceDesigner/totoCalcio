@@ -63,7 +63,13 @@ export default function UserHistoryScreen({ route, navigation }) {
                 </Text>
             </View>
 
-            {userHistory.map((giornata, index) => {
+            {[...userHistory]
+            .sort((a, b) => {
+                const dayA = parseInt(a.daysId.split('-')[1]);
+                const dayB = parseInt(b.daysId.split('-')[1]);
+                return dayB - dayA; // Ordinamento decrescente
+            })
+            .map((giornata, index) => {
                 if (giornata.daysId !== dayId || (giornata.daysId === dayId && isDatePast())) {
                     return (
                         <TouchableOpacity
