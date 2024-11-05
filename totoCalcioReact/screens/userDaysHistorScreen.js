@@ -1,23 +1,31 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { Card, useTheme, Avatar, Button } from 'react-native-paper';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import moment from 'moment-timezone';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { COLORJS } from '../theme/themeColor';
 import TabContainer from '../components/Tabs/TabContainer';
 import { selectUser } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
 import ProfileCard from './componentScreen/ProfilCard';
+import { makeUserAdminReducer, selectLeagueById } from '../redux/slice/leaguesSlice';
+import { makeUserAdmin } from '../services/leagueService';
+import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 
 export default function UserHistoryScreen({ route, navigation }) {
     const { colors } = useTheme();
 
     const userHistory = useSelector((state) => state.storicoPerUtenteSelezionato.storico); // Seleziona la lista delle giornate dallo stato
     const inizioGiornata = useSelector((state) => state.infogiornataAttuale.startDate);
+    const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
+    const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
     const dayId = useSelector((state) => state.infogiornataAttuale.dayId);
     const [selectedTab, setSelectedTab] = useState('Storico'); // Stato per selezionare il tab attivo
     const user = useSelector(selectUser);
     const [isModalVisible, setIsModalVisible] = useState(false);
+
+    const dispatch = useDispatch();
+
 
     // Configurazione dei tab
     const tabs = [
@@ -87,14 +95,31 @@ export default function UserHistoryScreen({ route, navigation }) {
                 style={styles.button}
                 mode='contained'
                 onPress={() => setIsModalVisible(true)}
-            >Rendi amministratore</Button>
+            >Rendi amministratore {selectedLeague.ownerId.includes(user.userId) ? 'lo è' : 'NO'} </Button>
         </>
     );
 
-    const handleConfirmAdmin = () => {
-        // Logica per rendere l'utente amministratore
-        console.log('Utente reso amministratore');
-        setIsModalVisible(false);
+    const handleConfirmAdmin = async () => {
+        try {
+            dispatch(showLoading());
+
+            // Call the makeUserAdmin function to assign admin role to the user
+            const result = await makeUserAdmin(leagueId, user.userId);
+            dispatch(makeUserAdminReducer({ leagueId, userId: user.userId }));
+
+            // Log success message or handle response data if needed
+            console.log('Utente reso amministratore --->', result);
+
+            // Close the modal after success
+            setIsModalVisible(false);
+            dispatch(hideLoading());
+
+        } catch (error) {
+            dispatch(hideLoading());
+
+            console.error('Errore durante l\'assegnazione del ruolo di amministratore:', error);
+            // Handle any error notification or UI updates here if necessary
+        }
     };
 
     return (

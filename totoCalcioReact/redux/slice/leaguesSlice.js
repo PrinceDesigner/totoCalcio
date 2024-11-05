@@ -246,5 +246,5 @@ export const selectLeagueById = (leagueId) => createSelector(
     (leagues) => leagues.find(league => league.id === leagueId)
 );
 
-export const { clearError, removeUserFromLeagueReducer } = leaguesSlice.actions;
+export const { clearError, removeUserFromLeagueReducer, makeUserAdminReducer } = leaguesSlice.actions;
 export default leaguesSlice.reducer;
