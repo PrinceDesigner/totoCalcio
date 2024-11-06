@@ -399,13 +399,13 @@ export default function LeagueDetails({ navigation }) {
                     ))}
                 </Card>
 
-                <Button
+                {selectedLeague.ownerId.includes(userId) ? <Button
                     mode="contained"
                     onPress={() => navigation.navigate('EditLeagueScreen', { leagueId })}
                     style={{ ...styles.insertButton }}
                 >
                     Modifica Lega
-                </Button>
+                </Button> : null}
             </ScrollView>
         </SafeAreaView>
     );
