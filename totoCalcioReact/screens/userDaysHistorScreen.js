@@ -344,13 +344,15 @@ const styles = StyleSheet.create({
     },
     cardPercentuale: {
         padding: 15,
-        backgroundColor: '#ffffff',
+        backgroundColor: COLORJS.background,
         borderRadius: 10,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
         shadowRadius: 4,
         elevation: 5,
+        borderWidth: 5,
+        borderColor: COLORJS.primary
     },
     cardContent: {
         flexDirection: 'column',
@@ -360,7 +362,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#333',
+        color: 'white',
     },
     percentage: {
         fontSize: 20,
@@ -373,7 +375,7 @@ const styles = StyleSheet.create({
     },
     schedineText: {
         fontSize: 14,
-        color: '#333',
+        color: 'white',
         marginTop: 10,
     },
 });
