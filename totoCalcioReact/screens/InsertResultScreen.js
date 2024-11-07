@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal } from 'react-native';
-import { Card, Button, useTheme } from 'react-native-paper';
+import { Card, Button, useTheme, Checkbox } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateStartDate } from '../redux/slice/infogiornataAttualeSlice';
 import { savePrediction } from '../redux/slice/predictionsSlice';
@@ -12,15 +12,19 @@ import { showToast } from '../ToastContainer';
 
 export default function InsertResultsScreen({ navigation }) {
     const { colors } = useTheme();
-    const matches = useSelector((state) => state.infogiornataAttuale.matches); 
-    const userId = useSelector((state) => state.auth.user.user.userId); 
-    const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata); 
-    const giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale); 
+    const myLeagues = useSelector((state) => state.leagues); // Stato delle leghe
+    const matches = useSelector((state) => state.infogiornataAttuale.matches);
+    const userId = useSelector((state) => state.auth.user.user.userId);
+    const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
+    const giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale);
     const schedinaGiocata = useSelector((state) => state.insertPredictions.schedinaInserita.schedina);
     const dispatch = useDispatch();
 
     const [results, setResults] = useState({});
     const [modalVisible, setModalVisible] = useState(false);
+
+    const [checked, setChecked] = useState(false);
+
 
     // Funzione per mappare l'array di predizioni in un oggetto compatibile con `setResults`
     const mapPredictionsToResults = (predictionsArray) => {
@@ -92,12 +96,12 @@ export default function InsertResultsScreen({ navigation }) {
         } catch (error) {
             console.error('Errore durante il salvataggio delle predizioni:', error);
             if (error.message === 'La giornata è già iniziata.') {
-                
+
                 showToast('error', 'La giornata è già iniziata. Aggiorna la pagina' + error.data);
                 dispatch(updateStartDate({ startDate: error.data }));
 
                 navigation.navigate('LeagueDetails'); // Sostituisci la schermata per evitare duplicazioni
-                
+
             } else {
                 showToast('error', 'Errore durante il salvataggio delle predizioni');
             }
@@ -109,6 +113,28 @@ export default function InsertResultsScreen({ navigation }) {
         }
     };
 
+
+    // Funzione per gestire il checkbox
+    const renderCheckbox = () => {
+        const handleToggleCheckbox = () => {
+            setChecked(!checked);
+            console.log(checked);
+            
+        };
+
+        return (
+            <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10 }}>
+                <Checkbox
+                    status={checked ? 'checked' : 'unchecked'}
+                    onPress={handleToggleCheckbox}
+                    color="#6200ee" // Cambia il colore del checkbox
+                />
+                <Text onPress={handleToggleCheckbox} style={{ marginLeft: 8, color: 'white' }}>
+                    Inserisci per tutte le tue leghe
+                </Text>
+            </View>
+        );
+    };
 
 
     return (
@@ -153,10 +179,13 @@ export default function InsertResultsScreen({ navigation }) {
                         </View>
                     </Card>
                 ))}
+
             </ScrollView>
 
             {/* Bottone per inserire gli esiti */}
             <View style={styles.buttonContainer}>
+                {renderCheckbox()}
+
                 <Button
                     mode="contained"
                     disabled={Object.keys(results).length !== matches.length}
@@ -231,7 +260,7 @@ const styles = StyleSheet.create({
     },
     resultBox: {
         width: '30%',
-        paddingVertical: 15,
+        paddingVertical: 10,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
@@ -247,6 +276,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#6200ea', // Colore del risultato selezionato
     },
     buttonContainer: {
+        display: 'flex',
+        flexDirection: 'column',
         paddingHorizontal: 20,
         paddingVertical: 10,
         backgroundColor: 'transparent',

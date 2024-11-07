@@ -26,7 +26,7 @@ router.post('/add', authMiddleware, async (req, res) => {
     const startDate = dayDoc.data().startDate;
 
     // Converti startDate e confronta con la data e ora attuali
-    const currentDate = moment().tz('Europe/Rome'); // Ottieni la data attuale nel fuso orario specificato
+    const currentDate = moment().utc(true).tz('Europe/Rome'); // Ottieni la data attuale nel fuso orario specificato
     const matchStartDate = moment.tz(startDate, 'Europe/Rome');
 
     if (currentDate.isAfter(matchStartDate)) {
