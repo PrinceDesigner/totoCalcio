@@ -184,7 +184,8 @@ export default function InsertResultsScreen({ navigation }) {
 
             {/* Bottone per inserire gli esiti */}
             <View style={styles.buttonContainer}>
-                {renderCheckbox()}
+                {/* DA PENSARE  */}
+                {/* {renderCheckbox()} */}
 
                 <Button
                     mode="contained"

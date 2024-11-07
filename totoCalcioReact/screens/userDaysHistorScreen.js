@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
-import { Card, useTheme, Avatar, Button } from 'react-native-paper';
+import { Card, useTheme, Avatar, Button, Title, Paragraph, ProgressBar } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import moment from 'moment-timezone';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -23,12 +23,20 @@ export default function UserHistoryScreen({ route, navigation }) {
     // UTENTE LOGGATO
     const userIdLogged = useSelector((state) => state.auth.user && state.auth.user.user.userId);
     const dayId = useSelector((state) => state.infogiornataAttuale.dayId);
+    const allPointOfUser = userHistory.filter(el => el.daysId !== dayId).map(el => el.punti);
+    const sumOfPoints = allPointOfUser.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+    const numberOfPredictions = allPointOfUser.length;
+    const totalPredictions = allPointOfUser.length * 10;
     const [selectedTab, setSelectedTab] = useState('Storico'); // Stato per selezionare il tab attivo
     const user = useSelector(selectUser);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isModalVisibleRemove, setIsModalVisibleRemove] = useState(false);
 
     const dispatch = useDispatch();
+
+
+
+    const percentage = (sumOfPoints / totalPredictions) * 100;
 
 
     // Configurazione dei tab
@@ -121,10 +129,32 @@ export default function UserHistoryScreen({ route, navigation }) {
         </Button>
     }
 
+    const PercentageCard = (percentage) => {
+        return (
+            <View style={styles.cardPercentualeContainer}>
+                <View style={styles.cardPercentuale}>
+                    <View style={styles.cardContent}>
+                        <Text style={styles.title}>Precisione 1X2</Text>
+                        <Text style={styles.percentage}>{percentage.toFixed(2)}%</Text>
+                    </View>
+                    <ProgressBar
+                        progress={percentage / 100}
+                        color={COLORJS.primary}
+                        style={styles.progressBar}
+                    />
+                    <Text style={styles.schedineText}>Schedine giocate: {numberOfPredictions}</Text>
+                </View>
+            </View>
+        );
+    };
+
     const renderProfiloTab = () => (
         <>
             <ProfileCard fullName={user.displayName} photoProfile={user.photoURL} />
             {buttonMakeRemoveAdmin()}
+            <View style={{ display: 'flex', flexDirection: 'row' }}>
+                {PercentageCard(percentage)}
+            </View>
         </>
     );
 
@@ -306,5 +336,44 @@ const styles = StyleSheet.create({
     },
     button: {
         color: COLORJS.background,
+        marginBottom: 10
+    },
+    cardPercentualeContainer: {
+        marginBottom: 20,
+        width: '50%'
+    },
+    cardPercentuale: {
+        padding: 15,
+        backgroundColor: '#ffffff',
+        borderRadius: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    cardContent: {
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        marginBottom: 10,
+    },
+    title: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    percentage: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#4caf50',
+    },
+    progressBar: {
+        height: 10,
+        borderRadius: 5,
+    },
+    schedineText: {
+        fontSize: 14,
+        color: '#333',
+        marginTop: 10,
     },
 });
