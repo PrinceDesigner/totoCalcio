@@ -574,5 +574,44 @@ router.post('/leagues/make-admin', authMiddleware, async (req, res) => {
   }
 });
 
+// Rimuovi un utente come amministratore di una lega
+router.post('/leagues/remove-admin', authMiddleware, async (req, res) => {
+  const { leagueId, userId } = req.body; // Ottieni l'ID della lega e dell'utente dal body della richiesta
+
+  // Verifica se leagueId e userId sono stati forniti
+  if (!leagueId || !userId) {
+    return res.status(400).json({ message: 'ID della lega e ID dell\'utente sono obbligatori.' });
+  }
+
+  try {
+    // Ottieni il riferimento al documento della lega
+    const leagueRef = firestore.collection('leagues').doc(leagueId);
+    const leagueDoc = await leagueRef.get();
+
+    // Verifica se la lega esiste
+    if (!leagueDoc.exists) {
+      return res.status(404).json({ message: 'Lega non trovata.' });
+    }
+
+    const leagueData = leagueDoc.data();
+
+    // Verifica se l'utente è attualmente amministratore della lega
+    if (!leagueData.ownerId || !leagueData.ownerId.includes(userId)) {
+      return res.status(400).json({ message: 'L\'utente non è un amministratore della lega.' });
+    }
+
+    // Rimuovi l'ID dell'utente dal campo ownerId della lega
+    await leagueRef.update({
+      ownerId: FieldValue.arrayRemove(userId)
+    });
+
+    res.status(200).json({ message: 'Utente rimosso come amministratore con successo.', leagueId, userId });
+  } catch (error) {
+    console.error('Errore durante la rimozione del ruolo di amministratore:', error);
+    res.status(500).json({ message: 'Errore durante la rimozione del ruolo di amministratore.' });
+  }
+});
+
+
 
 module.exports = router;

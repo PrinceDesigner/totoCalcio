@@ -109,6 +109,20 @@ export const makeUserAdmin = async (leagueId, userId) => {
   }
 };
 
+// Levo admin
+export const removeUserAdmin = async (leagueId, userId) => {
+  try {
+    const response = await axiosInstance.post('/leagues/remove-admin', {
+      leagueId,
+      userId,
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Errore durante la rimozione del ruolo di amministratore:`, error);
+    throw error;
+  }
+};
+
 // Servizio per recuperare le lineups di una partita specifica
 export const getMatchLineup = async (fixtureId) => {
   try {

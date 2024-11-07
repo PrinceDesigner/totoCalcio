@@ -10,6 +10,7 @@ import { selectUser } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
 import ProfileCard from './componentScreen/ProfilCard';
 import { makeUserAdminReducer, removeUserAdminReducer, selectLeagueById } from '../redux/slice/leaguesSlice';
 import { makeUserAdmin } from '../services/leagueService';
+import { removeUserAdmin } from '../services/leagueService';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 
 export default function UserHistoryScreen({ route, navigation }) {
@@ -64,36 +65,36 @@ export default function UserHistoryScreen({ route, navigation }) {
             </View>
 
             {[...userHistory]
-            .sort((a, b) => {
-                const dayA = parseInt(a.daysId.split('-')[1]);
-                const dayB = parseInt(b.daysId.split('-')[1]);
-                return dayB - dayA; // Ordinamento decrescente
-            })
-            .map((giornata, index) => {
-                if (giornata.daysId !== dayId || (giornata.daysId === dayId && isDatePast())) {
-                    return (
-                        <TouchableOpacity
-                            key={index + 1}
-                            onPress={() => navigation.navigate('GiornataSchedinaDetailsUserScreen', { dayId: giornata.daysId })} // Modifica in base alla logica che desideri
-                            style={{ ...styles.cardTouchable }} // Modifica per includere lo stile
-                        >
-                            <Card style={[styles.card, giornata.daysId === dayId ? styles.activeCard : {}]}>
-                                <View style={styles.participantRow}>
-                                    <Avatar.Icon
-                                        icon="calendar"
-                                        size={40}
-                                        style={styles.avatar}
-                                    />
-                                    <Text style={{ ...styles.participantName, color: 'white' }}>Giornata {giornata.daysId.replace('RegularSeason-', '')}</Text>
-                                    <Text style={{ ...styles.participantName, color: 'white' }}>{giornata.punti} punti</Text>
-                                </View>
-                            </Card>
-                        </TouchableOpacity>
-                    )
-                } else {
-                    return null;
-                }
-            })}
+                .sort((a, b) => {
+                    const dayA = parseInt(a.daysId.split('-')[1]);
+                    const dayB = parseInt(b.daysId.split('-')[1]);
+                    return dayB - dayA; // Ordinamento decrescente
+                })
+                .map((giornata, index) => {
+                    if (giornata.daysId !== dayId || (giornata.daysId === dayId && isDatePast())) {
+                        return (
+                            <TouchableOpacity
+                                key={index + 1}
+                                onPress={() => navigation.navigate('GiornataSchedinaDetailsUserScreen', { dayId: giornata.daysId })} // Modifica in base alla logica che desideri
+                                style={{ ...styles.cardTouchable }} // Modifica per includere lo stile
+                            >
+                                <Card style={[styles.card, giornata.daysId === dayId ? styles.activeCard : {}]}>
+                                    <View style={styles.participantRow}>
+                                        <Avatar.Icon
+                                            icon="calendar"
+                                            size={40}
+                                            style={styles.avatar}
+                                        />
+                                        <Text style={{ ...styles.participantName, color: 'white' }}>Giornata {giornata.daysId.replace('RegularSeason-', '')}</Text>
+                                        <Text style={{ ...styles.participantName, color: 'white' }}>{giornata.punti} punti</Text>
+                                    </View>
+                                </Card>
+                            </TouchableOpacity>
+                        )
+                    } else {
+                        return null;
+                    }
+                })}
         </>
     );
 
@@ -154,21 +155,21 @@ export default function UserHistoryScreen({ route, navigation }) {
             setIsModalVisibleRemove(false);
             dispatch(showLoading());
 
+            // Effettua la chiamata al servizio per rimuovere l'utente come amministratore
+            await removeUserAdmin(leagueId, user.userId);
             dispatch(removeUserAdminReducer({ leagueId, userId: user.userId }));
-
             console.log('Utente tolto amministratore --->', leagueId);
 
-            // Close the modal after success
+            // Chiudi il caricamento dopo il successo
             dispatch(hideLoading());
 
         } catch (error) {
             dispatch(hideLoading());
 
-            console.error('Errore durante l\'assegnazione del ruolo di amministratore:', error);
-            // Handle any error notification or UI updates here if necessary
+            console.error('Errore durante la rimozione del ruolo di amministratore:', error);
+            // Gestisci notifiche di errore o aggiornamenti dell'interfaccia utente qui, se necessario
         }
     };
-
     return (
         <View style={{ flex: 1 }}>
             {/* Tab Custom */}
