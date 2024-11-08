@@ -1,11 +1,11 @@
 import moment from 'moment-timezone';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Card, useTheme, Avatar, Button } from 'react-native-paper'; 
+import { Card, useTheme, Avatar, Button } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { fetchGiornateCalcolate } from '../services/storicoService';
-import { functions } from '../firebaseConfig'; 
+import { functions } from '../firebaseConfig';
 import { httpsCallable } from 'firebase/functions';
 import { useNavigation } from '@react-navigation/native';
 import { showToast } from '../ToastContainer';
@@ -21,7 +21,7 @@ export default function ListGiornateDaCalcolareScreen() {
     const [giornateCalcolate, setGiornateCalcolate] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [refreshing, setRefreshing] = useState(false); 
+    const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
         const getGiornateCalcolate = async () => {
@@ -95,6 +95,50 @@ export default function ListGiornateDaCalcolareScreen() {
         return dayIdPar === dayId;
     };
 
+    const renderGiornate = () => {
+        if (giornateCalcolate.length === 0) {
+            return (
+                <View style={styles.noGiornateContainer}>
+                    <Text style={styles.noGiornateText}>Non ci sono giornate da calcolare</Text>
+                </View>
+            );
+        }
+
+        return giornateCalcolate.map((giornata, index) => {
+            return !isDateAfter(giornata.dayId) ? (
+                <View key={index + 1} style={{ ...styles.cardTouchable }}>
+                    <Card style={styles.card}>
+                        <View style={styles.participantRow}>
+                            <Avatar.Icon
+                                icon="calendar"
+                                size={40}
+                                style={styles.avatar}
+                            />
+                            <Text style={{ ...styles.participantName, color: 'white' }}>
+                                Giornata {giornata.dayId.replace('RegularSeason-', '')}
+                            </Text>
+
+                            {/* Aggiungi l'icona "check-circle" se la giornata è stata calcolata */}
+                            {giornata.calcolate && (
+                                <MaterialIcons name="check-circle" size={24} color="green" />
+                            )}
+                        </View>
+
+                        {/* Mostra sempre i bottoni */}
+                        <Button
+                            mode="contained"
+                            onPress={() => handleCalculatePoints(giornata)}
+                            style={styles.calculateButton}
+                            color={colors.primary}
+                        >
+                            Calcola Giornata
+                        </Button>
+                    </Card>
+                </View>
+            ) : null;
+        });
+    };
+
     return (
         <View style={{ flex: 1 }}>
             <ScrollView
@@ -110,51 +154,8 @@ export default function ListGiornateDaCalcolareScreen() {
                         Le giornate con l'icona di spunta verde <MaterialIcons name="check-circle" size={16} color="green" /> sono già state calcolate.
                     </Text>
                 </View>
+                {renderGiornate()}
 
-                {giornateCalcolate.map((giornata, index) => {
-                    return !isDateAfter(giornata.dayId) ? (
-                        <View
-                            key={index + 1}
-                            style={{ ...styles.cardTouchable }}
-                        >
-                            <Card style={styles.card}>
-                                <View style={styles.participantRow}>
-                                    <Avatar.Icon
-                                        icon="calendar"
-                                        size={40}
-                                        style={styles.avatar}
-                                    />
-                                    <Text style={{ ...styles.participantName, color: 'white' }}>
-                                        Giornata {giornata.dayId.replace('RegularSeason-', '')}
-                                    </Text>
-
-                                    {/* Aggiungi l'icona "check-circle" se la giornata è stata calcolata */}
-                                    {giornata.calcolate && (
-                                        <MaterialIcons name="check-circle" size={24} color="green" />
-                                    )}
-                                </View>
-
-                                {/* Mostra sempre i bottoni */}
-                                <Button
-                                    mode="contained"
-                                    onPress={() => handleCalculatePoints(giornata)}
-                                    style={styles.calculateButton}
-                                    color={colors.primary}
-                                >
-                                    Calcola Giornata
-                                </Button>
-                                {/* <Button
-                                    mode="contained"
-                                    onPress={() => createTask(giornata)}
-                                    style={styles.calculateButton}
-                                    color={colors.primary}
-                                >
-                                    Calcola Giornata 2
-                                </Button> */}
-                            </Card>
-                        </View>
-                    ) : null;
-                })}
             </ScrollView>
         </View>
     );
@@ -195,5 +196,14 @@ const styles = StyleSheet.create({
         padding: 10,
         backgroundColor: '#333',
         borderRadius: 5,
+    },
+    noGiornateContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 20,
+    },
+    noGiornateText: {
+        fontSize: 18,
+        color: 'gray',
     },
 });
