@@ -23,20 +23,25 @@ export default function UserHistoryScreen({ route, navigation }) {
     // UTENTE LOGGATO
     const userIdLogged = useSelector((state) => state.auth.user && state.auth.user.user.userId);
     const dayId = useSelector((state) => state.infogiornataAttuale.dayId);
-    const allPointOfUser = userHistory.filter(el => el.daysId !== dayId).map(el => el.punti);
-    const sumOfPoints = allPointOfUser.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
-    const numberOfPredictions = allPointOfUser.length;
-    const totalPredictions = allPointOfUser.length * 10;
+    let allPointOfUser = 0
+    let sumOfPoints = 0
+    let numberOfPredictions = 0
+    let totalPredictions = 0
+    let percentage = 0;
     const [selectedTab, setSelectedTab] = useState('Storico'); // Stato per selezionare il tab attivo
     const user = useSelector(selectUser);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isModalVisibleRemove, setIsModalVisibleRemove] = useState(false);
 
+    if (userHistory >= 1) {
+        allPointOfUser = userHistory.filter(el => el.daysId !== dayId).map(el => el.punti);
+        sumOfPoints = allPointOfUser.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+        numberOfPredictions = allPointOfUser.length;
+        totalPredictions = allPointOfUser.length * 10;
+        percentage = (sumOfPoints / totalPredictions) * 100;
+    }
+
     const dispatch = useDispatch();
-
-
-
-    const percentage = (sumOfPoints / totalPredictions) * 100;
 
 
     // Configurazione dei tab
@@ -138,7 +143,7 @@ export default function UserHistoryScreen({ route, navigation }) {
                         <Text style={styles.percentage}>{percentage.toFixed(2)}%</Text>
                     </View>
                     <ProgressBar
-                        progress={percentage / 100}
+                        progress={(percentage || 0) / 100}
                         color={COLORJS.primary}
                         style={styles.progressBar}
                     />
