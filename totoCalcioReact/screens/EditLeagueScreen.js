@@ -7,7 +7,8 @@ import { showLoading, hideLoading } from '../redux/slice/uiSlice'; // Importa pe
 import { showToast } from '../ToastContainer';
 
 export default function EditLeagueScreen({ route, navigation }) {
-  const { leagueId } = route.params; // Ottieni l'ID della lega passato tramite la navigazione
+  
+  const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
   const { colors } = useTheme();
   const dispatch = useDispatch();
 

@@ -401,7 +401,7 @@ export default function LeagueDetails({ navigation }) {
 
                 {selectedLeague.ownerId.includes(userId) ? <Button
                     mode="contained"
-                    onPress={() => navigation.navigate('EditLeagueScreen', { leagueId })}
+                    onPress={() => navigation.navigate('EditLeagueScreen')}
                     style={{ ...styles.insertButton }}
                 >
                     Modifica Lega
