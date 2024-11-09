@@ -6,6 +6,7 @@ import { showLoading, hideLoading } from '../redux/slice/uiSlice';
 import { showToast } from '../ToastContainer';
 import { checkPrediction } from '../services/predictionsService';
 import { useNavigation } from '@react-navigation/native';
+import PredictionComponent from './componentScreen/SchedinaInserita';
 
 export default function GiornataDetailsScreen({ route }) {
     const { colors } = useTheme();
@@ -19,66 +20,43 @@ export default function GiornataDetailsScreen({ route }) {
     const participants = useSelector((state) => state.partecipantiLegaCorrente.participants);
     const prediction = useSelector((state) => state.insertPredictions.schedinaInserita);
     const loading = useSelector((state) => state.ui.loading);
-    
+
     const matchdayNumber = dayId.replace('RegularSeason-', '') || 0;
 
-// Funzione per gestire il click su un partecipante
-const handleParticipantPress = async (participant) => {
-    try {
-        // Mostra lo stato di caricamento
-        dispatch(showLoading());
+    // Funzione per gestire il click su un partecipante
+    const handleParticipantPress = async (participant) => {
+        try {
+            // Mostra lo stato di caricamento
+            dispatch(showLoading());
 
-        // Chiama il servizio checkPrediction
-        const predictionData = await checkPrediction(dayId, leagueId, participant.userId);
+            // Chiama il servizio checkPrediction
+            const predictionData = await checkPrediction(dayId, leagueId, participant.userId);
 
 
-        // Gestisci il risultato, ad esempio naviga a un'altra schermata o mostra un messaggio
-        if (predictionData) {
-            navigation.navigate('EsitiUtenteInseriti', {
-                prediction: predictionData, // Passa i dati della predizione
-                user: participant.displayName, // Passa i dettagli del partecipante se necessario
-            });
+            // Gestisci il risultato, ad esempio naviga a un'altra schermata o mostra un messaggio
+            if (predictionData) {
+                navigation.navigate('EsitiUtenteInseriti', {
+                    prediction: predictionData, // Passa i dati della predizione
+                    user: participant.displayName, // Passa i dettagli del partecipante se necessario
+                });
 
-        } else {
-            showToast('info', 'Nessuna predizione trovata per questo utente.');
+            } else {
+                showToast('info', 'Nessuna predizione trovata per questo utente.');
+            }
+
+        } catch (error) {
+            console.error('Errore durante il controllo della predizione:', error);
+            showToast('error', error.response.data.message);
+        } finally {
+            // Nascondi lo stato di caricamento
+            dispatch(hideLoading());
         }
-
-    } catch (error) {
-        console.error('Errore durante il controllo della predizione:', error);
-        showToast('error', error.response.data.message);
-    } finally {
-        // Nascondi lo stato di caricamento
-        dispatch(hideLoading());
-    }
-};
-
-    const getMatchById = (matchId) => {
-        return matches.find(match => match.matchId === matchId);
     };
 
     const renderPrediction = () => (
         <View style={styles.sectionContainer}>
             <Text style={{ ...styles.sectionTitle, color: colors.primary }}>I tuoi esiti per la giornata {matchdayNumber} </Text>
-            {prediction.schedina && prediction.schedina.length > 0 ? (
-                <View>
-                    {prediction.schedina.map((item) => (
-                        <Card key={item.matchId} style={{ ...styles.matchCard, backgroundColor: colors.surface }}>
-                            <View style={styles.matchInfo}>
-                                <Text style={[styles.matchText, { color: 'white' }]}>
-                                    {getMatchById(item.matchId).homeTeam}
-                                    <Text> - </Text>
-                                    {getMatchById(item.matchId).awayTeam}
-                                </Text>
-                                <Text style={[styles.predictionText, { color: colors.accent }]}>
-                                    {item.esitoGiocato}
-                                </Text>
-                            </View>
-                        </Card>
-                    ))}
-                </View>
-            ) : (
-                <Text style={{ ...styles.noDataText, color: colors.text }}>Nessuna predizione per questa giornata.</Text>
-            )}
+            <PredictionComponent prediction={prediction} />
         </View>
     );
 
@@ -90,9 +68,8 @@ const handleParticipantPress = async (participant) => {
                     <TouchableOpacity
                         key={index + 1}
                         onPress={() => handleParticipantPress(participant)} // Funzione per gestire il click
-                        style={{ marginBottom: 10 }} // Aggiungi un po' di margine
                     >
-                        <Card style={{ ...styles.card, backgroundColor: colors.surface }}>
+                        <View style={{ ...styles.card, backgroundColor: colors.surface }}>
                             <View style={styles.participantRow}>
                                 <Text style={{ color: 'white' }}>{index + 1}</Text>
                                 <Avatar.Image
@@ -104,7 +81,7 @@ const handleParticipantPress = async (participant) => {
                                     {participant.displayName}
                                 </Text>
                             </View>
-                        </Card>
+                        </View>
                     </TouchableOpacity>
                 ))}
             </ScrollView>
@@ -114,7 +91,7 @@ const handleParticipantPress = async (participant) => {
     return (
         <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}>
             {loading ? (
-                <Text style={{ ...styles.loadingText, color: colors.primary }}>Caricamento...</Text>
+               null
             ) : (
                 <>
                     {renderPrediction()}
@@ -130,34 +107,10 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 15,
     },
-    sectionContainer: {
-        marginBottom: 20,
-    },
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 10,
-    },
-    matchCard: {
-        padding: 15,
-        borderRadius: 8,
-        marginBottom: 10,
-    },
-    matchInfo: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    matchText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    predictionText: {
-        fontSize: 18,
-    },
-    noDataText: {
-        textAlign: 'center',
-        fontSize: 16,
-        color: 'gray',
     },
     loadingText: {
         textAlign: 'center',

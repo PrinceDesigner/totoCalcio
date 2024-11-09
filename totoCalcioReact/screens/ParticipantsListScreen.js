@@ -8,6 +8,7 @@ import { removeParticipant } from '../redux/slice/partecipantsSlice';
 import { fetchStoricoPerUtenteSelezionato, setUser } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { removeUserFromLeague } from '../services/leagueService';
+import { COLORJS } from '../theme/themeColor';
 import { showToast } from '../ToastContainer';
 
 export default function ParticipantsListScreen({ navigation }) {
@@ -119,7 +120,7 @@ export default function ParticipantsListScreen({ navigation }) {
                         onPress={() => handleParticipantPress(participant)} // Aggiungi la funzione da eseguire al tocco
                         style={{ ...styles.cardTouchable }} // Modifica per includere lo stile
                     >
-                        <Card style={styles.card}>
+                        <View style={styles.card}>
                             <View style={styles.participantRow}>
                                 <Text style={{ color: 'white' }}>{index + 1}</Text>
                                 <Avatar.Image
@@ -136,7 +137,7 @@ export default function ParticipantsListScreen({ navigation }) {
                                     </TouchableOpacity>
                                 ) : null}
                             </View>
-                        </Card>
+                        </View>
                     </TouchableOpacity>
                 ))}
             </ScrollView>
@@ -186,6 +187,7 @@ const styles = StyleSheet.create({
         padding: 15,
         marginBottom: 10,
         borderRadius: 10,
+        backgroundColor: COLORJS.surface
     },
     participantRow: {
         flexDirection: 'row',

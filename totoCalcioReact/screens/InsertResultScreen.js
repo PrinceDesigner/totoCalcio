@@ -144,7 +144,7 @@ export default function InsertResultsScreen({ navigation }) {
         <View style={{ flex: 1, backgroundColor: colors.background }}>
             <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 20 }}>
                 {matches.map(match => (
-                    <Card key={match.matchId} style={{ ...styles.matchCard, backgroundColor: colors.surface }}>
+                    <View key={match.matchId} style={{ ...styles.matchCard, backgroundColor: colors.surface }}>
                         <View style={styles.matchInfo}>
                             <Text style={styles.matchText}>{match.homeTeam} vs {match.awayTeam}</Text>
                         </View>
@@ -180,7 +180,7 @@ export default function InsertResultsScreen({ navigation }) {
                                 <Text style={styles.resultText}>2</Text>
                             </TouchableOpacity>
                         </View>
-                    </Card>
+                    </View>
                 ))}
 
             </ScrollView>

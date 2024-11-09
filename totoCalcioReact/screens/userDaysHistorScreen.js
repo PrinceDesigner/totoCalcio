@@ -91,7 +91,7 @@ export default function UserHistoryScreen({ route, navigation }) {
                                 onPress={() => navigation.navigate('GiornataSchedinaDetailsUserScreen', { dayId: giornata.daysId })} // Modifica in base alla logica che desideri
                                 style={{ ...styles.cardTouchable }} // Modifica per includere lo stile
                             >
-                                <Card style={[styles.card, giornata.daysId === dayId ? styles.activeCard : {}]}>
+                                <View style={[styles.card, giornata.daysId === dayId ? styles.activeCard : {}]}>
                                     <View style={styles.participantRow}>
                                         <Avatar.Icon
                                             icon="calendar"
@@ -101,7 +101,7 @@ export default function UserHistoryScreen({ route, navigation }) {
                                         <Text style={{ ...styles.participantName, color: 'white' }}>Giornata {giornata.daysId.replace('RegularSeason-', '')}</Text>
                                         <Text style={{ ...styles.participantName, color: 'white' }}>{giornata.punti} punti</Text>
                                     </View>
-                                </Card>
+                                </View>
                             </TouchableOpacity>
                         )
                     } else {
@@ -296,6 +296,7 @@ const styles = StyleSheet.create({
         padding: 15,
         marginBottom: 10,
         borderRadius: 10,
+        backgroundColor: COLORJS.surface
     },
     participantRow: {
         flexDirection: 'row',

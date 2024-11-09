@@ -3,6 +3,8 @@ import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useTheme, Card } from 'react-native-paper';
 import { selectStoricoByDayId } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
+import { COLORJS } from '../theme/themeColor';
+import { selectLeagueById } from '../redux/slice/leaguesSlice';
 
 export default function GiornataSchedinaDetailsUserScreen({ route }) {
     const { dayId } = route.params; // Recupera i parametri passati
@@ -12,10 +14,14 @@ export default function GiornataSchedinaDetailsUserScreen({ route }) {
     const storicoItem = useSelector(selectStoricoByDayId(dayId));
     const loading = useSelector((state) => state.ui.loading);
 
+    const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
+    const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
+    const leagueName = selectedLeague.name;
+
     // Funzione per rendere le predizioni
     const renderPrediction = () => {
         // Se non esiste una predizione per questa giornata
-        if (!storicoItem ||  !storicoItem.schedina) {
+        if (!storicoItem || !storicoItem.schedina) {
             return (
                 <Text style={{ ...styles.noDataText, color: colors.text }}>Nessuna predizione per questa giornata.</Text>
             );
@@ -25,21 +31,44 @@ export default function GiornataSchedinaDetailsUserScreen({ route }) {
 
         return (
             <View style={styles.sectionContainer}>
-                <Text style={{ ...styles.sectionTitle, color: colors.primary }}>
-                    Esiti giornata {dayId.replace('RegularSeason-', '')}
-                </Text>
-                {schedina.map((item) => (
-                    <Card key={item.matchId} style={{ ...styles.matchCard, backgroundColor: item.esitoGiocato === item.result ?  'green' : item.result === null ? colors.surface : 'red' }}>
-                        <View style={styles.matchInfo}>
-                            <Text style={[styles.matchText, { color: 'white' }]}>
-                                {item.homeTeam} - {item.awayTeam}
-                            </Text>
-                            <Text style={[styles.predictionText, { color: colors.accent }]}>
-                                {item.esitoGiocato}
-                            </Text>
+                <View style={styles.titleLeague}>
+                    <Text style={{ ...styles.leagueNameText }}>
+                        {leagueName}
+                    </Text>
+                    <Text style={{ ...styles.sectionTitle, color: colors.primary }}>
+                        Esiti giornata {dayId.replace('RegularSeason-', '')}
+                    </Text>
+                </View>
+                <View style={{marginTop: 10}}>
+                    {schedina.map((item) => (
+                        <View key={item.matchId} style={{ ...styles.matchCard }}>
+                            <View style={styles.matchInfo}>
+                                <View style={{ flex: '9' }}>
+                                    <Text style={[styles.matchText, { color: 'white' }]}>
+                                        {item.homeTeam} - {item.awayTeam}
+                                    </Text>
+                                </View>
+
+                                <Text style={{ flex: 1 }}>
+                                    {/* CERCHIO */}
+                                    {/* item.esitoGiocato === item.result ?  'green' : item.result === null ? colors.surface : 'red'  */}
+                                    <View style={{ display: 'flex', alignItems: 'center', flexDirection: 'row' }}>
+                                        <View
+                                            style={[
+                                                styles.circle,
+                                                {
+                                                    backgroundColor:
+                                                        item.result === null ? colors.surface : item.esitoGiocato === item.result ? 'green' : 'red',
+                                                },
+                                            ]}
+                                        />
+                                        <Text style={styles.predictionText}>{item.esitoGiocato}</Text>
+                                    </View>
+                                </Text>
+                            </View>
                         </View>
-                    </Card>
-                ))}
+                    ))}
+                </View>
             </View>
         );
     };
@@ -62,6 +91,18 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 15,
     },
+    titleLeague: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexDirection: 'column',
+        paddingBottom: 10,
+        paddingTop: 10,
+        borderBottomWidth: 5,
+        borderBottomColor: COLORJS.primary,
+        // borderTopWidth: 1, 
+        // borderTopColor: COLORJS.primary
+    },
     sectionContainer: {
         marginBottom: 20,
     },
@@ -70,14 +111,22 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 10,
     },
-    matchCard: {
-        padding: 15,
-        borderRadius: 8,
+    leagueNameText: {
+        fontSize: 18,
+        fontWeight: 'bold',
         marginBottom: 10,
+        color: COLORJS.surface
+    },
+    matchCard: {
+        borderBottomWidth: 1,
+        borderBottomColor: COLORJS.surface,
+        paddingBottom: 15,
+        paddingTop: 15
     },
     matchInfo: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        alignItems: 'center'
     },
     matchText: {
         fontSize: 16,
@@ -85,6 +134,7 @@ const styles = StyleSheet.create({
     },
     predictionText: {
         fontSize: 18,
+        color: 'white'
     },
     noDataText: {
         textAlign: 'center',
@@ -94,5 +144,11 @@ const styles = StyleSheet.create({
     loadingText: {
         textAlign: 'center',
         fontSize: 18,
+    },
+    circle: {
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        marginRight: 6,
     },
 });

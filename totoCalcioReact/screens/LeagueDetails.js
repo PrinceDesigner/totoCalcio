@@ -318,7 +318,7 @@ export default function LeagueDetails({ navigation }) {
                 }
             >
                 {/* Classifica Provvisoria */}
-                <Card style={{ ...styles.section, marginBottom: 0 }}>
+                <View style={{ ...styles.section, marginBottom: 0 }}>
                     <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica Provvisoria</Text>
 
                     {provisionalRankingLoading ? (
@@ -348,10 +348,10 @@ export default function LeagueDetails({ navigation }) {
                             </Button>
                         </>
                     )}
-                </Card>
+                </View>
 
                 {/* Sezione per copiare e condividere l'ID della lega */}
-                <Card style={{ ...styles.section, marginTop: 20 }}>
+                <View style={{ ...styles.section, marginTop: 20 }}>
                     <Text style={{ color: 'white', fontSize: 18, marginBottom: 10 }}>Condividi la tua Lega</Text>
                     <Text style={{ color: 'white', fontSize: 16 }}>ID Lega: {leagueId}</Text>
 
@@ -372,10 +372,10 @@ export default function LeagueDetails({ navigation }) {
                             Condividi
                         </Button>
                     </View>
-                </Card>
+                </View>
 
                 {/* Schema delle Partite */}
-                <Card style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginBottom: 10 }}>
+                <View style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginBottom: 10 }}>
                     <View style={styles.flexRow}>
                         <Text style={{ color: 'white', fontSize: 25 }}>Giornata {matchdayNumber}</Text>
 {/* 
@@ -397,7 +397,7 @@ export default function LeagueDetails({ navigation }) {
                     {matches.map((match) => (
                         <MatchItem key={match.matchId} match={match} />
                     ))}
-                </Card>
+                </View>
 
                 {selectedLeague.ownerId.includes(userId) ? <Button
                     mode="contained"
@@ -454,6 +454,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 5,
         elevation: 5,
+        backgroundColor: COLORJS.surface
     },
     sectionTitle: {
         fontSize: 20,

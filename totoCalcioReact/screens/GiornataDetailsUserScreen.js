@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useTheme, Card } from 'react-native-paper';
+import PredictionComponent from './componentScreen/SchedinaInserita';
 
 export default function GiornataDetailsUserScreen({ route }) {
     const { prediction, user } = route.params; // Recupera i parametri passati
@@ -24,26 +25,7 @@ export default function GiornataDetailsUserScreen({ route }) {
     const renderPrediction = () => (
         <View style={styles.sectionContainer}>
             <Text style={{ ...styles.sectionTitle, color: colors.primary }}>{user} esiti giornata {matchdayNumber} </Text>
-            {prediction.schedina && prediction.schedina.length > 0 ? (
-                <View>
-                    {prediction.schedina.map((item) => (
-                        <Card key={item.matchId} style={{ ...styles.matchCard, backgroundColor: colors.surface }}>
-                            <View style={styles.matchInfo}>
-                                <Text style={[styles.matchText, { color: 'white' }]}>
-                                    {getMatchById(item.matchId).homeTeam}
-                                    <Text> - </Text>
-                                    {getMatchById(item.matchId).awayTeam}
-                                </Text>
-                                <Text style={[styles.predictionText, { color: colors.accent }]}>
-                                    {item.esitoGiocato}
-                                </Text>
-                            </View>
-                        </Card>
-                    ))}
-                </View>
-            ) : (
-                <Text style={{ ...styles.noDataText, color: colors.text }}>Nessuna predizione per questa giornata.</Text>
-            )}
+            <PredictionComponent prediction={prediction} />
         </View>
     );
 
@@ -72,27 +54,6 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 10,
-    },
-    matchCard: {
-        padding: 15,
-        borderRadius: 8,
-        marginBottom: 10,
-    },
-    matchInfo: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    matchText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    predictionText: {
-        fontSize: 18,
-    },
-    noDataText: {
-        textAlign: 'center',
-        fontSize: 16,
-        color: 'gray',
     },
     loadingText: {
         textAlign: 'center',

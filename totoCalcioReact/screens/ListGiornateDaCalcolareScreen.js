@@ -10,6 +10,7 @@ import { httpsCallable } from 'firebase/functions';
 import { useNavigation } from '@react-navigation/native';
 import { showToast } from '../ToastContainer';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; // Importa Material Icons
+import { COLORJS } from '../theme/themeColor';
 
 export default function ListGiornateDaCalcolareScreen() {
     const { colors } = useTheme();
@@ -107,7 +108,7 @@ export default function ListGiornateDaCalcolareScreen() {
         return giornateCalcolate.map((giornata, index) => {
             return !isDateAfter(giornata.dayId) ? (
                 <View key={index + 1} style={{ ...styles.cardTouchable }}>
-                    <Card style={styles.card}>
+                    <View style={styles.card}>
                         <View style={styles.participantRow}>
                             <Avatar.Icon
                                 icon="calendar"
@@ -133,7 +134,7 @@ export default function ListGiornateDaCalcolareScreen() {
                         >
                             Calcola Giornata
                         </Button>
-                    </Card>
+                    </View>
                 </View>
             ) : null;
         });
@@ -171,6 +172,7 @@ const styles = StyleSheet.create({
         padding: 15,
         marginBottom: 10,
         borderRadius: 10,
+        backgroundColor: COLORJS.surface
     },
     participantRow: {
         flexDirection: 'row',
