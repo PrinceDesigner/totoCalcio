@@ -82,7 +82,10 @@ export default function ParticipantsListScreen({ navigation }) {
             dispatch(hideLoading());
 
             // Naviga alla schermata successiva, ad esempio "UserHistoryScreen"
-            navigation.navigate('UserHistoryScreen');
+            navigation.navigate('UserHistoryScreen',
+            {
+                user: participant.displayName, // Passa i dettagli del partecipante se necessario
+            });
 
             // Mostra un messaggio di successo se necessario
         } catch (error) {

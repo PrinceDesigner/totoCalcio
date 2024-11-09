@@ -75,8 +75,8 @@ export default function LeagueStackNavigator() {
             <Stack.Screen
                 name="UserHistoryScreen"
                 component={UserHistoryScreen}
-                options={({ navigation }) => ({
-                    title: `Storia e Profilo`,
+                options={({ navigation, route}) => ({
+                    title: route.params.user + ' Storia e Profilo',
                     headerShown: true, // Mostra l'header solo per questa schermata
                     ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
                 })}

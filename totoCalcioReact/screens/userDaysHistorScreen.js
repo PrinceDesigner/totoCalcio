@@ -29,7 +29,7 @@ export default function UserHistoryScreen({ route, navigation }) {
     let totalPredictions = 0
     let percentage = 0;
     const [selectedTab, setSelectedTab] = useState('Storico'); // Stato per selezionare il tab attivo
-    const user = useSelector(selectUser);
+    const userSelect = useSelector(selectUser);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isModalVisibleRemove, setIsModalVisibleRemove] = useState(false);
 
@@ -112,11 +112,11 @@ export default function UserHistoryScreen({ route, navigation }) {
     );
 
     const buttonMakeRemoveAdmin = () => {
-        if (user.userId === userIdLogged) {
+        if (userSelect.userId === userIdLogged) {
             return
         }
 
-        if (selectedLeague.ownerId.includes(user.userId)) {
+        if (selectedLeague.ownerId.includes(userSelect.userId)) {
             return <Button
                 style={styles.button}
                 mode='contained'
@@ -155,7 +155,7 @@ export default function UserHistoryScreen({ route, navigation }) {
 
     const renderProfiloTab = () => (
         <>
-            <ProfileCard fullName={user.displayName} photoProfile={user.photoURL} />
+            <ProfileCard fullName={userSelect.displayName} photoProfile={userSelect.photoURL} />
             {buttonMakeRemoveAdmin()}
             <View style={{ display: 'flex', flexDirection: 'row' }}>
                 {PercentageCard(percentage)}
@@ -169,8 +169,8 @@ export default function UserHistoryScreen({ route, navigation }) {
             dispatch(showLoading());
 
             // Call the makeUserAdmin function to assign admin role to the user
-            const result = await makeUserAdmin(leagueId, user.userId);
-            dispatch(makeUserAdminReducer({ leagueId, userId: user.userId }));
+            const result = await makeUserAdmin(leagueId, userSelect.userId);
+            dispatch(makeUserAdminReducer({ leagueId, userId: userSelect.userId }));
 
             // Log success message or handle response data if needed
             console.log('Utente reso amministratore --->', result);
@@ -191,8 +191,8 @@ export default function UserHistoryScreen({ route, navigation }) {
             dispatch(showLoading());
 
             // Effettua la chiamata al servizio per rimuovere l'utente come amministratore
-            await removeUserAdmin(leagueId, user.userId);
-            dispatch(removeUserAdminReducer({ leagueId, userId: user.userId }));
+            await removeUserAdmin(leagueId, userSelect.userId);
+            dispatch(removeUserAdminReducer({ leagueId, userId: userSelect.userId }));
             console.log('Utente tolto amministratore --->', leagueId);
 
             // Chiudi il caricamento dopo il successo
