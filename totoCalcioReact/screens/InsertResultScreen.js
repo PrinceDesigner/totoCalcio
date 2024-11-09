@@ -59,7 +59,8 @@ export default function InsertResultsScreen({ navigation }) {
                 result: null,
                 esitoGiocato: result,
                 homeTeam: match.homeTeam,
-                awayTeam: match.awayTeam
+                awayTeam: match.awayTeam,
+                startTime: match.startTime
             }
         }));
     };
@@ -75,7 +76,9 @@ export default function InsertResultsScreen({ navigation }) {
                 result: null,
                 esitoGiocato: result.esitoGiocato,
                 homeTeam: result.homeTeam,
-                awayTeam: result.awayTeam
+                awayTeam: result.awayTeam,
+                startTime: result.startTime
+
             })),
         };
 
