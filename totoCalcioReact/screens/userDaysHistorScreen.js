@@ -33,7 +33,7 @@ export default function UserHistoryScreen({ route, navigation }) {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isModalVisibleRemove, setIsModalVisibleRemove] = useState(false);
 
-    if (userHistory >= 1) {
+    if (userHistory.length >= 1) {
         allPointOfUser = userHistory.filter(el => el.daysId !== dayId).map(el => el.punti);
         sumOfPoints = allPointOfUser.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
         numberOfPredictions = allPointOfUser.length;

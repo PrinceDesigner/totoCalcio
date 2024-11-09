@@ -9,6 +9,7 @@ import { showToast } from '../ToastContainer';
 import { COLORJS } from '../theme/themeColor';
 import { getAuth } from 'firebase/auth';
 import ProfileCard from './componentScreen/ProfilCard';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 export default function ProfileScreen({ navigation }) {
   const userDetail = useSelector((state) => state.auth.user && state.auth.user.user);
@@ -28,17 +29,26 @@ export default function ProfileScreen({ navigation }) {
       alert("È necessario concedere l'accesso alla galleria per cambiare l'immagine.");
       return;
     }
-
+  
     const pickerResult = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
     });
-
+  
     if (!pickerResult.canceled && pickerResult.assets && pickerResult.assets.length > 0) {
       const selectedImageUri = pickerResult.assets[0].uri;
-      uploadImage(selectedImageUri);
+  
+      // Ridimensionamento dell'immagine
+      const resizedImage = await ImageManipulator.manipulateAsync(
+        selectedImageUri,
+        [{ resize: { width: 500 } }], // Modifica la larghezza a 500px (proporzionale)
+        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG } // comprime l'immagine al 70%
+      );
+  
+      // Carica l'immagine ridimensionata
+      uploadImage(resizedImage.uri);
     }
   };
 
