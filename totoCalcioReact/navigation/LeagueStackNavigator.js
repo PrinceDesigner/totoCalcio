@@ -84,8 +84,10 @@ export default function LeagueStackNavigator() {
             <Stack.Screen
                 name="GiornataSchedinaDetailsUserScreen"
                 component={GiornataSchedinaDetailsUserScreen}
-                options={({ navigation }) => ({
+                options={({ navigation, route }) => ({
                     title: 'Storia giornate schedina',
+                    title: route.params.user + ' Esiti',
+
                     headerShown: true, // Mostra l'header solo per questa schermata
                     ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
                 })}

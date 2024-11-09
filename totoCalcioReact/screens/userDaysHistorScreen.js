@@ -17,6 +17,7 @@ export default function UserHistoryScreen({ route, navigation }) {
     const { colors } = useTheme();
 
     const userHistory = useSelector((state) => state.storicoPerUtenteSelezionato.storico); // Seleziona la lista delle giornate dallo stato
+    const userSelectName = useSelector((state) => state.storicoPerUtenteSelezionato.user.displayName); // Seleziona la lista delle giornate dallo stato
     const inizioGiornata = useSelector((state) => state.infogiornataAttuale.startDate);
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
@@ -88,7 +89,7 @@ export default function UserHistoryScreen({ route, navigation }) {
                         return (
                             <TouchableOpacity
                                 key={index + 1}
-                                onPress={() => navigation.navigate('GiornataSchedinaDetailsUserScreen', { dayId: giornata.daysId })} // Modifica in base alla logica che desideri
+                                onPress={() => navigation.navigate('GiornataSchedinaDetailsUserScreen', { dayId: giornata.daysId, user: userSelectName })} // Modifica in base alla logica che desideri
                                 style={{ ...styles.cardTouchable }} // Modifica per includere lo stile
                             >
                                 <View style={[styles.card, giornata.daysId === dayId ? styles.activeCard : {}]}>
