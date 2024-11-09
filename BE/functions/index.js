@@ -272,6 +272,7 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
         }
 
         batchIndex++;
+        batchArray.push(firestore.batch());
         // Aggiungi le previsioni a 'giornateCalcolate'
         let predictionBatchCount = 0;
         predictions.forEach(prediction => {
