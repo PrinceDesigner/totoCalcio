@@ -1,12 +1,11 @@
 // functions/index.js
-const functions = require("firebase-functions");
+const functions = require("firebase-functions/v1");
 const admin = require("firebase-admin");
-const serviceAccount = require('./firebase-service-account.json'); // Modifica il percorso se necessario
+const serviceAccount = require('./firebase-service-account.json');
 const { google } = require('googleapis');
-const { log } = require("firebase-functions/logger");
-const moment = require('moment')
-const axios = require('axios')
-const { auth } = require('google-auth-library');
+const moment = require('moment');
+const axios = require('axios');
+const { v4: uuidv4 } = require('uuid'); // Importa la funzione per generare UUID
 
 
 admin.initializeApp({
@@ -17,87 +16,58 @@ admin.initializeApp({
 const firestore = admin.firestore();
 const rtdb = admin.database();
 
-// Funzione per calcolare i punti della giornata
 exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
+    console.time("Tempo totale calcolaPuntiGiornata");
+
+    // Step di inizializzazione e verifica lock
+    console.time("Inizializzazione e verifica lock");
     const { leagueId, dayId } = data;
-
-    if (!leagueId || !dayId) {
-        throw new functions.https.HttpsError('invalid-argument', 'League ID e Day ID sono richiesti.');
-    }
-
-    // Crea l'ID del documento basato su leagueId e dayId
     const documentId = `${leagueId}_${dayId}`;
-    console.log(documentId);
-    // Riferimento al documento specifico nella collection "giornateCalcolate"
-    const calcolateRef = firestore.collection('giornateCalcolate').doc(documentId);
     const lockRef = rtdb.ref(`locks/${leagueId}/${dayId}`);
+    const lockSnapshot = await lockRef.once('value');
+    const isLocked = lockSnapshot.exists() && lockSnapshot.val() === true;
 
-    try {
-        // Controlla se esiste già un lock per questa lega e giornata
-        const lockSnapshot = await lockRef.once('value');
-        if (lockSnapshot.exists()) {
-            return { success: false, message: "Il calcolo è già in corso per questa giornata e lega." };
-        }
+    if (isLocked) {
+        console.log("Il documento è già bloccato.");
+        return { success: false, message: "Gornata già calcolata" };
+    }
+    await lockRef.set(true); // Blocca il documento
 
-        // Verifica se la giornata è già stata calcolata
-        const calcolateDoc = await calcolateRef.get();
-        if (calcolateDoc.exists && calcolateDoc.data().calcolate) {
-            return { success: false, message: "Questa giornata è già stata calcolata." };
-        } else if (!calcolateDoc.exists) {
-            return { success: false, message: "Questa giornata non esiste nella collection giornateCalcolate." };
-        }
-
-        // Imposta un lock
-        await lockRef.set({ inProgress: true, timestamp: admin.database.ServerValue.TIMESTAMP });
-
-        // Esegui il recupero dei dati in parallelo utilizzando Promise.all()
+    console.timeEnd("Inizializzazione e verifica lock");
+    try{
+        // Caricamento dei dati
+        console.time("Caricamento dati (matches, predictions, leagueDoc)");
         const [matchesSnapshot, predictionsSnapshot, leagueDoc] = await Promise.all([
-            firestore.collection('matches').where('dayId', '==', dayId).get(),
-            firestore.collection('predictions').where('leagueId', '==', leagueId).where('daysId', '==', dayId).get(),
+            firestore.collection('matches').where('dayId', '==', dayId).select('matchId', 'result').get(),
+            firestore.collection('predictions').where('leagueId', '==', leagueId).where('daysId', '==', dayId).select('userId', 'schedina').get(),
             firestore.collection('leagues').doc(leagueId).get()
         ]);
+        console.timeEnd("Caricamento dati (matches, predictions, leagueDoc)");
 
-        if (matchesSnapshot.empty) {
-            return { success: false, message: "Nessuna partita trovata per questa giornata." };
-        }
+        // Creazione batch e calcolo punti
+        console.time("Calcolo punti e creazione batch");
+        const batchArray = [firestore.batch()];
+        let batchIndex = 0;
+        let batchCount = 0;
+        const MAX_BATCH_SIZE = 499;
 
-        if (predictionsSnapshot.empty) {
-            return { success: false, message: "Nessuna schedina trovata per questa giornata." };
-        }
-
-        if (!leagueDoc.exists) {
-            return { success: false, message: "Lega non trovata." };
-        }
-
-        // Definisci leagueRef qui dopo aver ottenuto leagueDoc
-        const leagueRef = firestore.collection('leagues').doc(leagueId);
-
-        // Utilizza una mappa per una ricerca più efficiente dei match
+        const userPointsMap = {}; // Mappa per accumulare i punti degli utenti
         const matchesMap = new Map();
         matchesSnapshot.forEach(doc => {
             const data = doc.data();
             matchesMap.set(data.matchId, data.result);
         });
 
-        let batchCount = 0;
-        const MAX_BATCH_SIZE = 500;
-        let currentBatch = firestore.batch();
-
-        const userPointsMap = {}; // Mappa per mantenere i punti accumulati da ogni utente
-
-        // Calcola i punti per ogni prediction
-        predictionsSnapshot.forEach(async (predictionDoc) => {
+        predictionsSnapshot.forEach((predictionDoc) => {
             const predictionData = predictionDoc.data();
             let punti = 0;
 
-            // Calcola i punti basati sugli esiti usando la mappa
+            // Calcola i punti e aggiorna la schedina
             predictionData.schedina.forEach(prediction => {
                 const matchResult = matchesMap.get(prediction.matchId);
                 if (matchResult === prediction.esitoGiocato) {
                     punti += 1;
                 }
-
-                // Aggiorna il campo `result` nella schedina
                 prediction.result = matchResult || null;
             });
 
@@ -105,63 +75,50 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
             const userId = predictionData.userId;
             userPointsMap[userId] = (userPointsMap[userId] || 0) + punti;
 
-            // Aggiorna i punti nella prediction
-            currentBatch.update(predictionDoc.ref, { punti, schedina: predictionData.schedina });
+            batchArray[batchIndex].update(predictionDoc.ref, { punti, schedina: predictionData.schedina });
             batchCount++;
 
-            // Se raggiungi il limite, committa il batch e inizia un nuovo batch
-            if (batchCount >= MAX_BATCH_SIZE) {
-                await currentBatch.commit();  // Fai il commit del batch
-                currentBatch = firestore.batch();    // Crea un nuovo batch
-                batchCount = 0;               // Resetta il conteggio
+            if (batchCount == MAX_BATCH_SIZE) {
+                batchArray.push(firestore.batch());
+                batchIndex++;
+                batchCount = 0;
             }
         });
+        console.timeEnd("Calcolo punti e creazione batch");
 
-        // Commit dell'ultimo batch, nel caso ci siano ancora operazioni non committate
-        if (batchCount > 0) {
-            await currentBatch.commit();
-        }
-
-        // Inizia un nuovo batch per aggiornare la lega e la giornata calcolata
-        const finalBatch = firestore.batch();
-
-        // Aggiorna i punti dei membri della lega
+        // Preparazione aggiornamenti per leagueDoc e calcolateRef nell'ultimo batch
         const leagueData = leagueDoc.data();
         const updatedMembersInfo = leagueData.membersInfo.map(member => {
             if (userPointsMap[member.id]) {
                 return {
                     ...member,
-                    punti: (member.punti || 0) + userPointsMap[member.id] // Incrementa i punti
+                    punti: (member.punti || 0) + userPointsMap[member.id]
                 };
             }
             return member;
         });
 
-        // Aggiorna la tabella leagues con i nuovi punti
-        finalBatch.update(leagueRef, { membersInfo: updatedMembersInfo });
+        // Aggiungi gli aggiornamenti alla fine dell'ultimo batch
+        batchIndex+1//gli utilimi due update saranno posizionati nell'ultima posizione del batch
+        batchArray[batchIndex].update(leagueDoc.ref, { membersInfo: updatedMembersInfo });
+        batchArray[batchIndex].update(firestore.collection('giornateCalcolate').doc(documentId), { calcolate: true });
 
-        // Aggiorna la giornata calcolata nella collection "giornateCalcolate"
-        finalBatch.update(calcolateRef, { calcolate: true });
+        // Commit di tutti i batch
+        console.time("Commit batch");
+        /*for (const batch of batchArray) {
+            await batch.commit();
+        }*/
+        await Promise.all(batchArray.map(batch => batch.commit()));//fa più batch in parallelo - LIMITE 500 scritture per secondo
+        console.timeEnd("Commit batch");
 
-        // Committa l'ultimo batch per l'aggiornamento dei membri e la giornata calcolata
-        await finalBatch.commit();
+        console.timeEnd("Tempo totale calcolaPuntiGiornata");
+        return { success: true, message: "Calcolo punti completato con successo." };
 
-        // Rimuovi il lock alla fine dell'operazione
-        await lockRef.remove();
-
-        return { success: true, message: "Calcolo punti completato con successo e punti aggiornati nella lega." };
-
-    } catch (error) {
-        console.error('Errore durante il calcolo dei punti:', error);
-
-        // Assicurati di rimuovere il lock anche in caso di errore
-        await lockRef.remove();
-
-        throw new functions.https.HttpsError('internal', 'Errore durante il calcolo dei punti');
+    }catch (error) {
+        console.error(`Errore calcolaPuntiGiornata catch `, error);
+        await lockRef.remove(); // Blocca il documento
     }
 });
-
-
 
 // Function per pianificare il task di aggiornamento per ogni giornata
 exports.scheduleDayUpdateTasks = functions.https.onCall(async (data, context) => {
@@ -222,7 +179,6 @@ exports.scheduleDayUpdateTasks = functions.https.onCall(async (data, context) =>
             functions.logger.info('JOB->', job)
             functions.logger.info('Auth ->', authClient)
 
-
             try {
                 await scheduler.projects.locations.jobs.create({
                     parent: `projects/${projectId}/locations/us-central1`,
@@ -242,11 +198,10 @@ exports.scheduleDayUpdateTasks = functions.https.onCall(async (data, context) =>
     }
 });
 
-
-// Function per aggiornare i risultati delle partite
 exports.updateMatches = functions.https.onRequest(async (req, res) => {
+    console.time('Data Retrieval Time');
     const { dayId } = req.body;
-    functions.logger.log('START--->>>', dayId ) ;
+    functions.logger.log('START--->>>', dayId);
 
     if (!dayId) {
         return res.status(400).send({ success: false, message: "dayId è richiesto" });
@@ -256,8 +211,8 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
         // Ottieni i dati dalla API di football
         const response = await axios.get(`https://api-football-v1.p.rapidapi.com/v3/fixtures`, {
             params: {
-                league: '135', // ID della lega
-                season: '2024', // Anno della stagione
+                league: '135',
+                season: '2024',
                 round: dayId.replace('Regular', 'Regular ').replace('Season', 'Season ').replace('-', '- '),
             },
             headers: {
@@ -268,67 +223,83 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
 
         const fixtures = response.data.response;
         functions.logger.log('FIXTURES->', fixtures);
+         // Esegui le query per ottenere i dati da Firestore in parallelo
+        const [leaguesSnapshot, predictionsSnapshot] = await Promise.all([
+            firestore.collection('leagues').get(),
+            firestore.collection('predictions').where('daysId', '==', dayId).select('leagueId').get() // Recupera solo leagueId
+        ]);
 
-        // Aggiorna la collection matches
-        const batch = firestore.batch();
-        fixtures.forEach(match => {
-            const matchRef = firestore.collection('matches').doc(match.fixture.id.toString());
-            batch.update(matchRef, { result: determineResult(match.goals.home, match.goals.away) });
-        });
-
-        await batch.commit();
-
-        // Recupera tutte le leghe
-        const leaguesSnapshot = await firestore.collection('leagues').get();
+        // Aggiorna la collection matches e prepara gli inserimenti in giornateCalcolate
+        const predictions = []; // Array per le previsioni da inserire
+        //const leaguesSnapshot = await firestore.collection('leagues').get();
         const leagueIds = leaguesSnapshot.docs.map(doc => doc.id);
-        functions.logger.log('leagueIds', leagueIds)
-        functions.logger.log('dayId', dayId)
-
-        // Recupera le previsioni corrispondenti a questi ID di lega
-        const predictionsSnapshot = await firestore.collection('predictions')
-            /*.where('leagueId', 'in', leagueIds) non serve, faremo questo check:
-                                                    Se almeno una schedina è legata ad una lega estratta
-                                                    Allora il record può essere inserito
-                                                    Così evitiamo di avere il vincolo di estrarre max 30 record con le condizioni*/
-            .where('daysId', '==', dayId)
-            .get();
-
-        // Crea una mappa per le leghe
         const leagueMap = leagueIds.reduce((acc, leagueId) => {
             acc[leagueId] = { calcolata: false };
             return acc;
         }, {});
 
-        // Crea un nuovo batch per gli inserimenti nella collezione giornateCalcolate
-        const giornateCalcolateBatch = firestore.batch();
-
-        const predictionsPromises = predictionsSnapshot.docs.map(async (doc) => {
+       // const predictionsSnapshot = await firestore.collection('predictions').where('daysId', '==', dayId).get();
+        // Aggiungi logica per le previsioni
+        predictionsSnapshot.forEach(doc => {
             const predictionData = doc.data();
-            functions.logger.log('predictionData', predictionData);
-
             if (predictionData.leagueId in leagueMap) {
                 leagueMap[predictionData.leagueId].calcolata = true;
-
-                // Crea l'ID del documento per la collezione giornateCalcolate
                 const documentId = `${predictionData.leagueId}_${dayId}`;
-
-                // Aggiungi l'operazione al batch
-                giornateCalcolateBatch.set(firestore.collection('giornateCalcolate').doc(documentId), {
-                    calcolate: false, // Imposta su true
-                    dayId: dayId,
-                    leagueId: predictionData.leagueId,
-                });
-
-                functions.logger.log(`Documento aggiunto al batch per giornateCalcolate con ID: ${documentId}`);
-            } else {
-                functions.logger.log(`League ID non trovato in leagueMap: ${predictionData.leagueId}`);
+                predictions.push({ documentId, leagueId: predictionData.leagueId });
             }
         });
 
-        // await Promise.all(predictionsPromises); // Aspetta che tutte le promesse siano risolte
+        console.timeEnd('Data Retrieval Time');
 
-        // Esegui il batch commit per le giornateCalcolate
-        await giornateCalcolateBatch.commit();
+        console.time('Popolamento Batch');
+        // Inizializza un array per i batch
+        const batchArray = [firestore.batch()];
+        let batchIndex = 0;
+        let operationCount = 0; // Contatore delle operazioni nel batch
+        const MAX_BATCH_SIZE = 499; // Dimensione massima del batch
+
+        // Aggiorna i risultati delle partite e raccogli le previsioni
+        for (const match of fixtures) {
+            const matchRef = firestore.collection('matches').doc(match.fixture.id.toString());
+            batchArray[batchIndex].update(matchRef, { result: determineResult(match.goals.home, match.goals.away) });
+            operationCount++;
+
+            // Controlla se il batch ha raggiunto la dimensione massima
+            if (operationCount == MAX_BATCH_SIZE) {
+                batchArray.push(firestore.batch());
+                batchIndex++;
+                operationCount = 0; // Resetta il contatore
+            }
+        }
+
+        batchIndex++;
+        batchArray.push(firestore.batch());
+        // Aggiungi le previsioni a 'giornateCalcolate'
+        let predictionBatchCount = 0;
+        predictions.forEach(prediction => {
+            // Imposta il documento nel batch corrente
+            batchArray[batchIndex].set(firestore.collection('giornateCalcolate').doc(prediction.documentId), {
+                calcolate: false,
+                dayId: dayId,
+                leagueId: prediction.leagueId,
+            });
+            predictionBatchCount++;
+
+            // Controlla se il batch ha raggiunto la dimensione massima
+            if (predictionBatchCount >= MAX_BATCH_SIZE) {
+                batchArray.push(firestore.batch());
+                batchIndex++;
+                predictionBatchCount = 0; // Resetta il contatore
+            }
+        });
+        console.timeEnd('Popolamento Batch');
+
+        console.time('Batch commit sequenziale');
+        // Esegui il commit di tutti i batch
+        for (const batch of batchArray) {
+            await batch.commit();
+        }
+        console.timeEnd('Batch commit sequenziale');
 
         // Aggiorna il campo giornataAttuale
         await updateCurrentGiornata();
@@ -340,12 +311,12 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
     }
 });
 
-
 // Funzione per determinare il risultato
 function determineResult(homeGoals, awayGoals) {
     if (homeGoals > awayGoals) return "1"; // Vittoria squadra di casa
     if (homeGoals < awayGoals) return "2"; // Vittoria squadra ospite
-    return "X"; // Pareggio
+    if(homeGoals == awayGoals)  return "X"; // Pareggio
+    return "";//-> nel caso di partita rinviata
 }
 
 // Funzione per aggiornare la giornata attuale
@@ -368,5 +339,198 @@ async function updateCurrentGiornata() {
     }
 }
 
+//User
+exports.createUserByJson = functions.https.onRequest(async (req, res) => {
+    // Assicurati che il metodo della richiesta sia POST
+    if (req.method !== 'POST') {
+    return res.status(405).send('Method Not Allowed');
+    }
+
+    const users = req.body; // Supponendo che il JSON sia inviato nel corpo della richiesta
+
+    const batch = admin.firestore().batch(); // Inizializza un batch
+    try {
+    users.forEach(user => {
+        const { displayName, email, uid } = user;
+
+        // Controlla se i dati richiesti sono presenti
+        if (!displayName || !email || !uid) {
+        throw new Error('User data is missing required fields: displayName, email, uid');
+        }
+
+        // Crea un riferimento al documento
+        const userRef = admin.firestore().collection('users').doc(uid);
+        // Aggiungi l'operazione di scrittura al batch
+        batch.set(userRef, {
+        displayName,
+        email,
+        uid,
+        });
+    });
+
+    // Esegui il batch
+    await batch.commit();
+    return res.status(200).send('Users added successfully');
+    } catch (error) {
+    console.error('Error adding users:', error);
+    return res.status(500).send('Error adding users: ' + error.message);
+    }
+});
+
+exports.deleteUsersByIds = functions.https.onRequest(async (req, res) => {
+    // Assicurati che il metodo della richiesta sia POST
+    if (req.method !== 'POST') {
+        return res.status(405).send('Method Not Allowed');
+    }
+
+    // Analizza direttamente il corpo della richiesta come JSON
+    const userIds = req.body;
+
+    const batch = admin.firestore().batch(); // Inizializza un batch
+    try {
+        userIds.forEach(uid => {
+        // Crea un riferimento al documento
+        const userRef = admin.firestore().collection('users').doc(uid);
+        // Aggiungi l'operazione di eliminazione al batch
+        batch.delete(userRef);
+        });
+
+        // Esegui il batch
+        await batch.commit();
+        return res.status(200).send('Users deleted successfully');
+    } catch (error) {
+        console.error('Error deleting users:', error);
+        return res.status(500).send('Error deleting users: ' + error.message);
+    }
+});
+//User
+
+//predictions
+
+exports.writePredictions = functions.https.onRequest(async (req, res) => {
+    // Controlla se la richiesta è un POST
+    if (req.method !== 'POST') {
+        return res.status(405).send('Metodo non consentito. Usa POST.');
+    }
+
+    // Estrai i dati dal corpo della richiesta
+    const predictionsData = req.body;
+
+    // Verifica che i dati siano validi
+    if (!Array.isArray(predictionsData) || predictionsData.length === 0) {
+        return res.status(400).send('Nessuna previsione fornita o dati non validi.');
+    }
+
+    const db = admin.firestore();
+    const batch = db.batch();
+    const insertedIds = []; // Array per tenere traccia degli ID inseriti
+
+    try {
+        // Itera sulle previsioni e aggiungile al batch
+        predictionsData.forEach(prediction => {
+            const uniqueId = uuidv4(); // Genera un UUID unico per la previsione
+            const docRef = db.collection('predictions').doc(uniqueId); // Usa l'UUID come ID del documento
+            batch.set(docRef, { ...prediction, id: uniqueId }); // Aggiungi l'operazione di scrittura al batch
+            insertedIds.push(uniqueId); // Aggiungi l'ID generato all'array degli ID inseriti
+        });
+        console.log("LISTA PREDICTION PRE COMMIT ", insertedIds)
+        await batch.commit(); // Esegui tutte le operazioni di batch
+
+        return res.status(200).json({
+            message: 'Previsioni scritte con successo.',
+            insertedIds: insertedIds // Restituisci l'array degli ID inseriti
+        });
+    } catch (error) {
+        console.error('Errore durante la scrittura delle previsioni:', error);
+        return res.status(500).send('Errore interno del server.');
+    }
+});
 
 
+exports.deletePredictions = functions.https.onRequest(async (req, res) => {
+    // Verifica che il metodo sia POST
+    if (req.method !== 'POST') {
+        return res.status(405).send('Method Not Allowed');
+    }
+
+    // Prendi l'array di ID direttamente dal corpo della richiesta
+    const predictionIds = req.body; // Modificato per usare predictionIds
+
+    // Verifica che l'input sia un array di stringhe non vuote
+    /* if (!Array.isArray(predictionIds) || predictionIds.length === 0 || !predictionIds.every(id => typeof id === 'string')) {
+        return res.status(400).send('Invalid input: must be a non-empty array of strings.');
+    }*/
+    console.error("QUI CI SONO LE PREDICTION",predictionIds);
+    const batch = admin.firestore().batch(); // Inizializza un batch
+
+    // Aggiungi le operazioni di eliminazione al batch
+    try {
+        predictionIds.forEach(id => {
+            console.error("QUI CI SONO LE PREDICTION nel for",id);
+            // Crea un riferimento al documento
+            const predictionRef = admin.firestore().collection('predictions').doc(id);
+            // Aggiungi l'operazione di eliminazione al batch
+            batch.delete(predictionRef);
+            console.log("predictionRef ",predictionRef)
+        });
+        // Esegui il batch
+        await batch.commit();
+        return res.status(200).send({ message: 'Predictions deleted successfully', deletedIds: predictionIds });
+    } catch (error) {
+        console.error('Error deleting predictions:', error);
+        return res.status(500).send('Error deleting predictions');
+    }
+});
+//prediction
+
+//league
+exports.createLeagues = async (req, res) => {
+    const { members, membersInfo } = req.body;
+
+    // Verifica se l'input è valido
+    if (!Array.isArray(members) || members.length === 0) {
+        return res.status(400).send('Invalid input: members must be a non-empty array.');
+    }
+
+    const leagueRefs = [];
+
+    const batch = admin.firestore().batch(); // Inizializza un batch
+    try {
+        // Creazione delle leghe
+        members.forEach(memberId => {
+            const leagueRef = admin.firestore().collection('leagues').doc(memberId); // Crea un riferimento alla lega
+            batch.set(leagueRef, { id: memberId, punti: 0 }); // Imposta i dati per la lega
+            leagueRefs.push(memberId); // Salva l'ID della lega
+        });
+
+        await batch.commit(); // Esegui il batch
+        return res.status(201).json({ leagueIds: leagueRefs }); // Restituisce gli ID delle leghe create
+    } catch (error) {
+        console.error('Error creating leagues:', error);
+        return res.status(500).send('Error creating leagues.');
+    }
+};
+
+exports.deleteLeagues = async (req, res) => {
+    const { leagueIds } = req.body;
+
+    // Verifica se l'input è valido
+    if (!Array.isArray(leagueIds) || leagueIds.length === 0) {
+        return res.status(400).send('Invalid input: leagueIds must be a non-empty array.');
+    }
+
+    const batch = admin.firestore().batch(); // Inizializza un batch
+    try {
+        leagueIds.forEach(id => {
+            const leagueRef = admin.firestore().collection('leagues').doc(id); // Crea un riferimento alla lega
+            batch.delete(leagueRef); // Aggiungi l'operazione di eliminazione al batch
+        });
+
+        await batch.commit(); // Esegui il batch
+        return res.status(200).send('Leagues deleted successfully.');
+    } catch (error) {
+        console.error('Error deleting leagues:', error);
+        return res.status(500).send('Error deleting leagues.');
+    }
+};
+//league
