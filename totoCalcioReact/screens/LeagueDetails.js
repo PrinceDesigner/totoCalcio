@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         paddingHorizontal: 20,
-        paddingTop: 20,
+        paddingTop: 10,
     },
     sectionCountDown: {
         padding: 20,
