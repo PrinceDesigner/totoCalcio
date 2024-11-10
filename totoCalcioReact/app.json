@@ -6,11 +6,11 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
+    // "splash": {
+    //   "image": "./assets/splash.png",
+    //   "resizeMode": "contain",
+    //   "backgroundColor": "#ffffff"
+    // },
     "extra": {
       "FIREBASE_API_KEY": "AIzaSyAmvM9n8lLu_POr6in4R87-jv1MRvX1VN0",
       "FIREBASE_AUTH_DOMAIN": "totocalcioreact.firebaseapp.com",

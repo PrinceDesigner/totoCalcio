@@ -92,8 +92,8 @@ const HomeScreen = React.memo(() => {
         } catch (error) {
             console.error('Errore durante l\'eliminazione della lega:', error);
         } finally {
-            dispatch(hideLoading());
             setModalVisible(false); // Nascondi la modale
+            dispatch(hideLoading());
         }
     };
 
