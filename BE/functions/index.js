@@ -121,6 +121,7 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
 
 // Function per pianificare il task di aggiornamento per ogni giornata
 exports.scheduleDayUpdateTasks = functions.https.onCall(async (data, context) => {
+    console.log('START --> scheduleDayUpdateTasks');
     try {
         const daysSnapshot = await firestore.collection('days').get();
 
@@ -194,6 +195,84 @@ exports.scheduleDayUpdateTasks = functions.https.onCall(async (data, context) =>
     } catch (error) {
         console.error('Errore durante la pianificazione dei task:', error);
         throw new functions.https.HttpsError('internal', 'Errore durante la pianificazione dei task');
+    }
+});
+
+exports.scheduleDayUpdateTasksV2 = functions
+    .runWith({ timeoutSeconds:540,memory:'2GB'})
+    .https.onRequest(async (req, res) => {
+    console.log('START --> scheduleDayUpdateTasks');
+    const promises = [];
+
+    try {
+        const daysSnapshot = await firestore.collection('days').get();
+
+        if (daysSnapshot.empty) {
+            return { success: false, message: "Nessuna giornata trovata" };
+        }
+
+        const projectId = 'totocalcioreact'; // Usa l'ID del progetto Firebase
+        // Usa il GoogleAuth per ottenere l'authClient con i corretti scopes
+        const auth = new google.auth.GoogleAuth({
+            scopes: ['https://www.googleapis.com/auth/cloud-scheduler', 'https://www.googleapis.com/auth/cloud-platform'],
+        });
+
+        const authClient = await auth.getClient();
+        // const authClient = await auth.getClient();
+        const scheduler = google.cloudscheduler('v1', { auth: authClient });
+
+        // Itera su ogni giornata per pianificare un task
+        daysSnapshot.forEach(async (doc) => {
+            const dayData = doc.data();
+            const dayId = doc.id;
+            const dayNumber = dayData.dayNumber
+            // Ottieni la data di fine con moment
+            const endDate = moment(dayData.endDate);
+
+            // Aggiungi 2 ore alla data di fine
+            const scheduleTime = endDate.add(3, 'hours');
+
+            // Ottieni l'ora formattata come stringa ISO
+            const formattedTime = scheduleTime.toISOString();
+
+            // Estrai i componenti della data e dell'ora per la programmazione del task
+            const scheduleMinute = scheduleTime.minutes();
+            const scheduleHour = scheduleTime.hours();
+            const scheduleDay = scheduleTime.date();
+            const scheduleMonth = scheduleTime.month() + 1; // I mesi in Moment sono indicizzati da 0
+
+            console.log('schedule->', `0 ${scheduleHour} ${scheduleDay} ${scheduleMonth} *`);
+            console.log('endDate->', endDate.format());
+            console.log('scheduleTime->', scheduleTime.format());
+            console.log('dayNumber ->', dayNumber);
+
+            const job = {
+                name: `projects/${projectId}/locations/us-central1/jobs/update-matches-${dayId}`,
+                schedule: `${scheduleMinute} ${scheduleHour} ${scheduleDay} ${scheduleMonth} *`, // Configura l'orario con Moment
+                timeZone: 'Europe/Rome',
+                httpTarget: {
+                    uri: `https://us-central1-${projectId}.cloudfunctions.net/updateMatches`,
+                    httpMethod: 'POST',
+                    body: Buffer.from(JSON.stringify({ dayId })).toString('base64'),
+                    headers: { 'Content-Type': 'application/json' },
+                },
+            };
+
+            const promise = scheduler.projects.locations.jobs.create({
+                parent: `projects/${projectId}/locations/us-central1`,
+                requestBody: job,
+                auth: authClient,
+            });
+            functions.logger.info('JOB->', job)
+            functions.logger.info('Auth ->', authClient)
+            promises.push(promise);
+        });
+        await Promise.all(promises); // Aspetta che tutte le promesse siano risolte
+
+        return res.status(200).send({ success: true, message: "Tasks pianificati correttamente" });
+    } catch (error) {
+        console.error('Errore durante la pianificazione dei task:', error);
+        return res.status(500).send({ success: false, message: 'Errore durante la pianificazione dei task' });
     }
 });
 
@@ -309,6 +388,69 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
         res.status(500).send({ success: false, message: "Errore durante l'aggiornamento delle partite" });
     }
 });
+
+//Aggiornamento delle date dei match
+exports.updateDateMatch = functions
+    .runWith({ timeoutSeconds:540,memory:'2GB'})
+    .https.onRequest(async (req, res) => {
+    console.time('Data Retrieval Time');
+    functions.logger.info('START --> Updating Match Start Times');
+
+    try {
+        // Ottieni tutti i dati delle partite dalla API di football
+        const response = await axios.get(`https://api-football-v1.p.rapidapi.com/v3/fixtures`, {
+            params: {
+                league: '135',
+                season: '2024',
+            },
+            headers: {
+                'x-rapidapi-key': 'db73c3daeamshce50eba84993c27p1ebcadjsnb14d87bc676d',
+                'x-rapidapi-host': 'api-football-v1.p.rapidapi.com',
+            },
+        });
+
+        const fixtures = response.data.response;
+        functions.logger.info('FIXTURES ->', fixtures);
+
+        console.timeEnd('Data Retrieval Time');
+
+        console.time('Batch Processing');
+        // Preparazione dei batch per aggiornare solo l'orario di inizio (startTime) dei match
+        const batchArray = [firestore.batch()];
+        let batchIndex = 0;
+        let operationCount = 0;
+        const MAX_BATCH_SIZE = 499;
+
+        for (const match of fixtures) {
+            const matchRef = firestore.collection('matches').doc(match.fixture.id.toString());
+
+            // Aggiorna solo il campo `startTime` con il tempo di inizio del match
+            batchArray[batchIndex].update(matchRef, { startTime: match.fixture.date });
+            operationCount++;
+
+            // Controlla se il batch ha raggiunto la dimensione massima
+            if (operationCount === MAX_BATCH_SIZE) {
+                batchArray.push(firestore.batch());
+                batchIndex++;
+                operationCount = 0;
+            }
+        }
+
+        console.timeEnd('Batch Processing');
+
+        console.time('Batch Commit');
+        // Commit sequenziale dei batch
+        for (const batch of batchArray) {
+            await batch.commit();
+        }
+        console.timeEnd('Batch Commit');
+        res.status(200).send({ success: true, message: "Orari di inizio dei match aggiornati con successo" });
+    } catch (error) {
+        console.error('Errore durante l\'aggiornamento degli orari di inizio dei match:', error);
+        res.status(500).send({ success: false, message: "Errore durante l'aggiornamento degli orari di inizio dei match" });
+    }
+});
+
 
 // Funzione per determinare il risultato
 function determineResult(homeGoals, awayGoals) {
