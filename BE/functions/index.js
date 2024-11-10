@@ -278,7 +278,8 @@ exports.scheduleDayUpdateTasksV2 = functions
 
 exports.updateMatches = functions.https.onRequest(async (req, res) => {
     console.time('Data Retrieval Time');
-    const { dayId } = req.body;
+
+    const {dayId,noStep = false} = req.body;
     functions.logger.log('START--->>>', dayId);
 
     if (!dayId) {
@@ -338,8 +339,9 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
 
         // Aggiorna i risultati delle partite e raccogli le previsioni
         for (const match of fixtures) {
+            console.info("match.fixture.status.short",match.fixture.status.short)
             const matchRef = firestore.collection('matches').doc(match.fixture.id.toString());
-            batchArray[batchIndex].update(matchRef, { result: determineResult(match.goals.home, match.goals.away) });
+            batchArray[batchIndex].update(matchRef, { result: determineResult(match.goals.home, match.goals.away), status: match.fixture.status.short});
             operationCount++;
 
             // Controlla se il batch ha raggiunto la dimensione massima
@@ -380,7 +382,7 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
         console.timeEnd('Batch commit sequenziale');
 
         // Aggiorna il campo giornataAttuale
-        await updateCurrentGiornata();
+        await updateCurrentGiornata(noStep);
 
         res.status(200).send({ success: true, message: "Partite aggiornate con successo" });
     } catch (error) {
@@ -454,14 +456,20 @@ exports.updateDateMatch = functions
 
 // Funzione per determinare il risultato
 function determineResult(homeGoals, awayGoals) {
+    if (homeGoals === null || awayGoals === null) {
+        return null; // Se uno dei due valori è null, restituisci una stringa vuota
+    }
     if (homeGoals > awayGoals) return "1"; // Vittoria squadra di casa
     if (homeGoals < awayGoals) return "2"; // Vittoria squadra ospite
     if(homeGoals == awayGoals)  return "X"; // Pareggio
-    return "";//-> nel caso di partita rinviata
+    return null;//-> nel caso di partita rinviata
 }
 
 // Funzione per aggiornare la giornata attuale
-async function updateCurrentGiornata() {
+async function updateCurrentGiornata(noStep) {
+    if(noStep){//Quando update match parte da una partita posticipata non andare avanti con la giornata
+        return ""
+    }
     const currentGiornataRef = firestore.collection('giornataAttuale').limit(1);
     const currentGiornataSnapshot = await currentGiornataRef.get();
 
@@ -677,3 +685,80 @@ exports.deleteLeagues = functions.https.onRequest(async (req, res) => {
     }
 });
 //league
+
+//gestione rinviati
+
+// Trigger per ascoltare gli aggiornamenti sul documento `matche`
+exports.scheduleJobOnUpdate = functions.firestore
+    .document('matches/{matchId}')
+    .onUpdate(async (change, context) => {
+        const beforeData = change.before.data(); // Stato precedente del documento
+        const afterData  = change.after.data(); // Stato successivo del documento
+        const dayId      = afterData.dayId;
+
+        // Verifica se startTime è stato aggiornato e che lo stato precedente fosse 'PST'
+        if (afterData.startTime !== beforeData.startTime && beforeData.status === 'PST') {
+            try {
+                const projectId = 'totocalcioreact'; // Usa l'ID del progetto Firebase
+                // Usa il GoogleAuth per ottenere l'authClient con i corretti scopes
+                const auth = new google.auth.GoogleAuth({
+                    scopes: ['https://www.googleapis.com/auth/cloud-scheduler', 'https://www.googleapis.com/auth/cloud-platform'],
+                });
+
+                const authClient = await auth.getClient();
+                const scheduler = google.cloudscheduler('v1', { auth: authClient });
+                // Converte startTime in un oggetto Moment.js
+                const endDate = moment(afterData.startTime);
+
+                // Verifica che endDate sia valido
+                if (!endDate.isValid()) {
+                    functions.logger.error('startTime non valido:', afterData.startTime);
+                    return null;
+                }
+
+                // Aggiungi 2 ore alla data di endTime
+                const scheduleTime = endDate.add(2, 'hours');
+
+                // Estrai i componenti per la programmazione
+                const scheduleMinute = scheduleTime.minutes();
+                const scheduleHour = scheduleTime.hours();
+                const scheduleDay = scheduleTime.date();
+                const scheduleMonth = scheduleTime.month() + 1; // I mesi in Moment sono indicizzati da 0
+
+                // Log per verificare la data e l'orario di schedulazione
+                functions.logger.info('scheduleTime->', scheduleTime.format());
+                functions.logger.info('endDate->', endDate.format());
+
+                // Crea un job di Cloud Scheduler
+                const job = {
+                    name: `projects/${projectId}/locations/us-central1/jobs/update-matchesPosticipato-${context.params.matchId}`,
+                    schedule: `${scheduleMinute} ${scheduleHour} ${scheduleDay} ${scheduleMonth} *`, // Formato cron
+                    timeZone: 'Europe/Rome',
+                    httpTarget: {
+                        uri: `https://us-central1-${projectId}.cloudfunctions.net/updateMatches`,
+                        httpMethod: 'POST',
+                        body: Buffer.from(JSON.stringify({ dayId:dayId, noStep:true})).toString('base64'),//Aggiorno tutta la giornata di quel match
+                        headers: { 'Content-Type': 'application/json' },
+                    },
+                };
+
+                // Creazione del job nel Cloud Scheduler
+                const promise = scheduler.projects.locations.jobs.create({
+                    parent: `projects/${projectId}/locations/us-central1`,
+                    requestBody: job,
+                    auth: authClient,
+                });
+
+                functions.logger.info('Job creato:', job);
+                await promise;
+                return promise;
+            } catch (error) {
+                functions.logger.error('Errore nella creazione del job:', error);
+                throw new Error('Impossibile creare il job nel Cloud Scheduler');
+            }
+        } else {
+            // Nessuna azione se le condizioni non sono soddisfatte
+            return null;
+        }
+    });
+//gestione rinviati
