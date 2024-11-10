@@ -13,6 +13,7 @@ import { getGiornataAttuale } from '../services/infoGiornataService';
 import { SafeAreaView } from 'react-native-safe-area-context'; // Importa SafeAreaView
 import { Avatar } from 'react-native-paper';
 import { COLORJS } from '../theme/themeColor';
+import fontStyle from '../theme/fontStyle';
 
 
 
@@ -274,10 +275,11 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     leagueName: {
+        ...fontStyle.textBold,
         fontSize: 18,
-        fontWeight: 'bold',
     },
     leagueDescription: {
+        ...fontStyle.textLight,
         fontSize: 14,
         color: 'white',
     },
@@ -348,12 +350,12 @@ const styles = StyleSheet.create({
         color: COLORJS.primary, // Colore viola per il nome
         fontWeight: 'bold',
         fontSize: 20,
-        fontFamily: 'Roboto_700Bold'
+        ...fontStyle.textBold,
     },
     subtitle: {
+        ...fontStyle.textLight,
         color: '#cccccc', // Colore grigio chiaro per il sottotitolo
         fontSize: 14,
-        fontFamily: 'Roboto_300Light',
     },
     menuIcon: {
         marginLeft: 10,
