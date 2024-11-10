@@ -7,6 +7,7 @@ import { removeToken } from '../AsyncStorage/AsyncStorage';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { getAuth, signOut } from 'firebase/auth'; // Importa signOut da Firebase
 import { COLORJS } from '../theme/themeColor';
+import fontStyle from '../theme/fontStyle';
 
 export default function CustomDrawerContent(props) {
   const dispatch = useDispatch();
@@ -67,6 +68,6 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     color: '#fff',
-    fontWeight: 'bold',
+    ...fontStyle.textLight
   },
 });

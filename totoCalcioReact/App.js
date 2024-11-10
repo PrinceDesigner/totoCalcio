@@ -38,6 +38,7 @@ import {
 import ToastContainer from './ToastContainer';
 import EmailVerificationScreen from './screens/EmailVerificationScreen';
 import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
+import fontStyle from './theme/fontStyle';
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator(); // Crea un Drawer Navigator
@@ -78,6 +79,10 @@ function DrawerNavigator() {
         drawerStyle: {
           backgroundColor: COLORJS.background, // Sfondo del drawer
         },
+        drawerLabelStyle: {
+          ...fontStyle.textBold,
+          color: 'white',
+      },
         drawerActiveBackgroundColor: COLORJS.surface, // Colore di sfondo della voce attiva
         drawerActiveTintColor: COLORJS.primary, // Colore del testo della voce attiva
         drawerInactiveTintColor: COLORJS.primary, // Colore del testo delle voci inattive

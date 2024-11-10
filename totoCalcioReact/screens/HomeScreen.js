@@ -210,7 +210,9 @@ const HomeScreen = React.memo(() => {
                 />
 
                 {/* Pulsante "Unisciti alla lega" */}
-                <Button mode="contained" onPress={() => navigation.navigate('JoinLeague')} style={styles.joinButton}>
+                <Button mode="contained" labelStyle={{
+                    ...fontStyle.textLight
+                }} onPress={() => navigation.navigate('JoinLeague')} style={styles.joinButton}>
                     Unisciti alla Lega
                 </Button>
 

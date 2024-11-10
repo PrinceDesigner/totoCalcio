@@ -4,6 +4,7 @@ import { Button, TextInput, useTheme } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { joinLeagueThunk } from '../redux/slice/leaguesSlice'; 
 import { showLoading, hideLoading } from '../redux/slice/uiSlice';
+import fontStyle from '../theme/fontStyle';
 import { showToast } from '../ToastContainer';
 
 
@@ -55,6 +56,9 @@ export default function JoinLeagueScreen({ navigation }) {
             mode="contained"
             onPress={handleJoinLeague}
             style={styles.button}
+            labelStyle={{
+              ...fontStyle.textLight
+          }}
             loading={loading}
             disabled={loading}
           >
@@ -75,6 +79,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   title: {
+    ...fontStyle.textBold,
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,

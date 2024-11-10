@@ -6,6 +6,7 @@ import { COLORJS } from '../../theme/themeColor';
 import { getAuth } from 'firebase/auth'; // Importa Firebase Authentication
 import { useDispatch, useSelector } from 'react-redux';
 import { updatePhotoUri } from '../../redux/slice/authSlice';
+import fontStyle from '../../theme/fontStyle';
 
 // Funzione per generare l'header personalizzato
 export function CustomHeader({ navigation }) {
@@ -61,7 +62,7 @@ export function CustomHeaderBackArrow({ navigation }) {
     },
     headerTintColor: '#FFFFFF', // Colore del testo e delle icone
     headerTitleStyle: {
-      fontWeight: 'bold',
+      ...fontStyle.textLight
     },
   };
 }

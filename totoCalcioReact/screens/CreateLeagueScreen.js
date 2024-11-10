@@ -4,6 +4,7 @@ import { Button, TextInput, useTheme } from 'react-native-paper';
 import { useDispatch } from 'react-redux'; // Per dispatchare azioni
 import { createLeagueThunk } from '../redux/slice/leaguesSlice'; // Importa il thunk
 import { showLoading, hideLoading } from '../redux/slice/uiSlice'; // Importa per mostrare/nascondere caricamento
+import fontStyle from '../theme/fontStyle';
 import { showToast } from '../ToastContainer';
 
 export default function CreateLeagueScreen({ navigation }) {
@@ -60,6 +61,9 @@ export default function CreateLeagueScreen({ navigation }) {
             mode="contained"
             onPress={handleCreateLeague}
             style={styles.button}
+            labelStyle={{
+              ...fontStyle.textLight
+          }}
           >
             Crea Lega
           </Button>
@@ -78,7 +82,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    ...fontStyle.textBold,
     marginBottom: 20,
     color: 'white',
   },
@@ -88,6 +92,7 @@ const styles = StyleSheet.create({
   },
   warningText: {
     width: '80%',
+    ...fontStyle.textMedium,
     color: '#FFD700', // Giallo per attirare l'attenzione
     fontSize: 14,
     textAlign: 'center',
