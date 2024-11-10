@@ -266,7 +266,7 @@ export default function LeagueDetails({ navigation }) {
                 </Text>
             </View>
             <Button
-                mode="contained"
+                mode="outlined"
                 onPress={() => navigation.navigate('InsertResults')}
                 style={styles.insertButton}
                 labelStyle={{
@@ -283,7 +283,7 @@ export default function LeagueDetails({ navigation }) {
         <>
             <Text style={{ textAlign: 'center', color: 'red', fontSize: 30, ...fontStyle.textMedium }}>LIVE</Text>
             <Button
-                mode="contained"
+                mode="outlined"
                 onPress={() => navigation.navigate('EsitiInseriti')}
                 style={styles.insertButton}
                 labelStyle={{
@@ -297,9 +297,9 @@ export default function LeagueDetails({ navigation }) {
 
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
             {/* Countdown Section */}
-            <View style={{ ...styles.sectionCountDown, backgroundColor: colors.surface }}>
+            <View style={{ ...styles.sectionCountDown, backgroundColor: colors.background }}>
                 <View style={styles.countdownHeader}>
                     {/* Badge compatto */}
                     <View style={styles.leagueBadgeCountDown}>
@@ -440,6 +440,7 @@ const styles = StyleSheet.create({
     sectionCountDown: {
         padding: 20,
         borderRadius: 0,
+        paddingBottom: 10
     },
     countdownHeader: {
         flexDirection: 'row',
