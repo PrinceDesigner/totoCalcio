@@ -87,6 +87,7 @@ const HomeScreen = React.memo(() => {
     // Funzione per eliminare una lega
     const handleDeleteLeague = async (leagueId) => {
         try {
+            setModalVisible(false); // Nascondi la modale
             dispatch(showLoading());
             await dispatch(deleteLeagueThunk(leagueId)).unwrap(); // Esegui il thunk per eliminare la lega
         } catch (error) {
