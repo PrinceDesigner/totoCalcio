@@ -10,6 +10,12 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { setSelectedLeagueGiornata } from '../redux/slice/selectedLeagueSlice';
 import { logout } from '../redux/slice/authSlice';
 import { getGiornataAttuale } from '../services/infoGiornataService';
+import { SafeAreaView } from 'react-native-safe-area-context'; // Importa SafeAreaView
+import { Avatar } from 'react-native-paper';
+import { COLORJS } from '../theme/themeColor';
+
+
+
 
 
 // React.memo per ottimizzare il rendering di HomeScreen
@@ -23,6 +29,8 @@ const HomeScreen = React.memo(() => {
     const leaguesStateLoading = useSelector((state) => state.loading); // Stato delle leghe
     const loadingState = useSelector((state) => state.ui.loading); // Stato di caricamento
     const userId = useSelector((state) => state.auth.user && state.auth.user.user.userId); // Recupera l'ID utente dallo stato
+    const userName = useSelector((state) => state.auth.user && state.auth.user.user.fullName); // Recupera l'ID utente dallo stato
+    const photoProfile = useSelector((state) => state.auth.photoUri); // Stato delle leghe
 
     const [giornataAttuale, setGiornataAttuale] = useState();
     const [refreshing, setRefreshing] = useState(false);
@@ -61,7 +69,7 @@ const HomeScreen = React.memo(() => {
     useEffect(() => {
         fetchAllData();
     }, []);
-    
+
 
     // Funzione di refresh
     const onRefresh = () => {
@@ -138,64 +146,96 @@ const HomeScreen = React.memo(() => {
     };
 
     return (
-        <View style={{ ...styles.container, backgroundColor: colors.background }}>
-            {/* Intestazione con "Le mie leghe" e "Crea Lega" */}
-            <View style={styles.headerContainer}>
-                <Text style={styles.headerText}>Le mie leghe</Text>
-                <Button mode="contained" onPress={() => navigation.navigate('CreateLeague')}>Crea Lega</Button>
-            </View>
+        <SafeAreaView style={[{ backgroundColor: colors.background, flex: 1 }]}>
+            <View style={{ ...styles.container, backgroundColor: colors.background }}>
 
-            {/* Stato di caricamento */}
-            {leaguesStateLoading && <ActivityIndicator size="large" color={colors.primary} />}
-
-            {/* Lista delle leghe con RefreshControl */}
-            <FlatList
-                data={leaguesState.leagues} // Usa le leghe dallo stato
-                renderItem={renderLeagueItem}
-                keyExtractor={item => item.id}
-                contentContainerStyle={styles.listContainer}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        tintColor={colors.primary}
-                        colors={[colors.primary]}
-                    />
-                }
-                ListEmptyComponent={!loadingState && (
-                    <View style={styles.emptyStateContainer}>
-                        <Text style={styles.emptyStateText}>Nessuna lega trovata</Text>
+                {/* Intestazione con "Le mie leghe" e "Crea Lega" */}
+                <View style={styles.containerProfile}>
+                    {/* Icona Profilo */}
+                    <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
+                        <Avatar.Image
+                            source={{ uri: photoProfile || 'https://via.placeholder.com/150' }}
+                            size={40}
+                        />
+                    </TouchableOpacity>
+                    {/* Testo Nome e Sottotitolo */}
+                    <View style={styles.textContainer}>
+                        <Text style={styles.name}>{userName}</Text>
+                        <Text style={styles.subtitle}>Inserisci le tue predizioni</Text>
                     </View>
-                )}
-            />
 
-            {/* Pulsante "Unisciti alla lega" */}
-            <Button mode="contained" onPress={() => navigation.navigate('JoinLeague')} style={styles.joinButton}>
-                Unisciti alla Lega
-            </Button>
+                    {/* Icona Menu */}
+                    <TouchableOpacity
+                        onPress={() => navigation.toggleDrawer()}
+                    >
+                        <MaterialIcons
+                            name="menu"
+                            size={30}
+                            color="#FFFFFF" // Colore dell'icona hamburger (bianco)
 
-            {/* Modale di conferma eliminazione */}
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={isModalVisible}
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalText}>Sei sicuro di voler eliminare la lega {selectedLeague?.name}?</Text>
-                        <View style={styles.modalButtons}>
-                            <Button mode="contained" onPress={() => handleDeleteLeague(selectedLeague.id)} style={styles.modalButton}>
-                                Si
-                            </Button>
-                            <Button mode="outlined" onPress={() => setModalVisible(false)} style={styles.modalButton}>
-                                Annulla
-                            </Button>
+                        />
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.headerContainer}>
+                    <Text style={styles.headerText}>Le mie leghe</Text>
+                    <Button mode="contained"
+                        labelStyle={{ fontSize: 12 }}
+                        onPress={() => navigation.navigate('CreateLeague')}>Crea Lega</Button>
+                </View>
+
+                {/* Stato di caricamento */}
+                {leaguesStateLoading && <ActivityIndicator size="large" color={colors.primary} />}
+
+                {/* Lista delle leghe con RefreshControl */}
+                <FlatList
+                    data={leaguesState.leagues} // Usa le leghe dallo stato
+                    renderItem={renderLeagueItem}
+                    keyExtractor={item => item.id}
+                    contentContainerStyle={styles.listContainer}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            tintColor={colors.primary}
+                            colors={[colors.primary]}
+                        />
+                    }
+                    ListEmptyComponent={!loadingState && (
+                        <View style={styles.emptyStateContainer}>
+                            <Text style={styles.emptyStateText}>Nessuna lega trovata</Text>
+                        </View>
+                    )}
+                />
+
+                {/* Pulsante "Unisciti alla lega" */}
+                <Button mode="contained" onPress={() => navigation.navigate('JoinLeague')} style={styles.joinButton}>
+                    Unisciti alla Lega
+                </Button>
+
+                {/* Modale di conferma eliminazione */}
+                <Modal
+                    animationType="slide"
+                    transparent={true}
+                    visible={isModalVisible}
+                    onRequestClose={() => setModalVisible(false)}
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                            <Text style={styles.modalText}>Sei sicuro di voler eliminare la lega {selectedLeague?.name}?</Text>
+                            <View style={styles.modalButtons}>
+                                <Button mode="contained" onPress={() => handleDeleteLeague(selectedLeague.id)} style={styles.modalButton}>
+                                    Si
+                                </Button>
+                                <Button mode="outlined" onPress={() => setModalVisible(false)} style={styles.modalButton}>
+                                    Annulla
+                                </Button>
+                            </View>
                         </View>
                     </View>
-                </View>
-            </Modal>
-        </View>
+                </Modal>
+            </View>
+        </SafeAreaView>
     );
 });
 
@@ -203,7 +243,7 @@ const HomeScreen = React.memo(() => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
+        padding: 20
     },
     headerContainer: {
         flexDirection: 'row',
@@ -212,7 +252,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     headerText: {
-        fontSize: 24,
+        fontSize: 18,
         fontWeight: 'bold',
         color: 'white',
     },
@@ -291,6 +331,32 @@ const styles = StyleSheet.create({
     modalButton: {
         flex: 1,
         marginHorizontal: 10,
+    },
+    containerProfile: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 30
+    },
+    profileIcon: {
+        marginRight: 10,
+    },
+    textContainer: {
+        flex: 1, // Occupa lo spazio rimanente
+        marginLeft: 10
+    },
+    name: {
+        color: COLORJS.primary, // Colore viola per il nome
+        fontWeight: 'bold',
+        fontSize: 20,
+        fontFamily: 'Roboto_700Bold'
+    },
+    subtitle: {
+        color: '#cccccc', // Colore grigio chiaro per il sottotitolo
+        fontSize: 14,
+        fontFamily: 'Roboto_300Light',
+    },
+    menuIcon: {
+        marginLeft: 10,
     },
 });
 

@@ -2,7 +2,7 @@ import 'react-native-gesture-handler'; // Importa all'inizio del file
 import { GestureHandlerRootView } from 'react-native-gesture-handler'; // Avvolgi l'app con questo componente
 import * as React from 'react';
 import { Provider, useSelector } from 'react-redux';
-import { StyleSheet, View, TouchableOpacity } from 'react-native';
+import { StyleSheet,View  } from 'react-native';
 import store from './redux/store'; // Importa lo store di Redux
 import { ActivityIndicator, Provider as PaperProvider, useTheme, Avatar } from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
@@ -23,6 +23,18 @@ import ProfileScreen from './screens/ProfileScreen';
 import SignupScreen from './screens/auth/SignupScreen';
 import SplashScreen from './screens/SplashScreen';
 import { COLORJS } from './theme/themeColor';
+
+import {
+  useFonts,
+  Roboto_400Regular,
+  Roboto_500Medium,
+  Roboto_700Bold,
+  Roboto_400Italic,
+  Roboto_700Bold_Italic,
+  Roboto_300Light,
+  Roboto_900Black
+} from '@expo-google-fonts/roboto';
+
 import ToastContainer from './ToastContainer';
 import EmailVerificationScreen from './screens/EmailVerificationScreen';
 import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
@@ -34,7 +46,17 @@ function GlobalLoadingIndicator() {
   const loading = useSelector((state) => state.ui.loading); // Ottieni lo stato di loading dal Redux store
   const { colors } = useTheme(); // Usa il tema per il colore del caricamento
 
-  if (!loading) {
+  const [fontsLoaded] = useFonts({
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
+    Roboto_400Italic,
+    Roboto_700Bold_Italic,
+    Roboto_300Light,
+    Roboto_900Black,
+  });
+
+  if (!loading && !fontsLoaded) {
     return null; // Non mostrare nulla se non c'è caricamento
   }
 
@@ -65,7 +87,7 @@ function DrawerNavigator() {
       <Drawer.Screen
         name="Home1"
         component={HomeScreen}
-        options={{ title: 'Le mie leghe' }}
+        options={{ title: 'Le mie leghe', headerShown: false }}
       />
       <Drawer.Screen
         name="CreateLeague"
