@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { useSelector } from 'react-redux';
+import fontStyle from '../../theme/fontStyle';
 import { COLORJS } from '../../theme/themeColor';
 
 const PredictionComponent = ({ prediction }) => {
@@ -54,15 +55,17 @@ const styles = StyleSheet.create({
     },
     matchText: {
         fontSize: 16,
-        fontWeight: 'bold',
+        ...fontStyle.textMedium
     },
     predictionText: {
         fontSize: 18,
+        ...fontStyle.textLight
     },
     noDataText: {
         textAlign: 'center',
         fontSize: 16,
         color: 'gray',
+        ...fontStyle.textLight
     },
     loadingText: {
         textAlign: 'center',

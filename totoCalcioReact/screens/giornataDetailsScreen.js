@@ -7,6 +7,7 @@ import { showToast } from '../ToastContainer';
 import { checkPrediction } from '../services/predictionsService';
 import { useNavigation } from '@react-navigation/native';
 import PredictionComponent from './componentScreen/SchedinaInserita';
+import fontStyle from '../theme/fontStyle';
 
 export default function GiornataDetailsScreen({ route }) {
     const { colors } = useTheme();
@@ -109,8 +110,8 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: 18,
-        fontWeight: 'bold',
         marginBottom: 10,
+        ...fontStyle.textBold
     },
     loadingText: {
         textAlign: 'center',
@@ -128,7 +129,7 @@ const styles = StyleSheet.create({
     },
     participantName: {
         fontSize: 16,
-        fontWeight: 'bold',
+        ...fontStyle.textMedium,
         flex: 1,
     },
     avatar: {

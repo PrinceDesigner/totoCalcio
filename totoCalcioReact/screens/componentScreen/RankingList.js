@@ -7,6 +7,7 @@ import { fetchStoricoPerUtenteSelezionato, setUser } from '../../redux/slice/sto
 import { hideLoading, showLoading } from '../../redux/slice/uiSlice';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { Avatar } from 'react-native-paper';
+import fontStyle from '../../theme/fontStyle';
 
 
 const RankingList = ({ ranking, showAvatar = true }) => {
@@ -88,15 +89,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
     marginRight: 10,
+    ...fontStyle.textLight
   },
   rankName: {
     fontSize: 16,
     color: 'white',
-    fontWeight: 'bold',
+    ...fontStyle.textBold,
     marginLeft: 10,
   },
   rankPoints: {
     fontSize: 16,
+    ...fontStyle.textMedium
   },
   avatar: {
     marginRight: 5,

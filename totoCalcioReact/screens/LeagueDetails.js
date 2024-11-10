@@ -16,6 +16,7 @@ import { getGiornataAttuale } from '../services/infoGiornataService';
 import MatchItem from './componentScreen/MatchItem';
 import { clearRefresh } from '../redux/slice/refreshSlice';
 import RankingList from './componentScreen/RankingList';
+import fontStyle from '../theme/fontStyle';
 
 
 
@@ -268,6 +269,9 @@ export default function LeagueDetails({ navigation }) {
                 mode="contained"
                 onPress={() => navigation.navigate('InsertResults')}
                 style={styles.insertButton}
+                labelStyle={{
+                    ...fontStyle.textBold
+                }}
             >
                 {schedinaGiocata ? 'Modifica Esiti' : 'Inserisci Esiti'}
             </Button>
@@ -277,11 +281,14 @@ export default function LeagueDetails({ navigation }) {
     // Sezione Live
     const liveSection = (
         <>
-            <Text style={{ textAlign: 'center', color: 'red', fontSize: 30 }}>LIVE</Text>
+            <Text style={{ textAlign: 'center', color: 'red', fontSize: 30, ...fontStyle.textMedium }}>LIVE</Text>
             <Button
                 mode="contained"
                 onPress={() => navigation.navigate('EsitiInseriti')}
                 style={styles.insertButton}
+                labelStyle={{
+                    ...fontStyle.textBold
+                }}
             >
                 Clicca per guardare i tuoi Esiti
             </Button>
@@ -296,15 +303,15 @@ export default function LeagueDetails({ navigation }) {
                 <View style={styles.countdownHeader}>
                     {/* Badge compatto */}
                     <View style={styles.leagueBadgeCountDown}>
-                        <Badge style={{ backgroundColor: colors.primary }}>Serie A</Badge>
+                        <Badge style={{ backgroundColor: colors.primary, ...fontStyle.textBold }}>Serie A</Badge>
                     </View>
                     <View >
-                        <Text style={{ color: 'white' }}>{selectedLeague?.name}</Text>
+                        <Text style={{ color: 'white', ...fontStyle.textBold }}>{selectedLeague?.name}</Text>
                     </View>
 
                     {/* Numero di giornata */}
                     <View style={styles.leagueBadgeCountDown}>
-                        <Badge style={{ backgroundColor: colors.primary }}> Giornata {matchdayNumber}</Badge>
+                        <Badge style={{ backgroundColor: colors.primary, ...fontStyle.textBold }}> Giornata {matchdayNumber}</Badge>
                     </View>
                 </View>
 
@@ -343,6 +350,9 @@ export default function LeagueDetails({ navigation }) {
                                 mode="contained"
                                 onPress={() => navigation.navigate('FullParticipantsRankingScreen')}
                                 style={styles.fullRankingButton}
+                                labelStyle={{
+                                    ...fontStyle.textBold
+                                }}
                             >
                                 Classifica Completa
                             </Button>
@@ -352,14 +362,17 @@ export default function LeagueDetails({ navigation }) {
 
                 {/* Sezione per copiare e condividere l'ID della lega */}
                 <View style={{ ...styles.section, marginTop: 20 }}>
-                    <Text style={{ color: 'white', fontSize: 18, marginBottom: 10 }}>Condividi la tua Lega</Text>
-                    <Text style={{ color: 'white', fontSize: 16 }}>ID Lega: {leagueId}</Text>
+                    <Text style={{ color: 'white', fontSize: 18, marginBottom: 10, ...fontStyle.textMedium }}>Condividi la tua Lega</Text>
+                    <Text style={{ color: 'white', fontSize: 16, ...fontStyle.textLight}}>ID Lega: {leagueId}</Text>
 
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
                         <Button
                             mode="contained"
                             onPress={copyToClipboard}
                             style={styles.copyButton}
+                            labelStyle={{
+                                ...fontStyle.textBold
+                            }}
                         >
                             Copia ID
                         </Button>
@@ -368,6 +381,9 @@ export default function LeagueDetails({ navigation }) {
                             mode="contained"
                             onPress={shareLeagueId}
                             style={styles.shareButton}
+                            labelStyle={{
+                                ...fontStyle.textBold
+                            }}
                         >
                             Condividi
                         </Button>
@@ -377,7 +393,7 @@ export default function LeagueDetails({ navigation }) {
                 {/* Schema delle Partite */}
                 <View style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginBottom: 10 }}>
                     <View style={styles.flexRow}>
-                        <Text style={{ color: 'white', fontSize: 25 }}>Giornata {matchdayNumber}</Text>
+                        <Text style={{ color: 'white', fontSize: 25, ...fontStyle.textMedium }}>Giornata {matchdayNumber}</Text>
 {/* 
                         <Button
 
@@ -403,6 +419,10 @@ export default function LeagueDetails({ navigation }) {
                     mode="contained"
                     onPress={() => navigation.navigate('EditLeagueScreen')}
                     style={{ ...styles.insertButton }}
+                    labelStyle={{
+                        ...fontStyle.textBold
+                    }}
+
                 >
                     Modifica Lega
                 </Button> : null}
@@ -459,6 +479,7 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 20,
         marginBottom: 15,
+        ...fontStyle.textMedium
     },
     rankItem: {
         flexDirection: 'row',

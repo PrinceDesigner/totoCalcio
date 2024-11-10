@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Badge, useTheme } from 'react-native-paper';
 import moment from 'moment-timezone';
 import { useNavigation } from '@react-navigation/native';
+import fontStyle from '../../theme/fontStyle';
 
 const MatchItem = ({ match }) => {
     const { colors } = useTheme();
@@ -25,10 +26,10 @@ const MatchItem = ({ match }) => {
                 <View style={styles.matchDetails}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
                         <View style={styles.leagueBadgeContainer}>
-                            <Badge style={{ backgroundColor: colors.primary }}>Serie A</Badge>
+                            <Badge style={{ backgroundColor: colors.primary, ...fontStyle.textBold }}>Serie A</Badge>
                         </View>
                         <View style={styles.leagueBadgeContainer}>
-                            <Badge style={{ backgroundColor: colors.primary }}>{match.stadio}</Badge>
+                            <Badge style={{ backgroundColor: colors.primary, ...fontStyle.textBold }}>{match.stadio}</Badge>
                         </View>
                     </View>
 
@@ -93,7 +94,7 @@ const styles = StyleSheet.create({
     teamName: {
         color: 'white',
         fontSize: 14,
-        fontWeight: 'bold',
+        ...fontStyle.textBold
     },
     vsText: {
         color: 'white',
@@ -104,6 +105,7 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 14,
         textAlign: 'center',
+        ...fontStyle.textLight,
         marginTop: 5,
     },
 });
