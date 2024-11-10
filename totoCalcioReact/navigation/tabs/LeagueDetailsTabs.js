@@ -56,6 +56,9 @@ export default function LeagueDetailsTabs() {
                     } else if (route.name === 'Le Mie Leghe') {
                         iconName = 'list';
                     }
+                     else if (route.name === 'Calcolo Giornate') {
+                        iconName = 'calculator';
+                    }
 
                     return <Ionicons name={iconName} size={size} color={color} />;
                 },
