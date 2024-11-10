@@ -17,7 +17,6 @@ const firestore = admin.firestore();
 const rtdb = admin.database();
 
 exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
-    console.time("Tempo totale calcolaPuntiGiornata");
 
     // Step di inizializzazione e verifica lock
     console.time("Inizializzazione e verifica lock");
@@ -122,6 +121,7 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
 
 // Function per pianificare il task di aggiornamento per ogni giornata
 exports.scheduleDayUpdateTasks = functions.https.onCall(async (data, context) => {
+    console.log('START --> scheduleDayUpdateTasks');
     try {
         const daysSnapshot = await firestore.collection('days').get();
 
@@ -198,9 +198,88 @@ exports.scheduleDayUpdateTasks = functions.https.onCall(async (data, context) =>
     }
 });
 
+exports.scheduleDayUpdateTasksV2 = functions
+    .runWith({ timeoutSeconds:540,memory:'2GB'})
+    .https.onRequest(async (req, res) => {
+    console.log('START --> scheduleDayUpdateTasks');
+    const promises = [];
+
+    try {
+        const daysSnapshot = await firestore.collection('days').get();
+
+        if (daysSnapshot.empty) {
+            return { success: false, message: "Nessuna giornata trovata" };
+        }
+
+        const projectId = 'totocalcioreact'; // Usa l'ID del progetto Firebase
+        // Usa il GoogleAuth per ottenere l'authClient con i corretti scopes
+        const auth = new google.auth.GoogleAuth({
+            scopes: ['https://www.googleapis.com/auth/cloud-scheduler', 'https://www.googleapis.com/auth/cloud-platform'],
+        });
+
+        const authClient = await auth.getClient();
+        // const authClient = await auth.getClient();
+        const scheduler = google.cloudscheduler('v1', { auth: authClient });
+
+        // Itera su ogni giornata per pianificare un task
+        daysSnapshot.forEach(async (doc) => {
+            const dayData = doc.data();
+            const dayId = doc.id;
+            const dayNumber = dayData.dayNumber
+            // Ottieni la data di fine con moment
+            const endDate = moment(dayData.endDate);
+
+            // Aggiungi 2 ore alla data di fine
+            const scheduleTime = endDate.add(3, 'hours');
+
+            // Ottieni l'ora formattata come stringa ISO
+            const formattedTime = scheduleTime.toISOString();
+
+            // Estrai i componenti della data e dell'ora per la programmazione del task
+            const scheduleMinute = scheduleTime.minutes();
+            const scheduleHour = scheduleTime.hours();
+            const scheduleDay = scheduleTime.date();
+            const scheduleMonth = scheduleTime.month() + 1; // I mesi in Moment sono indicizzati da 0
+
+            console.log('schedule->', `0 ${scheduleHour} ${scheduleDay} ${scheduleMonth} *`);
+            console.log('endDate->', endDate.format());
+            console.log('scheduleTime->', scheduleTime.format());
+            console.log('dayNumber ->', dayNumber);
+
+            const job = {
+                name: `projects/${projectId}/locations/us-central1/jobs/update-matches-${dayId}`,
+                schedule: `${scheduleMinute} ${scheduleHour} ${scheduleDay} ${scheduleMonth} *`, // Configura l'orario con Moment
+                timeZone: 'Europe/Rome',
+                httpTarget: {
+                    uri: `https://us-central1-${projectId}.cloudfunctions.net/updateMatches`,
+                    httpMethod: 'POST',
+                    body: Buffer.from(JSON.stringify({ dayId })).toString('base64'),
+                    headers: { 'Content-Type': 'application/json' },
+                },
+            };
+
+            const promise = scheduler.projects.locations.jobs.create({
+                parent: `projects/${projectId}/locations/us-central1`,
+                requestBody: job,
+                auth: authClient,
+            });
+            functions.logger.info('JOB->', job)
+            functions.logger.info('Auth ->', authClient)
+            promises.push(promise);
+        });
+        await Promise.all(promises); // Aspetta che tutte le promesse siano risolte
+
+        return res.status(200).send({ success: true, message: "Tasks pianificati correttamente" });
+    } catch (error) {
+        console.error('Errore durante la pianificazione dei task:', error);
+        return res.status(500).send({ success: false, message: 'Errore durante la pianificazione dei task' });
+    }
+});
+
 exports.updateMatches = functions.https.onRequest(async (req, res) => {
     console.time('Data Retrieval Time');
-    const { dayId } = req.body;
+
+    const {dayId,noStep = false} = req.body;
     functions.logger.log('START--->>>', dayId);
 
     if (!dayId) {
@@ -260,8 +339,9 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
 
         // Aggiorna i risultati delle partite e raccogli le previsioni
         for (const match of fixtures) {
+            console.info("match.fixture.status.short",match.fixture.status.short)
             const matchRef = firestore.collection('matches').doc(match.fixture.id.toString());
-            batchArray[batchIndex].update(matchRef, { result: determineResult(match.goals.home, match.goals.away) });
+            batchArray[batchIndex].update(matchRef, { result: determineResult(match.goals.home, match.goals.away), status: match.fixture.status.short});
             operationCount++;
 
             // Controlla se il batch ha raggiunto la dimensione massima
@@ -302,7 +382,7 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
         console.timeEnd('Batch commit sequenziale');
 
         // Aggiorna il campo giornataAttuale
-        await updateCurrentGiornata();
+        await updateCurrentGiornata(noStep);
 
         res.status(200).send({ success: true, message: "Partite aggiornate con successo" });
     } catch (error) {
@@ -311,16 +391,85 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
     }
 });
 
+//Aggiornamento delle date dei match
+exports.updateDateMatch = functions
+    .runWith({ timeoutSeconds:540,memory:'2GB'})
+    .https.onRequest(async (req, res) => {
+    console.time('Data Retrieval Time');
+    functions.logger.info('START --> Updating Match Start Times');
+
+    try {
+        // Ottieni tutti i dati delle partite dalla API di football
+        const response = await axios.get(`https://api-football-v1.p.rapidapi.com/v3/fixtures`, {
+            params: {
+                league: '135',
+                season: '2024',
+            },
+            headers: {
+                'x-rapidapi-key': 'db73c3daeamshce50eba84993c27p1ebcadjsnb14d87bc676d',
+                'x-rapidapi-host': 'api-football-v1.p.rapidapi.com',
+            },
+        });
+
+        const fixtures = response.data.response;
+        functions.logger.info('FIXTURES ->', fixtures);
+
+        console.timeEnd('Data Retrieval Time');
+
+        console.time('Batch Processing');
+        // Preparazione dei batch per aggiornare solo l'orario di inizio (startTime) dei match
+        const batchArray = [firestore.batch()];
+        let batchIndex = 0;
+        let operationCount = 0;
+        const MAX_BATCH_SIZE = 499;
+
+        for (const match of fixtures) {
+            const matchRef = firestore.collection('matches').doc(match.fixture.id.toString());
+
+            // Aggiorna solo il campo `startTime` con il tempo di inizio del match
+            batchArray[batchIndex].update(matchRef, { startTime: match.fixture.date });
+            operationCount++;
+
+            // Controlla se il batch ha raggiunto la dimensione massima
+            if (operationCount === MAX_BATCH_SIZE) {
+                batchArray.push(firestore.batch());
+                batchIndex++;
+                operationCount = 0;
+            }
+        }
+
+        console.timeEnd('Batch Processing');
+
+        console.time('Batch Commit');
+        // Commit sequenziale dei batch
+        for (const batch of batchArray) {
+            await batch.commit();
+        }
+        console.timeEnd('Batch Commit');
+        res.status(200).send({ success: true, message: "Orari di inizio dei match aggiornati con successo" });
+    } catch (error) {
+        console.error('Errore durante l\'aggiornamento degli orari di inizio dei match:', error);
+        res.status(500).send({ success: false, message: "Errore durante l'aggiornamento degli orari di inizio dei match" });
+    }
+});
+
+
 // Funzione per determinare il risultato
 function determineResult(homeGoals, awayGoals) {
+    if (homeGoals === null || awayGoals === null) {
+        return null; // Se uno dei due valori è null, restituisci una stringa vuota
+    }
     if (homeGoals > awayGoals) return "1"; // Vittoria squadra di casa
     if (homeGoals < awayGoals) return "2"; // Vittoria squadra ospite
     if(homeGoals == awayGoals)  return "X"; // Pareggio
-    return "";//-> nel caso di partita rinviata
+    return null;//-> nel caso di partita rinviata
 }
 
 // Funzione per aggiornare la giornata attuale
-async function updateCurrentGiornata() {
+async function updateCurrentGiornata(noStep) {
+    if(noStep){//Quando update match parte da una partita posticipata non andare avanti con la giornata
+        return ""
+    }
     const currentGiornataRef = firestore.collection('giornataAttuale').limit(1);
     const currentGiornataSnapshot = await currentGiornataRef.get();
 
@@ -415,6 +564,7 @@ exports.writePredictions = functions.https.onRequest(async (req, res) => {
 
     // Estrai i dati dal corpo della richiesta
     const predictionsData = req.body;
+    console.log("Dati ricevuti:", predictionsData);
 
     // Verifica che i dati siano validi
     if (!Array.isArray(predictionsData) || predictionsData.length === 0) {
@@ -430,7 +580,8 @@ exports.writePredictions = functions.https.onRequest(async (req, res) => {
         predictionsData.forEach(prediction => {
             const uniqueId = uuidv4(); // Genera un UUID unico per la previsione
             const docRef = db.collection('predictions').doc(uniqueId); // Usa l'UUID come ID del documento
-            batch.set(docRef, { ...prediction, id: uniqueId }); // Aggiungi l'operazione di scrittura al batch
+            console.log("docRef ",docRef)
+            batch.set(docRef, { ...prediction, predictionId: uniqueId }); // Aggiungi l'operazione di scrittura al batch
             insertedIds.push(uniqueId); // Aggiungi l'ID generato all'array degli ID inseriti
         });
         console.log("LISTA PREDICTION PRE COMMIT ", insertedIds)
@@ -442,6 +593,7 @@ exports.writePredictions = functions.https.onRequest(async (req, res) => {
         });
     } catch (error) {
         console.error('Errore durante la scrittura delle previsioni:', error);
+
         return res.status(500).send('Errore interno del server.');
     }
 });
@@ -484,40 +636,39 @@ exports.deletePredictions = functions.https.onRequest(async (req, res) => {
 //prediction
 
 //league
-exports.createLeagues = async (req, res) => {
-    const { members, membersInfo } = req.body;
-
+exports.createLeagues = functions.https.onRequest(async (req, res) => {
+    const { members, membersInfo, leagueId } = req.body;
+    console.log("League id input",leagueId)
     // Verifica se l'input è valido
     if (!Array.isArray(members) || members.length === 0) {
         return res.status(400).send('Invalid input: members must be a non-empty array.');
     }
 
-    const leagueRefs = [];
-
-    const batch = admin.firestore().batch(); // Inizializza un batch
-    try {
-        // Creazione delle leghe
-        members.forEach(memberId => {
-            const leagueRef = admin.firestore().collection('leagues').doc(memberId); // Crea un riferimento alla lega
-            batch.set(leagueRef, { id: memberId, punti: 0 }); // Imposta i dati per la lega
-            leagueRefs.push(memberId); // Salva l'ID della lega
-        });
-
-        await batch.commit(); // Esegui il batch
-        return res.status(201).json({ leagueIds: leagueRefs }); // Restituisce gli ID delle leghe create
-    } catch (error) {
-        console.error('Error creating leagues:', error);
-        return res.status(500).send('Error creating leagues.');
+    if (!Array.isArray(membersInfo) || membersInfo.some(member => !member.id || member.punti === undefined)) {
+        return res.status(400).send('Invalid input: membersInfo must be an array of JSON objects with "id" and "punti" fields.');
     }
-};
 
-exports.deleteLeagues = async (req, res) => {
+    const leagueRef = admin.firestore().collection('leagues').doc(leagueId);
+
+try {
+    // Imposta i dati della lega insieme a `members` e `membersInfo`
+    await leagueRef.set({
+        id: leagueId,
+        members: admin.firestore.FieldValue.arrayUnion(...members),
+        membersInfo: admin.firestore.FieldValue.arrayUnion(...membersInfo) // Aggiorna `membersInfo` direttamente come array
+    }, { merge: true });
+
+    console.log(`League ${leagueId} created/updated with members and membersInfo:`, members, membersInfo);
+    return res.status(201).json({ leagueId: leagueId, members: members, membersInfo });
+} catch (error) {
+    console.error('Error creating/updating league:', error);
+    return res.status(500).send('Error creating/updating league.',error);
+}
+});
+
+exports.deleteLeagues = functions.https.onRequest(async (req, res) => {
     const { leagueIds } = req.body;
-
-    // Verifica se l'input è valido
-    if (!Array.isArray(leagueIds) || leagueIds.length === 0) {
-        return res.status(400).send('Invalid input: leagueIds must be a non-empty array.');
-    }
+    console.log('Input received:', {leagueIds});
 
     const batch = admin.firestore().batch(); // Inizializza un batch
     try {
@@ -532,5 +683,82 @@ exports.deleteLeagues = async (req, res) => {
         console.error('Error deleting leagues:', error);
         return res.status(500).send('Error deleting leagues.');
     }
-};
+});
 //league
+
+//gestione rinviati
+
+// Trigger per ascoltare gli aggiornamenti sul documento `matche`
+exports.scheduleJobOnUpdate = functions.firestore
+    .document('matches/{matchId}')
+    .onUpdate(async (change, context) => {
+        const beforeData = change.before.data(); // Stato precedente del documento
+        const afterData  = change.after.data(); // Stato successivo del documento
+        const dayId      = afterData.dayId;
+
+        // Verifica se startTime è stato aggiornato e che lo stato precedente fosse 'PST'
+        if (afterData.startTime !== beforeData.startTime && beforeData.status === 'PST') {
+            try {
+                const projectId = 'totocalcioreact'; // Usa l'ID del progetto Firebase
+                // Usa il GoogleAuth per ottenere l'authClient con i corretti scopes
+                const auth = new google.auth.GoogleAuth({
+                    scopes: ['https://www.googleapis.com/auth/cloud-scheduler', 'https://www.googleapis.com/auth/cloud-platform'],
+                });
+
+                const authClient = await auth.getClient();
+                const scheduler = google.cloudscheduler('v1', { auth: authClient });
+                // Converte startTime in un oggetto Moment.js
+                const endDate = moment(afterData.startTime);
+
+                // Verifica che endDate sia valido
+                if (!endDate.isValid()) {
+                    functions.logger.error('startTime non valido:', afterData.startTime);
+                    return null;
+                }
+
+                // Aggiungi 2 ore alla data di endTime
+                const scheduleTime = endDate.add(2, 'hours');
+
+                // Estrai i componenti per la programmazione
+                const scheduleMinute = scheduleTime.minutes();
+                const scheduleHour = scheduleTime.hours();
+                const scheduleDay = scheduleTime.date();
+                const scheduleMonth = scheduleTime.month() + 1; // I mesi in Moment sono indicizzati da 0
+
+                // Log per verificare la data e l'orario di schedulazione
+                functions.logger.info('scheduleTime->', scheduleTime.format());
+                functions.logger.info('endDate->', endDate.format());
+
+                // Crea un job di Cloud Scheduler
+                const job = {
+                    name: `projects/${projectId}/locations/us-central1/jobs/update-matchesPosticipato-${context.params.matchId}`,
+                    schedule: `${scheduleMinute} ${scheduleHour} ${scheduleDay} ${scheduleMonth} *`, // Formato cron
+                    timeZone: 'Europe/Rome',
+                    httpTarget: {
+                        uri: `https://us-central1-${projectId}.cloudfunctions.net/updateMatches`,
+                        httpMethod: 'POST',
+                        body: Buffer.from(JSON.stringify({ dayId:dayId, noStep:true})).toString('base64'),//Aggiorno tutta la giornata di quel match
+                        headers: { 'Content-Type': 'application/json' },
+                    },
+                };
+
+                // Creazione del job nel Cloud Scheduler
+                const promise = scheduler.projects.locations.jobs.create({
+                    parent: `projects/${projectId}/locations/us-central1`,
+                    requestBody: job,
+                    auth: authClient,
+                });
+
+                functions.logger.info('Job creato:', job);
+                await promise;
+                return promise;
+            } catch (error) {
+                functions.logger.error('Errore nella creazione del job:', error);
+                throw new Error('Impossibile creare il job nel Cloud Scheduler');
+            }
+        } else {
+            // Nessuna azione se le condizioni non sono soddisfatte
+            return null;
+        }
+    });
+//gestione rinviati
