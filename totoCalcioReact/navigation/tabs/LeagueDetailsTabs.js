@@ -9,6 +9,7 @@ import { COLORJS } from '../../theme/themeColor';
 import ListGiornateDaCalcolareScreen from '../../screens/ListGiornateDaCalcolareScreen';
 import { useSelector } from 'react-redux';
 import { selectLeagueById } from '../../redux/slice/leaguesSlice';
+import fontStyle from '../../theme/fontStyle';
 
 const Tab = createBottomTabNavigator();
 
@@ -32,17 +33,18 @@ export default function LeagueDetailsTabs() {
                 },
                 headerTintColor: '#FFFFFF', // Colore del testo (bianco)
                 headerTitleStyle: {
-                    fontWeight: 'bold', // Stile del testo nell'header
+                    ...fontStyle.textLight
                 },
                 tabBarStyle: {
                     backgroundColor: COLORJS.primary, // Sfondo della tab bar
                     borderTopColor: '#e5e7eb', // Colore del bordo superiore della tab bar
+                    
                 },
                 tabBarActiveTintColor: '#FFFFFF', // Colore delle icone e del testo quando attivi
                 tabBarInactiveTintColor: '#888888', // Colore delle icone e del testo quando inattivi
                 tabBarLabelStyle: {
                     fontSize: 12, // Dimensione del testo delle etichette
-                    fontWeight: 'bold', // Grassetto per le etichette
+                    ...fontStyle.textBold
                 },
                 tabBarIcon: ({ color, size }) => {
                     let iconName;

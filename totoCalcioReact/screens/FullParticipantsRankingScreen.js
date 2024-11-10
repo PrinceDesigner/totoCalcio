@@ -10,6 +10,7 @@ import { fetchStoricoPerUtenteSelezionato } from '../redux/slice/storicoPerUtent
 import RankingList from './componentScreen/RankingList';
 import { getPredictionsForDay } from '../services/predictionsService';
 import TabContainer from '../components/Tabs/TabContainer';
+import fontStyle from '../theme/fontStyle';
 
 export default function FullParticipantsRankingScreen({ navigation }) {
     const { colors } = useTheme();
@@ -91,7 +92,7 @@ export default function FullParticipantsRankingScreen({ navigation }) {
                 containerStyle={styles.pickerContainer}
                 style={styles.picker}
                 dropDownStyle={styles.dropDownPicker}
-                textStyle={{ color: 'black' }}
+                textStyle={{ color: 'black', ...fontStyle.textMedium }}
             />
 
             {/* <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>

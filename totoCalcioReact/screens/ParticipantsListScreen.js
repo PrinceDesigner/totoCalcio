@@ -8,6 +8,7 @@ import { removeParticipant } from '../redux/slice/partecipantsSlice';
 import { fetchStoricoPerUtenteSelezionato, setUser } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { removeUserFromLeague } from '../services/leagueService';
+import fontStyle from '../theme/fontStyle';
 import { COLORJS } from '../theme/themeColor';
 import { showToast } from '../ToastContainer';
 
@@ -125,7 +126,6 @@ export default function ParticipantsListScreen({ navigation }) {
                     >
                         <View style={styles.card}>
                             <View style={styles.participantRow}>
-                                <Text style={{ color: 'white' }}>{index + 1}</Text>
                                 <Avatar.Image
                                     source={{ uri: participant.photoURL }}
                                     size={40}
@@ -202,10 +202,10 @@ const styles = StyleSheet.create({
     },
     participantName: {
         fontSize: 16,
-        fontWeight: 'bold',
         flex: 1,
         textAlign: 'left',
         paddingLeft: 10,
+        ...fontStyle.textBold
     },
     // Modale
     modalOverlay: {

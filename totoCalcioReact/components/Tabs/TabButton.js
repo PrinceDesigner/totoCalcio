@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import fontStyle from '../../theme/fontStyle';
 import { COLORJS } from '../../theme/themeColor';
 
 const TabButton = ({ label, isSelected, onPress }) => {
@@ -25,6 +26,7 @@ const styles = StyleSheet.create({
     },
     tabText: {
         fontSize: 16,
+        ...fontStyle.textLight
     },
 });
 

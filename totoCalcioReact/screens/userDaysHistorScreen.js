@@ -12,6 +12,7 @@ import { makeUserAdminReducer, removeUserAdminReducer, selectLeagueById } from '
 import { makeUserAdmin } from '../services/leagueService';
 import { removeUserAdmin } from '../services/leagueService';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
+import fontStyle from '../theme/fontStyle';
 
 export default function UserHistoryScreen({ route, navigation }) {
     const { colors } = useTheme();
@@ -314,6 +315,7 @@ const styles = StyleSheet.create({
         flex: 1,
         textAlign: 'left',
         paddingLeft: 10,
+        ...fontStyle.textBold
     },
     activeCard: {
         backgroundColor: COLORJS.primary,
