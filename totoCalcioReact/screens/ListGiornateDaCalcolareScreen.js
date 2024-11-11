@@ -105,7 +105,18 @@ export default function ListGiornateDaCalcolareScreen() {
             );
         }
 
-        return giornateCalcolate.map((giornata, index) => {
+        return [...giornateCalcolate]
+        // Prima ordina le giornate in base al numero estratto da dayId
+        .sort((a, b) => {
+            // Estrai il numero da entrambe le dayId
+            const numeroA = parseInt(a.dayId.replace('RegularSeason-', ''));
+            const numeroB = parseInt(b.dayId.replace('RegularSeason-', ''));
+            
+            // Confronta i numeri per ordinamento crescente
+            return numeroB - numeroA;
+        })
+        // Poi mappa gli elementi ordinati
+        .map((giornata, index) => {
             return !isDateAfter(giornata.dayId) ? (
                 <View key={index + 1} style={{ ...styles.cardTouchable }}>
                     <View style={styles.card}>
@@ -118,13 +129,13 @@ export default function ListGiornateDaCalcolareScreen() {
                             <Text style={{ ...styles.participantName, color: 'white' }}>
                                 Giornata {giornata.dayId.replace('RegularSeason-', '')}
                             </Text>
-
+    
                             {/* Aggiungi l'icona "check-circle" se la giornata è stata calcolata */}
                             {giornata.calcolate && (
                                 <MaterialIcons name="check-circle" size={24} color="green" />
                             )}
                         </View>
-
+    
                         {/* Mostra sempre i bottoni */}
                         <Button
                             mode="contained"
