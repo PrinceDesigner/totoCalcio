@@ -4,10 +4,8 @@ const { FieldValue, FieldPath } = require('firebase-admin').firestore; // Import
 const authMiddleware = require('../middlewares/authMiddleware');
 const router = express.Router();
 const axios = require('axios');
-const moment = require('moment');
-const momentTime = require('moment-timezone');
-
-
+// const moment = require('moment');
+const moment = require('moment-timezone');
 
 // Funzione per sanitizzare i matchId
 function sanitizeMatchId(matchId) {

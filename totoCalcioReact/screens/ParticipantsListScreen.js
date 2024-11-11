@@ -134,7 +134,7 @@ export default function ParticipantsListScreen({ navigation }) {
                                 <Text style={{ ...styles.participantName, color: 'white' }}>{participant.displayName}</Text>
 
                                 {/* Icona del cestino */}
-                                {selectedLeague.ownerId.includes(userId) && !(participant.userId === userId) ? (
+                                {selectedLeague.ownerId.includes(userId) && !participant.userId === userId ? (
                                     <TouchableOpacity onPress={() => handleDeleteParticipant(participant)}>
                                         <MaterialIcons name="delete" size={24} color={colors.primary} />
                                     </TouchableOpacity>
@@ -184,13 +184,13 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         paddingHorizontal: 20,
-        paddingTop: 0,
+        paddingTop: 20,
     },
     card: {
-        paddingVertical: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: 'white',
+        padding: 15,
+        marginBottom: 10,
         borderRadius: 10,
+        backgroundColor: COLORJS.surface
     },
     participantRow: {
         flexDirection: 'row',

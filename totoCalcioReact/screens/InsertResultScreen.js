@@ -7,13 +7,22 @@ import { savePrediction } from '../redux/slice/predictionsSlice';
 import { triggerRefresh } from '../redux/slice/refreshSlice';
 import { showLoading, hideLoading } from '../redux/slice/uiSlice';
 import { showToast } from '../ToastContainer';
+import moment from 'moment';
+import 'moment/locale/it';
+import { COLORJS } from '../theme/themeColor';
+import fontStyle from '../theme/fontStyle';
+
+
+
 
 
 
 export default function InsertResultsScreen({ navigation }) {
+    moment.locale('it');
+
     const { colors } = useTheme();
     const myLeagues = useSelector((state) => state.leagues); // Stato delle leghe
-    const matches = useSelector((state) => state.infogiornataAttuale.matches);
+    let matches = useSelector((state) => state.infogiornataAttuale.matches);
     const userId = useSelector((state) => state.auth.user.user.userId);
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale);
@@ -122,7 +131,7 @@ export default function InsertResultsScreen({ navigation }) {
         const handleToggleCheckbox = () => {
             setChecked(!checked);
             console.log(checked);
-            
+
         };
 
         return (
@@ -139,50 +148,74 @@ export default function InsertResultsScreen({ navigation }) {
         );
     };
 
+    // Funzione per raggruppare i match per giorno
+    const groupMatchesByDay = (matches) => {
+        return matches.reduce((acc, match) => {
+            const day = moment(match.startTime).format('YYYY-MM-DD'); // Estrai solo la data in formato yyyy-MM-dd
+            if (!acc[day]) {
+                acc[day] = [];
+            }
+            acc[day].push(match);
+            return acc;
+        }, {});
+    };
+
+    const sortedMatches = [...matches].sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
 
     return (
         <View style={{ flex: 1, backgroundColor: colors.background }}>
             <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 20 }}>
-                {matches.map(match => (
-                    <View key={match.matchId} style={{ ...styles.matchCard, backgroundColor: colors.surface }}>
-                        <View style={styles.matchInfo}>
-                            <Text style={styles.matchText}>{match.homeTeam} vs {match.awayTeam}</Text>
+                {Object.entries(groupMatchesByDay(sortedMatches)).map(([day, dayMatches]) => (
+                    <View key={day}>
+                        {/* Intestazione per il giorno */}
+                        <View style={{ ...styles.dayHeader }}>
+                            <Text style={{ fontSize: 15, color: 'white', ...fontStyle.textMedium }}>
+                                {moment(day).format('dddd, DD MMMM YYYY')} {/* E.g., "Sunday, 24 November 2024" */}
+                            </Text>
                         </View>
 
-                        <View style={styles.resultOptions}>
-                            <TouchableOpacity
-                                style={[
-                                    styles.resultBox,
-                                    results[match.matchId]?.esitoGiocato === '1' && styles.selectedResult
-                                ]}
-                                onPress={() => handleSelectResult(match, '1')}
-                            >
-                                <Text style={styles.resultText}>1</Text>
-                            </TouchableOpacity>
+                        {/* Matches per ogni giorno */}
+                        {dayMatches.map(match => (
+                            <View key={match.matchId} style={{ ...styles.matchCard, backgroundColor: colors.surface }}>
+                                <View style={styles.matchInfo}>
+                                    <Text style={styles.matchText}>{match.homeTeam} vs {match.awayTeam}</Text>
+                                </View>
 
-                            <TouchableOpacity
-                                style={[
-                                    styles.resultBox,
-                                    results[match.matchId]?.esitoGiocato === 'X' && styles.selectedResult
-                                ]}
-                                onPress={() => handleSelectResult(match, 'X')}
-                            >
-                                <Text style={styles.resultText}>X</Text>
-                            </TouchableOpacity>
+                                <View style={styles.resultOptions}>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.resultBox,
+                                            results[match.matchId]?.esitoGiocato === '1' && styles.selectedResult
+                                        ]}
+                                        onPress={() => handleSelectResult(match, '1')}
+                                    >
+                                        <Text style={styles.resultText}>1</Text>
+                                    </TouchableOpacity>
 
-                            <TouchableOpacity
-                                style={[
-                                    styles.resultBox,
-                                    results[match.matchId]?.esitoGiocato === '2' && styles.selectedResult
-                                ]}
-                                onPress={() => handleSelectResult(match, '2')}
-                            >
-                                <Text style={styles.resultText}>2</Text>
-                            </TouchableOpacity>
-                        </View>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.resultBox,
+                                            results[match.matchId]?.esitoGiocato === 'X' && styles.selectedResult
+                                        ]}
+                                        onPress={() => handleSelectResult(match, 'X')}
+                                    >
+                                        <Text style={styles.resultText}>X</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.resultBox,
+                                            results[match.matchId]?.esitoGiocato === '2' && styles.selectedResult
+                                        ]}
+                                        onPress={() => handleSelectResult(match, '2')}
+                                    >
+                                        <Text style={styles.resultText}>2</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        ))}
                     </View>
                 ))}
-
             </ScrollView>
 
             {/* Bottone per inserire gli esiti */}
@@ -195,6 +228,9 @@ export default function InsertResultsScreen({ navigation }) {
                     disabled={Object.keys(results).length !== matches.length}
                     onPress={() => setModalVisible(true)}
                     style={styles.submitButton}
+                    labelStyle={{
+                        ...fontStyle.textBold
+                    }}
                 >
                     Controlla e Conferma Esiti
                 </Button>
@@ -255,8 +291,8 @@ const styles = StyleSheet.create({
     },
     matchText: {
         fontSize: 18,
-        fontWeight: 'bold',
         color: 'white',
+        ...fontStyle.textBold
     },
     resultOptions: {
         flexDirection: 'row',
@@ -273,11 +309,11 @@ const styles = StyleSheet.create({
     },
     resultText: {
         fontSize: 18,
-        fontWeight: 'bold',
         color: 'white',
+        ...fontStyle.textBold
     },
     selectedResult: {
-        backgroundColor: '#6200ea', // Colore del risultato selezionato
+        backgroundColor: COLORJS.primary, // Colore del risultato selezionato
     },
     buttonContainer: {
         display: 'flex',
@@ -305,7 +341,7 @@ const styles = StyleSheet.create({
     },
     modalTitle: {
         fontSize: 20,
-        fontWeight: 'bold',
+        ...fontStyle.textBold,
         marginBottom: 20,
         textAlign: 'center',
     },
@@ -330,5 +366,13 @@ const styles = StyleSheet.create({
     },
     cancelButton: {
         marginTop: 10,
+    },
+    dayHeader: {
+        backgroundColor: COLORJS.primary, // Colore di sfondo per evidenziare l'intestazione (puoi cambiarlo con `colors.primary` se hai definito un tema)
+        color: '#ffffff',           // Colore del testo (in contrasto con il colore di sfondo)
+        fontWeight: 'bold',
+        padding: 10,
+        borderRadius: 5         // Rendere l'intestazione più evidente
+        // Arrotondamento degli angoli per un aspetto più moderno
     },
 });

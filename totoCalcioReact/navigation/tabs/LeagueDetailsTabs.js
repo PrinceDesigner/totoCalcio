@@ -36,11 +36,11 @@ export default function LeagueDetailsTabs() {
                     ...fontStyle.textLight
                 },
                 tabBarStyle: {
-                    backgroundColor: COLORJS.primary, // Sfondo della tab bar
+                    backgroundColor: COLORJS.surface, // Sfondo della tab bar
                     borderTopColor: '#e5e7eb', // Colore del bordo superiore della tab bar
                     
                 },
-                tabBarActiveTintColor: '#FFFFFF', // Colore delle icone e del testo quando attivi
+                tabBarActiveTintColor: COLORJS.primary, // Colore delle icone e del testo quando attivi
                 tabBarInactiveTintColor: '#888888', // Colore delle icone e del testo quando inattivi
                 tabBarLabelStyle: {
                     fontSize: 12, // Dimensione del testo delle etichette
