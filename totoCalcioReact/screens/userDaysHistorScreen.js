@@ -114,26 +114,28 @@ export default function UserHistoryScreen({ route, navigation }) {
     );
 
     const buttonMakeRemoveAdmin = () => {
-        if (userSelect.userId === userIdLogged || !selectedLeague.ownerId.includes(userSelect.userId)) {
+        if (userSelect.userId === userIdLogged) {
             return
         }
-
-        if (selectedLeague.ownerId.includes(userSelect.userId)) {
+        
+        if (selectedLeague.ownerId.includes(userIdLogged)) {
+            if (selectedLeague.ownerId.includes(userSelect.userId)) {
+                return <Button
+                    style={styles.button}
+                    mode='contained'
+                    onPress={() => setIsModalVisibleRemove(true)}
+                >
+                    Rimuovi amministratore
+                </Button>
+            }
             return <Button
                 style={styles.button}
                 mode='contained'
-                onPress={() => setIsModalVisibleRemove(true)}
+                onPress={() => setIsModalVisible(true)}
             >
-                Rimuovi amministratore
+                Rendi amministratore
             </Button>
         }
-        return <Button
-            style={styles.button}
-            mode='contained'
-            onPress={() => setIsModalVisible(true)}
-        >
-            Rendi amministratore
-        </Button>
     }
 
     const PercentageCard = (percentage) => {
