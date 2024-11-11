@@ -114,7 +114,7 @@ export default function UserHistoryScreen({ route, navigation }) {
     );
 
     const buttonMakeRemoveAdmin = () => {
-        if (userSelect.userId === userIdLogged) {
+        if (userSelect.userId === userIdLogged || !selectedLeague.ownerId.includes(userSelect.userId)) {
             return
         }
 

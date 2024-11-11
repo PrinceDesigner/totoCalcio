@@ -134,7 +134,7 @@ export default function ParticipantsListScreen({ navigation }) {
                                 <Text style={{ ...styles.participantName, color: 'white' }}>{participant.displayName}</Text>
 
                                 {/* Icona del cestino */}
-                                {!(selectedLeague.ownerId.includes(userId) && selectedLeague.ownerId.includes(participant.userId)) ? (
+                                {(!selectedLeague.ownerId.includes(participant.userId)) && selectedLeague.ownerId.includes(userId)  ? (
                                     <TouchableOpacity onPress={() => handleDeleteParticipant(participant)}>
                                         <MaterialIcons name="delete" size={24} color={colors.primary} />
                                     </TouchableOpacity>
