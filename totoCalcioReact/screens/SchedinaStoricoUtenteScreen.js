@@ -5,6 +5,7 @@ import { useTheme, Card } from 'react-native-paper';
 import { selectStoricoByDayId } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
 import { COLORJS } from '../theme/themeColor';
 import { selectLeagueById } from '../redux/slice/leaguesSlice';
+import fontStyle from '../theme/fontStyle';
 
 export default function GiornataSchedinaDetailsUserScreen({ route }) {
     const { dayId } = route.params; // Recupera i parametri passati
@@ -32,14 +33,15 @@ export default function GiornataSchedinaDetailsUserScreen({ route }) {
         return (
             <View style={styles.sectionContainer}>
                 <View style={styles.titleLeague}>
-                    <Text style={{ ...styles.leagueNameText }}>
-                        {leagueName}
-                    </Text>
+
                     <Text style={{ ...styles.sectionTitle, color: colors.primary }}>
                         Esiti giornata {dayId.replace('RegularSeason-', '')}
                     </Text>
+                    <Text style={{ ...styles.leagueNameText }}>
+                        {leagueName}
+                    </Text>
                 </View>
-                <View style={{marginTop: 10}}>
+                <View style={{ marginTop: 10 }}>
                     {schedina.map((item) => (
                         <View key={item.matchId} style={{ ...styles.matchCard }}>
                             <View style={styles.matchInfo}>
@@ -95,7 +97,7 @@ const styles = StyleSheet.create({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        flexDirection: 'column',
+        flexDirection: 'row',
         paddingBottom: 10,
         paddingTop: 10,
         borderBottomWidth: 5,
@@ -108,14 +110,17 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: 18,
-        fontWeight: 'bold',
         marginBottom: 10,
+        ...fontStyle.textMedium,
+        flex: 1,
     },
     leagueNameText: {
         fontSize: 18,
-        fontWeight: 'bold',
         marginBottom: 10,
-        color: COLORJS.surface
+        color: 'white',
+        ...fontStyle.textBold,
+        flex: 1,
+        textAlign: 'right'
     },
     matchCard: {
         borderBottomWidth: 1,
