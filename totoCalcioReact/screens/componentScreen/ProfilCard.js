@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { Avatar, Button } from 'react-native-paper';
 import { useSelector } from 'react-redux'; // Importa useSelector
+import fontStyle from '../../theme/fontStyle';
 import { COLORJS } from '../../theme/themeColor';
 
 const ProfileCard = ({ onAvatarPress, fullName, photoProfile }) => {
@@ -59,7 +60,7 @@ const styles = StyleSheet.create({
 
     userNameText: {
         fontSize: 20,
-        fontWeight: 'bold',
+        ...fontStyle.textBold,
         color: 'white',
         marginBottom: 5,
     },
@@ -67,6 +68,7 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-start',
         backgroundColor: 'white',
         color: COLORJS.primary,
+        ...fontStyle.textBold,
       },
 });
 

@@ -52,6 +52,9 @@ export default function LeagueDetails({ navigation }) {
     const matchdayNumber = infogiornataAttuale.dayId && infogiornataAttuale.dayId.replace('RegularSeason-', '') || 0;
     const startDate = infogiornataAttuale && infogiornataAttuale.startDate;
 
+    const sortedMatches = [...matches].sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+
+
 
     // Funzione per copiare l'ID della lega
     const copyToClipboard = async () => {
@@ -363,7 +366,7 @@ export default function LeagueDetails({ navigation }) {
                 {/* Sezione per copiare e condividere l'ID della lega */}
                 <View style={{ ...styles.section, marginTop: 20 }}>
                     <Text style={{ color: 'white', fontSize: 18, marginBottom: 10, ...fontStyle.textMedium }}>Condividi la tua Lega</Text>
-                    <Text style={{ color: 'white', fontSize: 16, ...fontStyle.textLight}}>ID Lega: {leagueId}</Text>
+                    <Text style={{ color: 'white', fontSize: 16, ...fontStyle.textLight }}>ID Lega: {leagueId}</Text>
 
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
                         <Button
@@ -394,7 +397,7 @@ export default function LeagueDetails({ navigation }) {
                 <View style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginBottom: 10 }}>
                     <View style={styles.flexRow}>
                         <Text style={{ color: 'white', fontSize: 25, ...fontStyle.textMedium }}>Giornata {matchdayNumber}</Text>
-{/* 
+                        {/* 
                         <Button
 
                             mode="contained"
@@ -410,9 +413,10 @@ export default function LeagueDetails({ navigation }) {
                             Calendario
                         </Button> */}
                     </View>
-                    {matches.map((match) => (
+                    {sortedMatches.map((match) => (
                         <MatchItem key={match.matchId} match={match} />
                     ))}
+
                 </View>
 
                 {selectedLeague.ownerId.includes(userId) ? <Button

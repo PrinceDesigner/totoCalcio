@@ -4,6 +4,10 @@ import { Badge, useTheme } from 'react-native-paper';
 import moment from 'moment-timezone';
 import { useNavigation } from '@react-navigation/native';
 import fontStyle from '../../theme/fontStyle';
+import 'moment/locale/it'; // Importa la localizzazione italiana
+
+// Imposta la lingua italiana per moment
+moment.locale('it');
 
 const MatchItem = ({ match }) => {
     const { colors } = useTheme();
@@ -11,7 +15,7 @@ const MatchItem = ({ match }) => {
 
     const convertToItalianTime = (dateString) => {
         // Crea un nuovo oggetto Date dalla stringa ISO
-        return moment(dateString).utc().format('HH:mm');
+        return moment(dateString).utc().format('dddd, DD MMMM HH:mm');
     };
 
     const handlePress = () => {
@@ -26,10 +30,10 @@ const MatchItem = ({ match }) => {
                 <View style={styles.matchDetails}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
                         <View style={styles.leagueBadgeContainer}>
-                            <Badge style={{ backgroundColor: colors.primary, ...fontStyle.textBold }}>Serie A</Badge>
+                            <Badge style={{ backgroundColor: colors.primary, }}>Serie A</Badge>
                         </View>
                         <View style={styles.leagueBadgeContainer}>
-                            <Badge style={{ backgroundColor: colors.primary, ...fontStyle.textBold }}>{match.stadio}</Badge>
+                            <Badge style={{ backgroundColor: colors.primary, ...fontStyle.textMedium }}>{convertToItalianTime(match.startTime)}</Badge>
                         </View>
                     </View>
 
@@ -55,8 +59,6 @@ const MatchItem = ({ match }) => {
                             <Text style={styles.teamName}>{match.awayTeam}</Text>
                         </View>
                     </View>
-
-                    <Text style={styles.matchTime}>{convertToItalianTime(match.startTime)}</Text>
                 </View>
             </View>
         </TouchableOpacity>
@@ -104,9 +106,8 @@ const styles = StyleSheet.create({
     matchTime: {
         color: 'white',
         fontSize: 14,
-        textAlign: 'center',
+        textAlign: 'left',
         ...fontStyle.textLight,
-        marginTop: 5,
     },
 });
 

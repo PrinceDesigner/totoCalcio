@@ -10,6 +10,7 @@ import { COLORJS } from '../theme/themeColor';
 import { getAuth } from 'firebase/auth';
 import ProfileCard from './componentScreen/ProfilCard';
 import * as ImageManipulator from 'expo-image-manipulator';
+import fontStyle from '../theme/fontStyle';
 
 export default function ProfileScreen({ navigation }) {
   const userDetail = useSelector((state) => state.auth.user && state.auth.user.user);
@@ -240,6 +241,7 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 16,
     color: 'gray',
+    ...fontStyle.textMedium
   },
   activeTabText: {
     color: COLORJS.primary,
@@ -294,5 +296,6 @@ const styles = StyleSheet.create({
   modalButton: {
     flex: 1,
     marginHorizontal: 10,
+    ...fontStyle.textMedium
   },
 });

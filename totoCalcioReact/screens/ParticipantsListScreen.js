@@ -134,7 +134,7 @@ export default function ParticipantsListScreen({ navigation }) {
                                 <Text style={{ ...styles.participantName, color: 'white' }}>{participant.displayName}</Text>
 
                                 {/* Icona del cestino */}
-                                {selectedLeague.ownerId.includes(userId) && !participant.userId === userId ? (
+                                {!(selectedLeague.ownerId.includes(userId) && selectedLeague.ownerId.includes(participant.userId)) ? (
                                     <TouchableOpacity onPress={() => handleDeleteParticipant(participant)}>
                                         <MaterialIcons name="delete" size={24} color={colors.primary} />
                                     </TouchableOpacity>
@@ -154,7 +154,7 @@ export default function ParticipantsListScreen({ navigation }) {
             >
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Vuoi eliminare {selectedParticipant?.name}?</Text>
+                        <Text style={styles.modalTitle}>Vuoi eliminare {selectedParticipant?.displayName} dalla lega?</Text>
 
                         {/* Bottoni per confermare o annullare */}
                         <View style={styles.modalActions}>
@@ -225,6 +225,8 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 20,
+        ...fontStyle.textMedium,
+        textAlign: 'center'
     },
     modalActions: {
         flexDirection: 'row',

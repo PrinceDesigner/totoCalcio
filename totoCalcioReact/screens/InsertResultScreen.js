@@ -179,6 +179,7 @@ export default function InsertResultsScreen({ navigation }) {
                             <View key={match.matchId} style={{ ...styles.matchCard, backgroundColor: colors.surface }}>
                                 <View style={styles.matchInfo}>
                                     <Text style={styles.matchText}>{match.homeTeam} vs {match.awayTeam}</Text>
+                                    <Text style={styles.matchTextHour}>{moment(match.startTime).utc().format('HH:mm')}</Text>
                                 </View>
 
                                 <View style={styles.resultOptions}>
@@ -288,9 +289,18 @@ const styles = StyleSheet.create({
     },
     matchInfo: {
         marginBottom: 10,
+        display: 'flex',
+        justifyContent: 'space-between',
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     matchText: {
         fontSize: 18,
+        color: 'white',
+        ...fontStyle.textBold
+    },
+    matchTextHour: {
+        fontSize: 16,
         color: 'white',
         ...fontStyle.textBold
     },
@@ -368,6 +378,7 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
     dayHeader: {
+        marginBottom: 10,
         backgroundColor: COLORJS.primary, // Colore di sfondo per evidenziare l'intestazione (puoi cambiarlo con `colors.primary` se hai definito un tema)
         color: '#ffffff',           // Colore del testo (in contrasto con il colore di sfondo)
         fontWeight: 'bold',

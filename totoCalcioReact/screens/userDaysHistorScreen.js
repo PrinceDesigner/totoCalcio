@@ -338,6 +338,8 @@ const styles = StyleSheet.create({
     modalText: {
         fontSize: 16,
         marginBottom: 20,
+        ...fontStyle.textMedium,
+        textAlign: 'center'
     },
     modalButtonContainer: {
         flexDirection: 'row',
