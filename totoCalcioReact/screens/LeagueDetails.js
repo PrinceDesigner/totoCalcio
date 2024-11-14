@@ -1,6 +1,6 @@
 import moment from 'moment-timezone';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, RefreshControl } from 'react-native';
 import { Card, Badge, useTheme, Button, ActivityIndicator } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
@@ -17,7 +17,7 @@ import MatchItem from './componentScreen/MatchItem';
 import { clearRefresh } from '../redux/slice/refreshSlice';
 import RankingList from './componentScreen/RankingList';
 import fontStyle from '../theme/fontStyle';
-
+import { BannerAdComponent } from '../components/Adv/AdvBanner';
 
 
 export default function LeagueDetails({ navigation }) {
@@ -362,6 +362,9 @@ export default function LeagueDetails({ navigation }) {
                         </>
                     )}
                 </View>
+                <View style={{ marginTop: 20, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <BannerAdComponent />
+                </View>
 
                 {/* Sezione per copiare e condividere l'ID della lega */}
                 <View style={{ ...styles.section, marginTop: 20 }}>
@@ -397,25 +400,24 @@ export default function LeagueDetails({ navigation }) {
                 <View style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginBottom: 10 }}>
                     <View style={styles.flexRow}>
                         <Text style={{ color: 'white', fontSize: 25, ...fontStyle.textMedium }}>Giornata {matchdayNumber}</Text>
-                        {/* 
-                        <Button
 
-                            mode="contained"
-                            style={{
-                                ...styles.insertButton,
-                                minWidth: 80, // Larghezza minima, puoi adattarla come preferisci
-
-                            }}
-                            labelStyle={{
-                                fontSize: 10, // Diminuisce la dimensione del testo
-                            }}
-                        >
-                            Calendario
-                        </Button> */}
                     </View>
-                    {sortedMatches.map((match) => (
-                        <MatchItem key={match.matchId} match={match} />
-                    ))}
+                    {sortedMatches.map((match, i) => {
+                        if (i === 5) {
+                            return (
+                                <>
+                                    <View style={{ marginTop: 10, marginBottom: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                        <BannerAdComponent />
+                                    </View>
+                                    <MatchItem key={match.matchId} match={match} />
+                                </>
+                            )
+                        } else {
+                            return <MatchItem key={match.matchId} match={match} />
+                        }
+
+                    }
+                    )}
 
                 </View>
 

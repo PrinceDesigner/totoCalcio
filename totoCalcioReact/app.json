@@ -6,11 +6,11 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    // "splash": {
-    //   "image": "./assets/splash.png",
-    //   "resizeMode": "contain",
-    //   "backgroundColor": "#ffffff"
-    // },
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "extra": {
       "FIREBASE_API_KEY": "AIzaSyAmvM9n8lLu_POr6in4R87-jv1MRvX1VN0",
       "FIREBASE_AUTH_DOMAIN": "totocalcioreact.firebaseapp.com",
@@ -18,7 +18,10 @@
       "FIREBASE_STORAGE_BUCKET": "totocalcioreact.appspot.com",
       "FIREBASE_MESSAGING_SENDER_ID": "700309241728",
       "FIREBASE_APP_ID": "1:700309241728:web:38f12c82fb5f684e44cb65",
-      "FIREBASE_MEASUREMENT_ID": "G-J1KBDWK4SS"
+      "FIREBASE_MEASUREMENT_ID": "G-J1KBDWK4SS",
+      "eas": {
+        "projectId": "3b3cc619-7e49-4f2a-8657-881e3d987341"
+      }
     },
     "ios": {
       "supportsTablet": true,
@@ -40,7 +43,13 @@
     "plugins": [
       "expo-asset",
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-4136467313498542~4203300084"
+        }
+      ]
     ]
   }
 }

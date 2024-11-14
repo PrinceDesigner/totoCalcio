@@ -11,6 +11,7 @@ import moment from 'moment';
 import 'moment/locale/it';
 import { COLORJS } from '../theme/themeColor';
 import fontStyle from '../theme/fontStyle';
+import { BannerAdComponent } from '../components/Adv/AdvBanner';
 
 
 
@@ -165,7 +166,7 @@ export default function InsertResultsScreen({ navigation }) {
     return (
         <View style={{ flex: 1, backgroundColor: colors.background }}>
             <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 20 }}>
-                {Object.entries(groupMatchesByDay(sortedMatches)).map(([day, dayMatches]) => (
+                {Object.entries(groupMatchesByDay(sortedMatches)).map(([day, dayMatches], i) => (
                     <View key={day}>
                         {/* Intestazione per il giorno */}
                         <View style={{ ...styles.dayHeader }}>
@@ -173,15 +174,17 @@ export default function InsertResultsScreen({ navigation }) {
                                 {moment(day).format('dddd, DD MMMM YYYY')} {/* E.g., "Sunday, 24 November 2024" */}
                             </Text>
                         </View>
-
+                        {(i === 0 ||i === 1 || i === 2) ? <View style={{ marginTop: 10, marginBottom: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                            <BannerAdComponent />
+                        </View> : null}
                         {/* Matches per ogni giorno */}
-                        {dayMatches.map(match => (
+                        {dayMatches.map((match) => (
+
                             <View key={match.matchId} style={{ ...styles.matchCard, backgroundColor: colors.surface }}>
                                 <View style={styles.matchInfo}>
                                     <Text style={styles.matchText}>{match.homeTeam} vs {match.awayTeam}</Text>
                                     <Text style={styles.matchTextHour}>{moment(match.startTime).utc().format('HH:mm')}</Text>
                                 </View>
-
                                 <View style={styles.resultOptions}>
                                     <TouchableOpacity
                                         style={[

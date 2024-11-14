@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl, ActivityIndicator, Modal } from 'react-native';
 import { Button, useTheme } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -14,9 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'; // Importa SafeAr
 import { Avatar } from 'react-native-paper';
 import { COLORJS } from '../theme/themeColor';
 import fontStyle from '../theme/fontStyle';
-
-
-
+import { BannerAdComponent } from '../components/Adv/AdvBanner';
 
 
 // React.memo per ottimizzare il rendering di HomeScreen
@@ -185,6 +183,10 @@ const HomeScreen = React.memo(() => {
                         labelStyle={{ fontSize: 12 }}
                         onPress={() => navigation.navigate('CreateLeague')}>Crea Lega</Button>
                 </View>
+                <View style={{marginBottom:20, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                    <BannerAdComponent />
+                </View>
+
 
                 {/* Stato di caricamento */}
                 {leaguesStateLoading && <ActivityIndicator size="large" color={colors.primary} />}
