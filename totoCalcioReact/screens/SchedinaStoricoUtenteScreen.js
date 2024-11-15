@@ -45,7 +45,7 @@ export default function GiornataSchedinaDetailsUserScreen({ route }) {
                     {schedina.map((item) => (
                         <View key={item.matchId} style={{ ...styles.matchCard }}>
                             <View style={styles.matchInfo}>
-                                <View style={{ flex: '9' }}>
+                                <View style={{ flex: 9 }}>
                                     <Text style={[styles.matchText, { color: 'white' }]}>
                                         {item.homeTeam} - {item.awayTeam}
                                     </Text>
