@@ -127,7 +127,7 @@ export default function ParticipantsListScreen({ navigation }) {
                         <View style={styles.card}>
                             <View style={styles.participantRow}>
                                 <Avatar.Image
-                                    source={{ uri: participant.photoURL }}
+                                    source={{ uri: participant.photoURL}}
                                     size={40}
                                     style={styles.avatar}
                                 />

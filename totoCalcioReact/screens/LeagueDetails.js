@@ -18,6 +18,7 @@ import { clearRefresh } from '../redux/slice/refreshSlice';
 import RankingList from './componentScreen/RankingList';
 import fontStyle from '../theme/fontStyle';
 import { BannerAdComponent } from '../components/Adv/AdvBanner';
+import DailyQuestion from './componentScreen/quiz/DailyQuestions';
 
 
 export default function LeagueDetails({ navigation }) {
@@ -366,6 +367,9 @@ export default function LeagueDetails({ navigation }) {
                     <BannerAdComponent />
                 </View>
 
+                {/* Daily question */}
+                    <DailyQuestion />
+
                 {/* Sezione per copiare e condividere l'ID della lega */}
                 <View style={{ ...styles.section, marginTop: 20 }}>
                     <Text style={{ color: 'white', fontSize: 18, marginBottom: 10, ...fontStyle.textMedium }}>Condividi la tua Lega</Text>
@@ -406,7 +410,7 @@ export default function LeagueDetails({ navigation }) {
                         if (i === 5) {
                             return (
                                 <>
-                                    <View style={{ marginTop: 10, marginBottom: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                    <View key={i} style={{ marginTop: 10, marginBottom: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                         <BannerAdComponent />
                                     </View>
                                     <MatchItem key={match.matchId} match={match} />
