@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl, ActivityIndicator, Modal } from 'react-native';
-import { Button, useTheme } from 'react-native-paper';
+import { View, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl, ActivityIndicator, Modal } from 'react-native';
+import { Button, useTheme, Card, Text } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { deleteLeagueThunk, getUserLeaguesThunk } from '../redux/slice/leaguesSlice';
@@ -112,15 +112,20 @@ const HomeScreen = React.memo(() => {
                 renderRightActions={() => isOwner ? renderRightActions(item) : null}
             >
                 <TouchableOpacity onPress={() => handleLeaguePress(item)}>
-                    <View style={{ ...styles.leagueContainer, backgroundColor: colors.surface }}>
-                        <Image source={require('../league1.png')} style={styles.leagueImage} />
-                        <View style={styles.leagueTextContainer}>
-                            <Text style={{ ...styles.leagueName, color: 'white' }}>{item.name}</Text>
-                            <Text style={styles.leagueDescription}>{item.members.length} Partecipanti</Text>
-                        </View>
-                    </View>
-                </TouchableOpacity>
-            </Swipeable>
+
+                    <Card
+                        elevation={5}
+                        mode='outlined'
+                         style={{ ...styles.leagueContainer }} >
+                        <Card.Title
+                            title={`${item.name}`}
+                            // subtitle={`${item.members.length} Partecipanti`}
+                            subtitle={`${item.members.length} Partecipanti`}
+                            left={(props) => <Avatar.Icon  {...props} icon="soccer" />}
+                        />
+                    </Card>
+                    </TouchableOpacity>
+            </Swipeable >
         );
     });
 
@@ -183,7 +188,7 @@ const HomeScreen = React.memo(() => {
                         labelStyle={{ fontSize: 12 }}
                         onPress={() => navigation.navigate('CreateLeague')}>Crea Lega</Button>
                 </View>
-                <View style={{marginBottom:20, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                <View style={{ marginBottom: 20, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <BannerAdComponent />
                 </View>
 
@@ -263,31 +268,9 @@ const styles = StyleSheet.create({
         color: 'white',
     },
     leagueContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 10,
-        borderRadius: 10,
-        marginBottom: 15,
+        marginVertical: 5,
         borderBottomWidth: 3,
-        borderBottomColor: COLORJS.primary        
-    },
-    leagueImage: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        marginRight: 10,
-    },
-    leagueTextContainer: {
-        flex: 1,
-    },
-    leagueName: {
-        ...fontStyle.textBold,
-        fontSize: 18,
-    },
-    leagueDescription: {
-        ...fontStyle.textMedium,
-        fontSize: 14,
-        color: COLORJS.primary,
+        borderBottomColor: COLORJS.primary
     },
     listContainer: {
         paddingBottom: 20,
@@ -347,9 +330,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 30
     },
-    profileIcon: {
-        marginRight: 10,
-    },
     textContainer: {
         flex: 1, // Occupa lo spazio rimanente
         marginLeft: 10
@@ -357,16 +337,13 @@ const styles = StyleSheet.create({
     name: {
         color: COLORJS.primary, // Colore viola per il nome
         fontWeight: 'bold',
-        fontSize: 20,
+        fontSize: 18,
         ...fontStyle.textBold,
     },
     subtitle: {
         ...fontStyle.textLight,
         color: '#cccccc', // Colore grigio chiaro per il sottotitolo
         fontSize: 14,
-    },
-    menuIcon: {
-        marginLeft: 10,
     },
 });
 

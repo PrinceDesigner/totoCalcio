@@ -2,7 +2,7 @@ import moment from 'moment-timezone';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, RefreshControl } from 'react-native';
-import { Card, Badge, useTheme, Button, ActivityIndicator } from 'react-native-paper';
+import { Card, Badge, useTheme, Button, ActivityIndicator, Avatar } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchDayDetails } from '../redux/slice/infogiornataAttualeSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
@@ -257,7 +257,7 @@ export default function LeagueDetails({ navigation }) {
             return <ActivityIndicator size="large" color={colors.primary} />;
         }
 
-        return isPast ? liveSection : countdownAndButton;
+        return isPast ? (liveSection) : countdownAndButton;
     };
 
 
@@ -279,6 +279,9 @@ export default function LeagueDetails({ navigation }) {
             >
                 {schedinaGiocata ? 'Modifica Esiti' : 'Inserisci Esiti'}
             </Button>
+            <View style={{ marginTop: 20, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <BannerAdComponent />
+            </View>
         </>
     );
 
@@ -296,6 +299,9 @@ export default function LeagueDetails({ navigation }) {
             >
                 Clicca per guardare i tuoi Esiti
             </Button>
+            <View style={{ marginTop: 20, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <BannerAdComponent />
+            </View>
         </>
     );
 
@@ -336,18 +342,7 @@ export default function LeagueDetails({ navigation }) {
                         <ActivityIndicator size="large" color={colors.primary} />
                     ) : (
                         <>
-                            {/* {[...provisionalRanking]
-                                .sort((a, b) => b.punti - a.punti)
-                                .map((player, index) => (
-                                    <View key={index + 1} style={styles.rankItem}>
-                                        <View style={{ display: 'flex', flexDirection: 'row' }}>
-                                            <Text style={styles.rankPosition}>{index + 1}</Text>
-                                            <Text style={styles.rankName}>{player.displayName}</Text>
-                                        </View>
-                                        <Text style={{ ...styles.rankPoints, color: 'white' }}>{player.punti} punti</Text>
-                                    </View>
-                                ))} */}
-                            <RankingList ranking={provisionalRanking.slice(0, 6)} showAvatar={false} />
+                            <RankingList ranking={provisionalRanking.slice(0, 6)} size={20} />
 
                             {/* Bottone per vedere la classifica completa */}
                             <Button
@@ -363,49 +358,28 @@ export default function LeagueDetails({ navigation }) {
                         </>
                     )}
                 </View>
-                <View style={{ marginTop: 20, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <BannerAdComponent />
+                <View style={styles.shareAction}>
+                    <View style={{borderRightWidth: 1, borderRightColor: colors.primary, paddingRight: 10}}>
+                        <Text style={{ color: 'white', fontSize: 15, ...fontStyle.textBold }}>ID Lega: {leagueId}</Text>
+                        <Text style={{ color: 'white', fontSize: 12, ...fontStyle.textLight }}>Condividi con i tuoi amici</Text>
+                    </View>
+
+                    <View style={{ ...styles.flexRow, marginTop: 10 }}>
+                        <TouchableOpacity style={{ marginRight: 10 }} onPress={copyToClipboard}>
+                            <Avatar.Icon size={35} icon="content-copy" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={shareLeagueId}>
+                            <Avatar.Icon size={35} icon="share-variant" />
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 {/* Daily question */}
                 {/* <DailyQuestion /> */}
 
-                {/* Sezione per copiare e condividere l'ID della lega */}
-                <View style={{ ...styles.section, marginTop: 20 }}>
-                    <Text style={{ color: 'white', fontSize: 18, marginBottom: 10, ...fontStyle.textMedium }}>Condividi la tua Lega</Text>
-                    <Text style={{ color: 'white', fontSize: 16, ...fontStyle.textLight }}>ID Lega: {leagueId}</Text>
-
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
-                        <Button
-                            mode="contained"
-                            onPress={copyToClipboard}
-                            style={styles.copyButton}
-                            labelStyle={{
-                                ...fontStyle.textBold
-                            }}
-                        >
-                            Copia ID
-                        </Button>
-
-                        <Button
-                            mode="contained"
-                            onPress={shareLeagueId}
-                            style={styles.shareButton}
-                            labelStyle={{
-                                ...fontStyle.textBold
-                            }}
-                        >
-                            Condividi
-                        </Button>
-                    </View>
-                </View>
-
                 {/* Schema delle Partite */}
                 <View style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginBottom: 10 }}>
-                    <View style={styles.flexRow}>
-                        <Text style={{ color: 'white', fontSize: 25, ...fontStyle.textMedium }}>Giornata {matchdayNumber}</Text>
 
-                    </View>
                     {sortedMatches.map((match, i) => {
                         if (i === 5) {
                             return (
@@ -484,38 +458,28 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: 20,
-        marginBottom: 15,
+        marginBottom: 10,
         ...fontStyle.textMedium
-    },
-    rankItem: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingVertical: 10,
-        borderBottomColor: '#ddd',
-        borderBottomWidth: 1,
-    },
-    rankPosition: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: 'white',
-        marginRight: 10,
-    },
-    rankName: {
-        fontSize: 16,
-        color: 'white',
-        fontWeight: 'bold',
-    },
-    rankPoints: {
-        fontSize: 16,
     },
     fullRankingButton: {
         marginTop: 10,
     },
     flexRow: {
         display: 'flex',
+        flexDirection: 'row'
+    },
+    shareAction: {
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 15,
+        borderColor: COLORJS.surface,
+        borderWidth: 1,
+        marginTop: 10,
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        display: 'flex',
         flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between'
+        alignItems: 'center'
     }
 });
 

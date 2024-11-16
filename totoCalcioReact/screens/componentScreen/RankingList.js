@@ -10,7 +10,7 @@ import { Avatar } from 'react-native-paper';
 import fontStyle from '../../theme/fontStyle';
 
 
-const RankingList = ({ ranking, showAvatar = true }) => {
+const RankingList = ({ ranking, showAvatar = true, size = 40 }) => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
@@ -53,7 +53,11 @@ const RankingList = ({ ranking, showAvatar = true }) => {
             <View style={styles.rankItem}>
               <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Text style={styles.rankPosition}>{index + 1}</Text>
-                {showAvatar && <Avatar.Image source={{ uri: player.photoURL }} size={40} style={styles.avatar} />}
+                {showAvatar && <Avatar.Image
+
+                  source={player.photoURL ? { uri: player.photoURL } : require('../../User-avatar.svg.png')}
+                  size={size}
+                  style={styles.avatar} />}
                 <Text style={styles.rankName}>{player.displayName}</Text>
               </View>
               <Text style={{ ...styles.rankPoints, color: 'white' }}>{player.punti} punti</Text>
@@ -103,6 +107,7 @@ const styles = StyleSheet.create({
   },
   avatar: {
     marginRight: 5,
+    backgroundColor: 'transparent'
   },
 });
 
