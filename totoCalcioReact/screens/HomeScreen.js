@@ -268,7 +268,8 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 10,
         marginBottom: 15,
-        elevation: 3,
+        borderBottomWidth: 3,
+        borderBottomColor: COLORJS.primary        
     },
     leagueImage: {
         width: 50,
@@ -294,6 +295,8 @@ const styles = StyleSheet.create({
     joinButton: {
         marginBottom: 20,
         borderRadius: 10,
+        width: '70%',
+        margin: 'auto'
     },
     emptyStateContainer: {
         alignItems: 'center',
