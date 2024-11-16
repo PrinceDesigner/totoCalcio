@@ -127,7 +127,7 @@ export default function ParticipantsListScreen({ navigation }) {
                         <View style={styles.card}>
                             <View style={styles.participantRow}>
                                 <Avatar.Image
-                                    source={{ uri: participant.photoURL}}
+                                    source={participant.photoURL ? { uri: participant.photoURL } : require('../../totoCalcioReact/User-avatar.svg.png')}
                                     size={40}
                                     style={styles.avatar}
                                 />

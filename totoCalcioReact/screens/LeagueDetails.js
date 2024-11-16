@@ -368,7 +368,7 @@ export default function LeagueDetails({ navigation }) {
                 </View>
 
                 {/* Daily question */}
-                    <DailyQuestion />
+                {/* <DailyQuestion /> */}
 
                 {/* Sezione per copiare e condividere l'ID della lega */}
                 <View style={{ ...styles.section, marginTop: 20 }}>
@@ -409,15 +409,15 @@ export default function LeagueDetails({ navigation }) {
                     {sortedMatches.map((match, i) => {
                         if (i === 5) {
                             return (
-                                <>
-                                    <View key={i} style={{ marginTop: 10, marginBottom: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                <React.Fragment key={`match-${match.matchId}`}>
+                                    <View style={{ marginTop: 10, marginBottom: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                         <BannerAdComponent />
                                     </View>
-                                    <MatchItem key={match.matchId} match={match} />
-                                </>
-                            )
+                                    <MatchItem match={match} />
+                                </React.Fragment>
+                            );
                         } else {
-                            return <MatchItem key={match.matchId} match={match} />
+                            return <MatchItem key={`match-${match.matchId}`} match={match} />;
                         }
 
                     }
@@ -480,11 +480,6 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         padding: 20,
         borderRadius: 15,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 5,
-        elevation: 5,
         backgroundColor: COLORJS.surface
     },
     sectionTitle: {

@@ -123,7 +123,7 @@ export default function ProfileScreen({ navigation }) {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={{ ...styles.container, backgroundColor: colors.background }}>
-        <ProfileCard onAvatarPress={handleChangeImage} fullName={userDetail.fullName} photoProfile={photoProfile} />
+        <ProfileCard onAvatarPress={handleChangeImage} fullName={userDetail?.fullName} photoProfile={photoProfile} />
         <View style={styles.tabsContainer}>
           <TouchableWithoutFeedback onPress={() => setActiveTab('other')}>
             <View style={[styles.tab, activeTab === 'other' && styles.activeTab]}>
