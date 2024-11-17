@@ -11,6 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 import { showToast } from '../ToastContainer';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; // Importa Material Icons
 import { COLORJS } from '../theme/themeColor';
+import Wrapper from './componentScreen/Container';
 
 export default function ListGiornateDaCalcolareScreen() {
     const { colors } = useTheme();
@@ -106,68 +107,69 @@ export default function ListGiornateDaCalcolareScreen() {
         }
 
         return [...giornateCalcolate]
-        // Prima ordina le giornate in base al numero estratto da dayId
-        .sort((a, b) => {
-            // Estrai il numero da entrambe le dayId
-            const numeroA = parseInt(a.dayId.replace('RegularSeason-', ''));
-            const numeroB = parseInt(b.dayId.replace('RegularSeason-', ''));
-            
-            // Confronta i numeri per ordinamento crescente
-            return numeroB - numeroA;
-        })
-        // Poi mappa gli elementi ordinati
-        .map((giornata, index) => {
-            return !isDateAfter(giornata.dayId) ? (
-                <View key={index + 1} style={{ ...styles.cardTouchable }}>
-                    <View style={styles.card}>
-                        <View style={styles.participantRow}>
-                            <Avatar.Icon
-                                icon="calendar"
-                                size={40}
-                                style={styles.avatar}
-                            />
-                            <Text style={{ ...styles.participantName, color: 'white' }}>
-                                Giornata {giornata.dayId.replace('RegularSeason-', '')}
-                            </Text>
-    
-                            {/* Aggiungi l'icona "check-circle" se la giornata è stata calcolata */}
-                            {giornata.calcolate && (
-                                <MaterialIcons name="check-circle" size={24} color="green" />
-                            )}
+            // Prima ordina le giornate in base al numero estratto da dayId
+            .sort((a, b) => {
+                // Estrai il numero da entrambe le dayId
+                const numeroA = parseInt(a.dayId.replace('RegularSeason-', ''));
+                const numeroB = parseInt(b.dayId.replace('RegularSeason-', ''));
+
+                // Confronta i numeri per ordinamento crescente
+                return numeroB - numeroA;
+            })
+            // Poi mappa gli elementi ordinati
+            .map((giornata, index) => {
+                return !isDateAfter(giornata.dayId) ? (
+                    <View key={index + 1} style={{ ...styles.cardTouchable }}>
+                        <View style={styles.card}>
+                            <View style={styles.participantRow}>
+                                <Avatar.Icon
+                                    icon="calendar"
+                                    size={40}
+                                    style={styles.avatar}
+                                />
+                                <Text style={{ ...styles.participantName, color: 'white' }}>
+                                    Giornata {giornata.dayId.replace('RegularSeason-', '')}
+                                </Text>
+
+                                {/* Aggiungi l'icona "check-circle" se la giornata è stata calcolata */}
+                                {giornata.calcolate && (
+                                    <MaterialIcons name="check-circle" size={24} color="green" />
+                                )}
+                            </View>
+
+                            {/* Mostra sempre i bottoni */}
+                            <Button
+                                mode="contained"
+                                onPress={() => handleCalculatePoints(giornata)}
+                                style={styles.calculateButton}
+                                color={colors.primary}
+                            >
+                                Calcola Giornata
+                            </Button>
                         </View>
-    
-                        {/* Mostra sempre i bottoni */}
-                        <Button
-                            mode="contained"
-                            onPress={() => handleCalculatePoints(giornata)}
-                            style={styles.calculateButton}
-                            color={colors.primary}
-                        >
-                            Calcola Giornata
-                        </Button>
                     </View>
-                </View>
-            ) : null;
-        });
+                ) : null;
+            });
     };
 
     return (
         <View style={{ flex: 1 }}>
             <ScrollView
-                style={{ ...styles.container, backgroundColor: colors.background }}
+                style={{ backgroundColor: colors.background }}
                 contentContainerStyle={{ paddingBottom: 60 }}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
             >
-                {/* Avviso per le giornate calcolate */}
-                <View style={styles.warningContainer}>
-                    <Text style={{ color: 'yellow', fontSize: 16 }}>
-                        Le giornate con l'icona di spunta verde <MaterialIcons name="check-circle" size={16} color="green" /> sono già state calcolate.
-                    </Text>
-                </View>
-                {renderGiornate()}
-
+                <Wrapper>
+                    {/* Avviso per le giornate calcolate */}
+                    <View style={styles.warningContainer}>
+                        <Text style={{ color: 'yellow', fontSize: 16 }}>
+                            Le giornate con l'icona di spunta verde <MaterialIcons name="check-circle" size={16} color="green" /> sono già state calcolate.
+                        </Text>
+                    </View>
+                    {renderGiornate()}
+                </Wrapper>
             </ScrollView>
         </View>
     );

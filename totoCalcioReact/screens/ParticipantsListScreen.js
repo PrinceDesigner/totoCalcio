@@ -11,6 +11,7 @@ import { removeUserFromLeague } from '../services/leagueService';
 import fontStyle from '../theme/fontStyle';
 import { COLORJS } from '../theme/themeColor';
 import { showToast } from '../ToastContainer';
+import Wrapper from './componentScreen/Container';
 
 export default function ParticipantsListScreen({ navigation }) {
     const dispatch = useDispatch(); // Usa dispatch per inviare l'azione Redux
@@ -77,16 +78,16 @@ export default function ParticipantsListScreen({ navigation }) {
             // Effettua la chiamata all'API
             await dispatch(fetchStoricoPerUtenteSelezionato({ leagueId, userId: participant.userId })).unwrap();
 
-            dispatch(setUser({...participant}));
+            dispatch(setUser({ ...participant }));
 
             // Nascondi lo stato di caricamento
             dispatch(hideLoading());
 
             // Naviga alla schermata successiva, ad esempio "UserHistoryScreen"
             navigation.navigate('UserHistoryScreen',
-            {
-                user: participant.displayName, // Passa i dettagli del partecipante se necessario
-            });
+                {
+                    user: participant.displayName, // Passa i dettagli del partecipante se necessario
+                });
 
             // Mostra un messaggio di successo se necessario
         } catch (error) {
@@ -117,32 +118,34 @@ export default function ParticipantsListScreen({ navigation }) {
 
     return (
         <View style={{ flex: 1 }}>
-            <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}>
-                {participants.map((participant, index) => (
-                    <TouchableOpacity
-                        key={index + 1}
-                        onPress={() => handleParticipantPress(participant)} // Aggiungi la funzione da eseguire al tocco
-                        style={{ ...styles.cardTouchable }} // Modifica per includere lo stile
-                    >
-                        <View style={styles.card}>
-                            <View style={styles.participantRow}>
-                                <Avatar.Image
-                                    source={participant.photoURL ? { uri: participant.photoURL } : require('../../totoCalcioReact/User-avatar.svg.png')}
-                                    size={40}
-                                    style={styles.avatar}
-                                />
-                                <Text style={{ ...styles.participantName, color: 'white' }}>{participant.displayName}</Text>
+            <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}>
+                <Wrapper>
+                    {participants.map((participant, index) => (
+                        <TouchableOpacity
+                            key={index + 1}
+                            onPress={() => handleParticipantPress(participant)} // Aggiungi la funzione da eseguire al tocco
+                            style={{ ...styles.cardTouchable }} // Modifica per includere lo stile
+                        >
+                            <View style={styles.card}>
+                                <View style={styles.participantRow}>
+                                    <Avatar.Image
+                                        source={participant.photoURL ? { uri: participant.photoURL } : require('../../totoCalcioReact/User-avatar.svg.png')}
+                                        size={40}
+                                        style={styles.avatar}
+                                    />
+                                    <Text style={{ ...styles.participantName, color: 'white' }}>{participant.displayName}</Text>
 
-                                {/* Icona del cestino */}
-                                {(!selectedLeague.ownerId.includes(participant.userId)) && selectedLeague.ownerId.includes(userId)  ? (
-                                    <TouchableOpacity onPress={() => handleDeleteParticipant(participant)}>
-                                        <MaterialIcons name="delete" size={24} color={colors.primary} />
-                                    </TouchableOpacity>
-                                ) : null}
+                                    {/* Icona del cestino */}
+                                    {(!selectedLeague.ownerId.includes(participant.userId)) && selectedLeague.ownerId.includes(userId) ? (
+                                        <TouchableOpacity onPress={() => handleDeleteParticipant(participant)}>
+                                            <MaterialIcons name="delete" size={24} color={colors.primary} />
+                                        </TouchableOpacity>
+                                    ) : null}
+                                </View>
                             </View>
-                        </View>
-                    </TouchableOpacity>
-                ))}
+                        </TouchableOpacity>
+                    ))}
+                </Wrapper>
             </ScrollView>
 
             {/* Modale per confermare l'eliminazione */}
@@ -181,11 +184,6 @@ export default function ParticipantsListScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        paddingHorizontal: 10,
-        paddingTop: 20,
-    },
     card: {
         padding: 15,
         marginBottom: 10,

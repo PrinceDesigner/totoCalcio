@@ -6,6 +6,7 @@ import { joinLeagueThunk } from '../redux/slice/leaguesSlice';
 import { showLoading, hideLoading } from '../redux/slice/uiSlice';
 import fontStyle from '../theme/fontStyle';
 import { showToast } from '../ToastContainer';
+import Wrapper from './componentScreen/Container';
 
 
 
@@ -40,7 +41,7 @@ export default function JoinLeagueScreen({ navigation }) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View style={{ ...styles.container, backgroundColor: colors.background }}>
+        <Wrapper style={{ ...styles.container, backgroundColor: colors.background }}>
           <Text style={styles.title}>Inserisci il codice della lega</Text>
 
           <TextInput
@@ -57,7 +58,7 @@ export default function JoinLeagueScreen({ navigation }) {
             onPress={handleJoinLeague}
             style={styles.button}
             labelStyle={{
-              ...fontStyle.textLight
+              ...fontStyle.textMedium
           }}
             loading={loading}
             disabled={loading}
@@ -65,7 +66,7 @@ export default function JoinLeagueScreen({ navigation }) {
           Unisciti alla Lega
           </Button>
 
-        </View>
+        </Wrapper>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -82,15 +83,14 @@ const styles = StyleSheet.create({
     ...fontStyle.textBold,
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
     color: 'white',
   },
   input: {
-    width: '80%',
+    width: '100%',
     marginBottom: 20,
   },
   button: {
-    width: '80%',
+    width: '100%',
     height: 50,
     justifyContent: 'center',
     borderRadius: 10,

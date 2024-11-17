@@ -6,6 +6,7 @@ import { createLeagueThunk } from '../redux/slice/leaguesSlice'; // Importa il t
 import { showLoading, hideLoading } from '../redux/slice/uiSlice'; // Importa per mostrare/nascondere caricamento
 import fontStyle from '../theme/fontStyle';
 import { showToast } from '../ToastContainer';
+import Wrapper from './componentScreen/Container';
 
 export default function CreateLeagueScreen({ navigation }) {
   const [leagueName, setLeagueName] = useState(''); // Stato per il nome della lega
@@ -39,7 +40,7 @@ export default function CreateLeagueScreen({ navigation }) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View style={{ ...styles.container, backgroundColor: colors.background }}>
+        <Wrapper style={styles.container}>
           <Text style={styles.title}>Nome della tua nuova lega</Text>
 
           {/* Campo di input per il nome della lega */}
@@ -62,12 +63,12 @@ export default function CreateLeagueScreen({ navigation }) {
             onPress={handleCreateLeague}
             style={styles.button}
             labelStyle={{
-              ...fontStyle.textLight
+              ...fontStyle.textMedium
           }}
           >
             Crea Lega
           </Button>
-        </View>
+        </Wrapper>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -78,20 +79,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center', 
     alignItems: 'center',
-    backgroundColor: '#f5f5f5', 
   },
   title: {
     fontSize: 24,
     ...fontStyle.textBold,
-    marginBottom: 20,
     color: 'white',
   },
   input: {
-    width: '80%', 
+    width: '100%', 
     marginBottom: 20,
   },
   warningText: {
-    width: '80%',
     ...fontStyle.textMedium,
     color: '#FFD700', // Giallo per attirare l'attenzione
     fontSize: 14,
@@ -102,7 +100,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   button: {
-    width: '80%',
+    width: '100%', 
     height: 50,
     justifyContent: 'center',
     borderRadius: 10,

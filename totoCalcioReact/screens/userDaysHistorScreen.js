@@ -13,6 +13,7 @@ import { makeUserAdmin } from '../services/leagueService';
 import { removeUserAdmin } from '../services/leagueService';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import fontStyle from '../theme/fontStyle';
+import Wrapper from './componentScreen/Container';
 
 export default function UserHistoryScreen({ route, navigation }) {
     const { colors } = useTheme();
@@ -210,11 +211,14 @@ export default function UserHistoryScreen({ route, navigation }) {
         }
     };
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
             {/* Tab Custom */}
             <TabContainer tabs={tabs} />
-            <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}>
+            <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>
+                <Wrapper>
+
                 {selectedTab === 'Storico' ? renderStoricoTab() : renderProfiloTab()}
+                </Wrapper>
             </ScrollView>
 
             {/* Modale di conferma */}
@@ -276,11 +280,6 @@ const styles = StyleSheet.create({
     },
     tabText: {
         fontSize: 16,
-    },
-    container: {
-        flex: 1,
-        paddingHorizontal: 10,
-        paddingTop: 20,
     },
     warningContainer: {
         flexDirection: 'row',

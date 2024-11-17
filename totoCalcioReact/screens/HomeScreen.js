@@ -15,6 +15,7 @@ import { Avatar } from 'react-native-paper';
 import { COLORJS } from '../theme/themeColor';
 import fontStyle from '../theme/fontStyle';
 import { BannerAdComponent } from '../components/Adv/AdvBanner';
+import Wrapper from './componentScreen/Container';
 
 
 // React.memo per ottimizzare il rendering di HomeScreen
@@ -152,7 +153,7 @@ const HomeScreen = React.memo(() => {
 
     return (
         <SafeAreaView style={[{ backgroundColor: colors.background, flex: 1 }]}>
-            <View style={{ ...styles.container, backgroundColor: colors.background }}>
+            <Wrapper>
 
                 {/* Intestazione con "Le mie leghe" e "Crea Lega" */}
                 <View style={styles.containerProfile}>
@@ -219,7 +220,7 @@ const HomeScreen = React.memo(() => {
 
                 {/* Pulsante "Unisciti alla lega" */}
                 <Button mode="contained" labelStyle={{
-                    ...fontStyle.textLight
+                    ...fontStyle.textMedium
                 }} onPress={() => navigation.navigate('JoinLeague')} style={styles.joinButton}>
                     Unisciti alla Lega
                 </Button>
@@ -245,18 +246,13 @@ const HomeScreen = React.memo(() => {
                         </View>
                     </View>
                 </Modal>
-            </View>
+            </Wrapper>
         </SafeAreaView>
     );
 });
 
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        paddingHorizontal: 10
-    },
     headerContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',

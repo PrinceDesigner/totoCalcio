@@ -17,11 +17,6 @@ export default function GiornataDetailsUserScreen({ route }) {
     // const prediction = useSelector((state) => state.insertPredictions.schedinaInserita);
     const loading = useSelector((state) => state.ui.loading);
 
-
-    const getMatchById = (matchId) => {
-        return matches.find(match => match.matchId === matchId);
-    };
-
     const renderPrediction = () => (
         <View style={styles.sectionContainer}>
             <Text style={{ ...styles.sectionTitle, color: colors.primary }}>{user} esiti giornata {matchdayNumber} </Text>

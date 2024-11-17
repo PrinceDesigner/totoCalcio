@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { TouchableOpacity } from 'react-native-gesture-handler';
-import { Card, useTheme, Avatar, ActivityIndicator } from 'react-native-paper';
+import { useTheme } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { COLORJS } from '../theme/themeColor';
 import DropDownPicker from 'react-native-dropdown-picker';
-import { fetchStoricoPerUtenteSelezionato } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
 import RankingList from './componentScreen/RankingList';
 import { getPredictionsForDay } from '../services/predictionsService';
 import TabContainer from '../components/Tabs/TabContainer';
 import fontStyle from '../theme/fontStyle';
+import Wrapper from './componentScreen/Container';
 
 export default function FullParticipantsRankingScreen({ navigation }) {
     const { colors } = useTheme();
@@ -75,13 +74,13 @@ export default function FullParticipantsRankingScreen({ navigation }) {
     };
 
     const renderGeneraleTab = () => (
-        <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 100 }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
             <RankingList ranking={participants} />
         </ScrollView>
     );
 
     const renderGiornateTab = () => (
-        <View style={{ ...styles.container, backgroundColor: colors.background }}>
+        <View>
             <DropDownPicker
                 open={open}
                 value={selectedGiornata}
@@ -98,7 +97,7 @@ export default function FullParticipantsRankingScreen({ navigation }) {
             {/* <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                 <Text style={{ color: 'white', fontSize: 18 }}>Classifica per Giornata {selectedGiornata} - In costruzione</Text>
             </View> */}
-            <ScrollView style={{backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 100 }}>
+            <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
                 <RankingList ranking={updatedParticipants} />
             </ScrollView>
         </View>
@@ -109,7 +108,9 @@ export default function FullParticipantsRankingScreen({ navigation }) {
             {/* Tab Custom */}
             <TabContainer tabs={tabs} />
             {/* Contenuto del Tab */}
-            {selectedTab === 'Generale' ? renderGeneraleTab() : renderGiornateTab()}
+            <Wrapper>
+                {selectedTab === 'Generale' ? renderGeneraleTab() : renderGiornateTab()}
+            </Wrapper>
             {/* Contenuto del Tab */}
         </View>
     );

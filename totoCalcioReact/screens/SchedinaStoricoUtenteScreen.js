@@ -6,6 +6,7 @@ import { selectStoricoByDayId } from '../redux/slice/storicoPerUtenteSelezionato
 import { COLORJS } from '../theme/themeColor';
 import { selectLeagueById } from '../redux/slice/leaguesSlice';
 import fontStyle from '../theme/fontStyle';
+import Wrapper from './componentScreen/Container';
 
 export default function GiornataSchedinaDetailsUserScreen({ route }) {
     const { dayId } = route.params; // Recupera i parametri passati
@@ -60,7 +61,7 @@ export default function GiornataSchedinaDetailsUserScreen({ route }) {
                                                 styles.circle,
                                                 {
                                                     backgroundColor:
-                                                        item.result === null ? colors.surface : item.esitoGiocato === item.result ? 'green' : 'red',
+                                                        item.result === null ? colors.secondaryBackGroud : item.esitoGiocato === item.result ? 'green' : 'red',
                                                 },
                                             ]}
                                         />
@@ -76,23 +77,21 @@ export default function GiornataSchedinaDetailsUserScreen({ route }) {
     };
 
     return (
-        <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}>
-            {loading ? (
-                <Text style={{ ...styles.loadingText, color: colors.primary }}>Caricamento...</Text>
-            ) : (
-                <>
-                    {renderPrediction()}
-                </>
-            )}
+        <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}>
+            <Wrapper style={{paddingTop: 10}}>
+                {loading ? (
+                    <Text style={{ ...styles.loadingText, color: colors.primary }}>Caricamento...</Text>
+                ) : (
+                    <>
+                        {renderPrediction()}
+                    </>
+                )}
+            </Wrapper>
         </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 15,
-    },
     titleLeague: {
         display: 'flex',
         justifyContent: 'space-between',
@@ -124,7 +123,7 @@ const styles = StyleSheet.create({
     },
     matchCard: {
         borderBottomWidth: 1,
-        borderBottomColor: COLORJS.surface,
+        borderBottomColor: COLORJS.secondaryBackGroud,
         paddingBottom: 15,
         paddingTop: 15
     },

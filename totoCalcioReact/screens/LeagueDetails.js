@@ -19,6 +19,7 @@ import RankingList from './componentScreen/RankingList';
 import fontStyle from '../theme/fontStyle';
 import { BannerAdComponent } from '../components/Adv/AdvBanner';
 import DailyQuestion from './componentScreen/quiz/DailyQuestions';
+import Wrapper from './componentScreen/Container';
 
 
 export default function LeagueDetails({ navigation }) {
@@ -328,102 +329,96 @@ export default function LeagueDetails({ navigation }) {
                 {renderConuntDown()}
             </ImageBackground>
 
-            <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}
+            <ScrollView contentContainerStyle={{ paddingBottom: 60 }}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                }
-            >
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+                <Wrapper>
+                    <View style={{ marginBottom: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <BannerAdComponent />
+                    </View>
+                    {/* Classifica Provvisoria */}
+                    <View style={{ ...styles.section, marginBottom: 0 }}>
+                        <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica Provvisoria</Text>
 
-                <View style={{ marginTop: 10, marginBottom: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <BannerAdComponent />
-                </View>
-                {/* Classifica Provvisoria */}
-                <View style={{ ...styles.section, marginBottom: 0 }}>
-                    <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica Provvisoria</Text>
+                        {provisionalRankingLoading ? (
+                            <ActivityIndicator size="large" color={colors.primary} />
+                        ) : (
+                            <>
+                                <RankingList ranking={provisionalRanking.slice(0, 6)} size={20} />
 
-                    {provisionalRankingLoading ? (
-                        <ActivityIndicator size="large" color={colors.primary} />
-                    ) : (
-                        <>
-                            <RankingList ranking={provisionalRanking.slice(0, 6)} size={20} />
+                                {/* Bottone per vedere la classifica completa */}
+                                <Button
+                                    mode="contained"
+                                    onPress={() => navigation.navigate('FullParticipantsRankingScreen')}
+                                    style={styles.fullRankingButton}
+                                    labelStyle={{
+                                        ...fontStyle.textBold
+                                    }}
+                                >
+                                    Classifica Completa
+                                </Button>
+                            </>
+                        )}
+                    </View>
+                    <View style={styles.shareAction}>
+                        <View style={{ paddingRight: 10 }}>
+                            <Text style={{ color: 'white', fontSize: 15, ...fontStyle.textBold }}>{leagueId}</Text>
+                            <Text style={{ color: 'white', fontSize: 12, ...fontStyle.textLight }}>Condividi con i tuoi amici</Text>
+                        </View>
 
-                            {/* Bottone per vedere la classifica completa */}
-                            <Button
-                                mode="contained"
-                                onPress={() => navigation.navigate('FullParticipantsRankingScreen')}
-                                style={styles.fullRankingButton}
-                                labelStyle={{
-                                    ...fontStyle.textBold
-                                }}
-                            >
-                                Classifica Completa
-                            </Button>
-                        </>
-                    )}
-                </View>
-                <View style={styles.shareAction}>
-                    <View style={{ paddingRight: 10 }}>
-                        <Text style={{ color: 'white', fontSize: 15, ...fontStyle.textBold }}>{leagueId}</Text>
-                        <Text style={{ color: 'white', fontSize: 12, ...fontStyle.textLight }}>Condividi con i tuoi amici</Text>
+                        <View style={{ ...styles.flexRow, marginTop: 10 }}>
+                            <TouchableOpacity style={{ marginRight: 10 }} onPress={copyToClipboard}>
+                                <Avatar.Icon size={35} icon="content-copy" />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={shareLeagueId}>
+                                <Avatar.Icon size={35} icon="share-variant" />
+                            </TouchableOpacity>
+                        </View>
                     </View>
 
-                    <View style={{ ...styles.flexRow, marginTop: 10 }}>
-                        <TouchableOpacity style={{ marginRight: 10 }} onPress={copyToClipboard}>
-                            <Avatar.Icon size={35} icon="content-copy" />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={shareLeagueId}>
-                            <Avatar.Icon size={35} icon="share-variant" />
-                        </TouchableOpacity>
-                    </View>
-                </View>
+                    {/* Daily question */}
+                    {/* <DailyQuestion /> */}
 
-                {/* Daily question */}
-                {/* <DailyQuestion /> */}
+                    {/* Schema delle Partite */}
+                    <View style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginBottom: 10 }}>
 
-                {/* Schema delle Partite */}
-                <View style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginBottom: 10 }}>
+                        {sortedMatches.map((match, i) => {
+                            if (i === 5) {
+                                return (
+                                    <React.Fragment key={`match-${match.matchId}`}>
+                                        <View style={{ marginTop: 10, marginBottom: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                            <BannerAdComponent />
+                                        </View>
+                                        <MatchItem match={match} />
+                                    </React.Fragment>
+                                );
+                            } else {
+                                return <MatchItem key={`match-${match.matchId}`} match={match} />;
+                            }
 
-                    {sortedMatches.map((match, i) => {
-                        if (i === 5) {
-                            return (
-                                <React.Fragment key={`match-${match.matchId}`}>
-                                    <View style={{ marginTop: 10, marginBottom: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                        <BannerAdComponent />
-                                    </View>
-                                    <MatchItem match={match} />
-                                </React.Fragment>
-                            );
-                        } else {
-                            return <MatchItem key={`match-${match.matchId}`} match={match} />;
                         }
+                        )}
 
-                    }
-                    )}
+                    </View>
 
-                </View>
+                    {selectedLeague.ownerId.includes(userId) ? <Button
+                        mode="contained"
+                        onPress={() => navigation.navigate('EditLeagueScreen')}
+                        style={{ ...styles.insertButton }}
+                        labelStyle={{
+                            ...fontStyle.textBold
+                        }}
 
-                {selectedLeague.ownerId.includes(userId) ? <Button
-                    mode="contained"
-                    onPress={() => navigation.navigate('EditLeagueScreen')}
-                    style={{ ...styles.insertButton }}
-                    labelStyle={{
-                        ...fontStyle.textBold
-                    }}
-
-                >
-                    Modifica Lega
-                </Button> : null}
+                    >
+                        Modifica Lega
+                    </Button> : null}
+                </Wrapper>
             </ScrollView>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        paddingHorizontal: 10,
-        paddingTop: 10,
-    },
     sectionCountDown: {
         padding: 20,
         paddingHorizontal: 10,
@@ -457,7 +452,6 @@ const styles = StyleSheet.create({
     section: {
         marginBottom: 10,
         padding: 10,
-        paddingTop: 10,
         borderRadius: 5,
         backgroundColor: COLORJS.secondaryBackGroud
     },
@@ -475,8 +469,7 @@ const styles = StyleSheet.create({
     },
     shareAction: {
         backgroundColor: COLORJS.secondaryBackGroud,
-        paddingHorizontal: 20,
-        paddingVertical: 10,
+        padding: 10,
         borderRadius: 5,
         borderColor: COLORJS.surface,
         borderWidth: 1,
