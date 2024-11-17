@@ -1,8 +1,8 @@
 import moment from 'moment-timezone';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, RefreshControl, ImageBackground } from 'react-native';
-import { Card, Badge, useTheme, Button, ActivityIndicator, Avatar } from 'react-native-paper';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, RefreshControl, ImageBackground, ActivityIndicator } from 'react-native';
+import { Card, Badge, useTheme, Button, Avatar } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchDayDetails } from '../redux/slice/infogiornataAttualeSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
@@ -331,7 +331,11 @@ export default function LeagueDetails({ navigation }) {
 
             <ScrollView contentContainerStyle={{ paddingBottom: 60 }}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+                    <RefreshControl
+                        tintColor={colors.primary}
+                        colors={[colors.primary]}
+                        refreshing={refreshing}
+                        onRefresh={onRefresh} />}>
                 <Wrapper>
                     <View style={{ marginBottom: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                         <BannerAdComponent />

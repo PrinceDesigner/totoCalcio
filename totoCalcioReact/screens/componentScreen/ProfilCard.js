@@ -32,7 +32,7 @@ const ProfileCard = ({ onAvatarPress, fullName, photoProfile }) => {
             </View>
             <View style={styles.profileInfoContainer}>
                 <Text style={styles.userNameText}>{fullName}</Text>
-                <Button mode="outlined" style={styles.inviteButton}>
+                <Button style={styles.inviteButton}>
                     Invita amici
                 </Button>
             </View>
@@ -61,7 +61,6 @@ const styles = StyleSheet.create({
     userNameText: {
         fontSize: 20,
         ...fontStyle.textBold,
-        color: 'white',
         marginBottom: 5,
     },
     inviteButton: {

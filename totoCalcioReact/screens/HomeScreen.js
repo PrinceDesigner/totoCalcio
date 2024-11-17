@@ -115,7 +115,6 @@ const HomeScreen = React.memo(() => {
                 <TouchableOpacity onPress={() => handleLeaguePress(item)}>
 
                     <Card
-                        elevation={5}
                         mode='outlined'
                          style={{ ...styles.leagueContainer }} >
                         <Card.Title
