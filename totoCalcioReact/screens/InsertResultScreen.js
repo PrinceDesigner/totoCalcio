@@ -172,11 +172,11 @@ export default function InsertResultsScreen({ navigation }) {
                         <View key={day}>
                             {/* Intestazione per il giorno */}
                             <View style={{ ...styles.dayHeader }}>
-                                <Text style={{ fontSize: 15, color: 'white', ...fontStyle.textMedium }}>
+                                <Text style={{ fontSize: 15, ...fontStyle.textMedium }}>
                                     {moment(day).format('dddd, DD MMMM YYYY')} {/* E.g., "Sunday, 24 November 2024" */}
                                 </Text>
                             </View>
-                            {(i === 0 || i === 1 || i === 2) ? <View style={{ marginTop: 10, marginBottom: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                            {(i === 0 || i === 1 || i === 2) ? <View style={{ marginBottom: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                 <BannerAdComponent />
                             </View> : null}
                             {/* Matches per ogni giorno */}
@@ -383,7 +383,6 @@ const styles = StyleSheet.create({
     dayHeader: {
         marginBottom: 10,
         backgroundColor: COLORJS.primary, // Colore di sfondo per evidenziare l'intestazione (puoi cambiarlo con `colors.primary` se hai definito un tema)
-        color: '#ffffff',           // Colore del testo (in contrasto con il colore di sfondo)
         fontWeight: 'bold',
         padding: 10,
         borderRadius: 5         // Rendere l'intestazione più evidente

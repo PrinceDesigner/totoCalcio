@@ -69,7 +69,7 @@ const MatchItem = ({ match }) => {
 
 const styles = StyleSheet.create({
     matchItem: {
-        marginVertical: 5,
+        marginBottom: 10,
         borderRadius: 5,
         padding: 10,
         borderBottomWidth: 1,

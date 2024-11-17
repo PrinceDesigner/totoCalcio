@@ -338,7 +338,9 @@ export default function LeagueDetails({ navigation }) {
                     </View>
                     {/* Classifica Provvisoria */}
                     <View style={{ ...styles.section, marginBottom: 0 }}>
-                        <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica Provvisoria</Text>
+                        <View style={styles.rowHeaderRanking}>
+                            <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica Provvisoria</Text>
+                        </View>
 
                         {provisionalRankingLoading ? (
                             <ActivityIndicator size="large" color={colors.primary} />
@@ -348,7 +350,8 @@ export default function LeagueDetails({ navigation }) {
 
                                 {/* Bottone per vedere la classifica completa */}
                                 <Button
-                                    mode="contained"
+                                    mode="outlined"
+                                    icon={'format-list-bulleted'}
                                     onPress={() => navigation.navigate('FullParticipantsRankingScreen')}
                                     style={styles.fullRankingButton}
                                     labelStyle={{
@@ -362,8 +365,8 @@ export default function LeagueDetails({ navigation }) {
                     </View>
                     <View style={styles.shareAction}>
                         <View style={{ paddingRight: 10 }}>
-                            <Text style={{ color: 'white', fontSize: 15, ...fontStyle.textBold }}>{leagueId}</Text>
-                            <Text style={{ color: 'white', fontSize: 12, ...fontStyle.textLight }}>Condividi con i tuoi amici</Text>
+                            <Text style={{ fontSize: 15, ...fontStyle.textBold }}>{leagueId}</Text>
+                            <Text style={{ fontSize: 12, ...fontStyle.textLight }}>Condividi con i tuoi amici</Text>
                         </View>
 
                         <View style={{ ...styles.flexRow, marginTop: 10 }}>
@@ -380,7 +383,7 @@ export default function LeagueDetails({ navigation }) {
                     {/* <DailyQuestion /> */}
 
                     {/* Schema delle Partite */}
-                    <View style={{ ...styles.section, backgroundColor: 'transparent', padding: 5, marginBottom: 10 }}>
+                    <View style={{ ...styles.section, backgroundColor: 'transparent', padding: 0, marginBottom: 10 }}>
 
                         {sortedMatches.map((match, i) => {
                             if (i === 5) {
@@ -463,17 +466,24 @@ const styles = StyleSheet.create({
     fullRankingButton: {
         marginTop: 10,
     },
+    rowHeaderRanking: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingBottom: 5,
+    },
     flexRow: {
         display: 'flex',
         flexDirection: 'row'
     },
     shareAction: {
-        backgroundColor: COLORJS.secondaryBackGroud,
+        backgroundColor: COLORJS.primary,
         padding: 10,
         borderRadius: 5,
         borderColor: COLORJS.surface,
         borderWidth: 1,
-        marginTop: 10,
+        marginVertical: 10,
         justifyContent: 'space-between',
         flexWrap: 'wrap',
         display: 'flex',
