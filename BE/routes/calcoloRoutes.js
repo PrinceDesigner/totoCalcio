@@ -16,7 +16,7 @@ router.get('/giornate-calcolate/:leagueId', authMiddleware, async (req, res) => 
 
     // Controlla se sono stati trovati documenti
     if (snapshot.empty) {
-      return res.status(404).json({ message: 'Nessun documento trovato per questa leagueId.' });
+      return res.status(200).json({ message: 'Nessun documento trovato per questa leagueId.', documents: []});
     }
 
     // Inizializza un array per contenere i documenti uniti

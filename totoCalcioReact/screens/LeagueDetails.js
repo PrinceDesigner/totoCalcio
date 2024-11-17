@@ -1,8 +1,7 @@
 import moment from 'moment-timezone';
-import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, RefreshControl, ImageBackground, ActivityIndicator } from 'react-native';
-import { Card, Badge, useTheme, Button, Avatar } from 'react-native-paper';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, RefreshControl, ImageBackground } from 'react-native';
+import { Card, Badge, useTheme, Button, Avatar, ActivityIndicator } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchDayDetails } from '../redux/slice/infogiornataAttualeSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
@@ -17,9 +16,11 @@ import MatchItem from './componentScreen/MatchItem';
 import { clearRefresh } from '../redux/slice/refreshSlice';
 import RankingList from './componentScreen/RankingList';
 import fontStyle from '../theme/fontStyle';
-import { BannerAdComponent } from '../components/Adv/AdvBanner';
+// import { BannerAdComponent } from '../components/Adv/AdvBanner';
 import DailyQuestion from './componentScreen/quiz/DailyQuestions';
 import Wrapper from './componentScreen/Container';
+import { fetchGiornateCalcolateThunk } from '../redux/slice/giornateDaCalcolareSlice';
+import GiornateDaCalcolareItemList from './componentScreen/GiornateDaCalcolareItemList';
 
 
 export default function LeagueDetails({ navigation }) {
@@ -44,6 +45,10 @@ export default function LeagueDetails({ navigation }) {
     const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
     const provisionalRanking = useSelector((state) => state.partecipantiLegaCorrente.participants);
     const provisionalRankingLoading = useSelector((state) => state.partecipantiLegaCorrente.loading);
+
+    const giornateCalcolate = useSelector((state) => state.giornateDaCalcolareReducer.giornate);
+    const giornateCalcolateLoading = useSelector((state) => state.giornateDaCalcolareReducer.loading);
+
     // selettore di refreshdata
     const refreshRequired = useSelector((state) => state.refresh.refreshRequired);
 
@@ -178,7 +183,6 @@ export default function LeagueDetails({ navigation }) {
         return () => clearInterval(interval); // Pulisci l'interval quando il componente viene smontato
     }, [startDate]);
 
-
     const isDatePast = (inputDate) => {
         if (!inputDate) {
             // Se la data di input non è valida, restituisci null
@@ -218,6 +222,20 @@ export default function LeagueDetails({ navigation }) {
         }
     };
 
+    useEffect(() => {
+        if (selectedLeague.ownerId.includes(userId)) {
+            fetchGiornateDaCalcolare(leagueId)
+        }
+    }, [dispatch, leagueId]);
+
+    const fetchGiornateDaCalcolare = async (leagueId) => {
+        try {
+            await dispatch(fetchGiornateCalcolateThunk(leagueId)).unwrap();
+        } catch (error) {
+            console.error('Errore durante il recupero delle giornate da calcolare:', error);
+        }
+    };
+
 
     const fetchDataInParallel = async () => {
         try {
@@ -242,7 +260,9 @@ export default function LeagueDetails({ navigation }) {
 
     // Funzione per gestire il refresh
     const onRefresh = () => {
+
         fetchLeagueById(leagueId).then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
+        fetchGiornateDaCalcolare(leagueId).then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
         fetchGiornataAttuale().then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
         fetchDataInParallel();
     };
@@ -302,6 +322,28 @@ export default function LeagueDetails({ navigation }) {
         </>
     );
 
+    const giornataSingolaDaCalcolare = () => {
+        if (selectedLeague.ownerId.includes(userId) && giornateCalcolate.length > 0 && [...giornateCalcolate].some(el => !el.calcolate)) {
+            if (giornateCalcolateLoading) {
+                return (
+                    <View style={{ height: 60 }}>
+                        <ActivityIndicator size={'large'} />
+                    </View>
+                )
+            } else {
+                return (
+                    <View>
+                        <Text style={{ color: 'white', ...fontStyle.textLight, fontSize: 20, marginBottom: 10 }}>Giornate non calcolata</Text>
+                        <GiornateDaCalcolareItemList leagueId={leagueId} giornateCalcolate={[...giornateCalcolate].filter(el => !el.calcolate)} />
+                    </View>
+                )
+
+            }
+        } else {
+            return null
+        }
+    }
+
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -337,9 +379,9 @@ export default function LeagueDetails({ navigation }) {
                         refreshing={refreshing}
                         onRefresh={onRefresh} />}>
                 <Wrapper>
-                    <View style={{ marginBottom: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    {/* <View style={{ marginBottom: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                         <BannerAdComponent />
-                    </View>
+                    </View> */}
                     {/* Classifica Provvisoria */}
                     <View style={{ ...styles.section, marginBottom: 0 }}>
                         <View style={styles.rowHeaderRanking}>
@@ -383,19 +425,22 @@ export default function LeagueDetails({ navigation }) {
                         </View>
                     </View>
 
+                    {giornataSingolaDaCalcolare()}
+
                     {/* Daily question */}
                     {/* <DailyQuestion /> */}
 
                     {/* Schema delle Partite */}
                     <View style={{ ...styles.section, backgroundColor: 'transparent', padding: 0, marginBottom: 10 }}>
+                        <Text style={{ color: 'white', ...fontStyle.textLight, fontSize: 20, marginBottom: 10 }}>{`Giornata ${dayId}`.replace('RegularSeason-', '') || 0}</Text>
 
                         {sortedMatches.map((match, i) => {
                             if (i === 5) {
                                 return (
                                     <React.Fragment key={`match-${match.matchId}`}>
-                                        <View style={{ marginTop: 10, marginBottom: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                        {/* <View style={{ marginTop: 10, marginBottom: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                             <BannerAdComponent />
-                                        </View>
+                                        </View> */}
                                         <MatchItem match={match} />
                                     </React.Fragment>
                                 );
