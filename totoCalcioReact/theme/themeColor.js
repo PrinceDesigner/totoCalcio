@@ -1,6 +1,7 @@
 export const COLORJS = {
-    primary: '#a21fec',
-    surface: '#323232',
-    background: '#161616',
+    primary: '#49C251',
+    surface: '#000000',
+    background: '#000',
     accent: '#f1c40f',
+    secondaryBackGroud: '#141414'
 }

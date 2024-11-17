@@ -5,6 +5,8 @@ import moment from 'moment-timezone';
 import { useNavigation } from '@react-navigation/native';
 import fontStyle from '../../theme/fontStyle';
 import 'moment/locale/it'; // Importa la localizzazione italiana
+import { COLORJS } from '../../theme/themeColor';
+
 
 // Imposta la lingua italiana per moment
 moment.locale('it');
@@ -25,7 +27,7 @@ const MatchItem = ({ match }) => {
 
     return (
         <TouchableOpacity onPress={handlePress}>
-            <View style={{ ...styles.matchItem, backgroundColor: colors.surface }}>
+            <View style={{ ...styles.matchItem, backgroundColor: colors.secondaryBackGroud }}>
                 {/* Dettaglio del match */}
                 <View style={styles.matchDetails}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
@@ -70,6 +72,8 @@ const styles = StyleSheet.create({
         marginVertical: 5,
         borderRadius: 5,
         padding: 10,
+        borderBottomWidth: 1,
+        borderColor: COLORJS.primary
     },
     matchDetails: {
         // paddingHorizontal: 10,

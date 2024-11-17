@@ -23,11 +23,13 @@ export const customDarkTheme = {
   roundness: 8,
   colors: {
     ...MD2DarkTheme.colors,
-    primary: '#a21fec',
+    primary: '#49C251',
     accent: '#f1c40f',
-    background: '#161616',
-    surface: '#323232',
+    background: '#000',
+    surface: '#000000',
     text: '#ffffff',
+    secondaryBackGroud: '#141414'
+
     // Altri colori personalizzabili
   },
 };

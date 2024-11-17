@@ -180,7 +180,7 @@ export default function InsertResultsScreen({ navigation }) {
                         {/* Matches per ogni giorno */}
                         {dayMatches.map((match) => (
 
-                            <View key={match.matchId} style={{ ...styles.matchCard, backgroundColor: colors.surface }}>
+                            <View key={match.matchId} style={{ ...styles.matchCard, backgroundColor: colors.secondaryBackGroud }}>
                                 <View style={styles.matchInfo}>
                                     <Text style={styles.matchText}>{match.homeTeam} vs {match.awayTeam}</Text>
                                     <Text style={styles.matchTextHour}>{moment(match.startTime).utc().format('HH:mm')}</Text>
@@ -283,7 +283,7 @@ export default function InsertResultsScreen({ navigation }) {
 
 const styles = StyleSheet.create({
     container: {
-        padding: 20,
+        padding: 10,
     },
     matchCard: {
         marginBottom: 10,

@@ -1,7 +1,7 @@
 import moment from 'moment-timezone';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, RefreshControl, ImageBackground } from 'react-native';
 import { Card, Badge, useTheme, Button, ActivityIndicator, Avatar } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchDayDetails } from '../redux/slice/infogiornataAttualeSlice';
@@ -270,7 +270,7 @@ export default function LeagueDetails({ navigation }) {
                 </Text>
             </View>
             <Button
-                mode="outlined"
+                mode="contained"
                 onPress={() => navigation.navigate('InsertResults')}
                 style={styles.insertButton}
                 labelStyle={{
@@ -279,9 +279,7 @@ export default function LeagueDetails({ navigation }) {
             >
                 {schedinaGiocata ? 'Modifica Esiti' : 'Inserisci Esiti'}
             </Button>
-            <View style={{ marginTop: 20, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <BannerAdComponent />
-            </View>
+
         </>
     );
 
@@ -290,7 +288,7 @@ export default function LeagueDetails({ navigation }) {
         <>
             <Text style={{ textAlign: 'center', color: 'red', fontSize: 30, ...fontStyle.textMedium }}>LIVE</Text>
             <Button
-                mode="outlined"
+                mode="contained"
                 onPress={() => navigation.navigate('EsitiInseriti')}
                 style={styles.insertButton}
                 labelStyle={{
@@ -299,9 +297,7 @@ export default function LeagueDetails({ navigation }) {
             >
                 Clicca per guardare i tuoi Esiti
             </Button>
-            <View style={{ marginTop: 20, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <BannerAdComponent />
-            </View>
+
         </>
     );
 
@@ -309,7 +305,10 @@ export default function LeagueDetails({ navigation }) {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
             {/* Countdown Section */}
-            <View style={{ ...styles.sectionCountDown, backgroundColor: colors.background }}>
+            <ImageBackground
+                source={require('../campo2.jpg')} // Sostituisci con il percorso dell'immagine
+                resizeMode="cover"
+                style={{ ...styles.sectionCountDown, backgroundColor: colors.background }}>
                 <View style={styles.countdownHeader}>
                     {/* Badge compatto */}
                     <View style={styles.leagueBadgeCountDown}>
@@ -327,13 +326,17 @@ export default function LeagueDetails({ navigation }) {
 
                 {/* Contenuto della sezione Countdown e Live */}
                 {renderConuntDown()}
-            </View>
+            </ImageBackground>
 
             <ScrollView style={{ ...styles.container, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
             >
+
+                <View style={{ marginTop: 10, marginBottom: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <BannerAdComponent />
+                </View>
                 {/* Classifica Provvisoria */}
                 <View style={{ ...styles.section, marginBottom: 0 }}>
                     <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica Provvisoria</Text>
@@ -359,8 +362,8 @@ export default function LeagueDetails({ navigation }) {
                     )}
                 </View>
                 <View style={styles.shareAction}>
-                    <View style={{borderRightWidth: 1, borderRightColor: colors.primary, paddingRight: 10}}>
-                        <Text style={{ color: 'white', fontSize: 15, ...fontStyle.textBold }}>ID Lega: {leagueId}</Text>
+                    <View style={{ paddingRight: 10 }}>
+                        <Text style={{ color: 'white', fontSize: 15, ...fontStyle.textBold }}>{leagueId}</Text>
                         <Text style={{ color: 'white', fontSize: 12, ...fontStyle.textLight }}>Condividi con i tuoi amici</Text>
                     </View>
 
@@ -418,11 +421,12 @@ export default function LeagueDetails({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingHorizontal: 20,
+        paddingHorizontal: 10,
         paddingTop: 10,
     },
     sectionCountDown: {
         padding: 20,
+        paddingHorizontal: 10,
         borderRadius: 0,
         paddingBottom: 10
     },
@@ -452,13 +456,14 @@ const styles = StyleSheet.create({
     },
     section: {
         marginBottom: 10,
-        padding: 20,
-        borderRadius: 15,
-        backgroundColor: COLORJS.surface
+        padding: 10,
+        paddingTop: 10,
+        borderRadius: 5,
+        backgroundColor: COLORJS.secondaryBackGroud
     },
     sectionTitle: {
         fontSize: 20,
-        marginBottom: 10,
+        // marginBottom: 10,
         ...fontStyle.textMedium
     },
     fullRankingButton: {
@@ -469,9 +474,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row'
     },
     shareAction: {
+        backgroundColor: COLORJS.secondaryBackGroud,
         paddingHorizontal: 20,
         paddingVertical: 10,
-        borderRadius: 15,
+        borderRadius: 5,
         borderColor: COLORJS.surface,
         borderWidth: 1,
         marginTop: 10,

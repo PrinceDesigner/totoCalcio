@@ -27,7 +27,7 @@ export default function LeagueDetailsTabs() {
         initialRouteName="Home Lega"
             screenOptions={({ route }) => ({
                 headerStyle: {
-                    backgroundColor: COLORJS.surface, // Colore di sfondo dell'header
+                    backgroundColor: COLORJS.secondaryBackGroud, // Colore di sfondo dell'header
                     borderBottomColor: '#e5e7eb', // Colore del bordo inferiore
                     borderBottomWidth: 1, // Spessore del bordo inferiore
                 },

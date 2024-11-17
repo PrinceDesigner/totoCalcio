@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
         padding: 15,
         marginBottom: 10,
         borderRadius: 10,
-        backgroundColor: COLORJS.surface
+        backgroundColor: COLORJS.secondaryBackGroud
     },
     participantRow: {
         flexDirection: 'row',
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     },
     avatar: {
         marginHorizontal: 10,
-        backgroundColor: '#6200ea',
+        backgroundColor: COLORJS.primary,
     },
     participantName: {
         fontSize: 16,

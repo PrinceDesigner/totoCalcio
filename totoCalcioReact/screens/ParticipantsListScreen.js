@@ -183,14 +183,14 @@ export default function ParticipantsListScreen({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingHorizontal: 20,
+        paddingHorizontal: 10,
         paddingTop: 20,
     },
     card: {
         padding: 15,
         marginBottom: 10,
         borderRadius: 10,
-        backgroundColor: COLORJS.surface
+        backgroundColor: COLORJS.secondaryBackGroud
     },
     participantRow: {
         flexDirection: 'row',

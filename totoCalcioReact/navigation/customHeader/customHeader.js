@@ -58,7 +58,7 @@ export function CustomHeaderBackArrow({ navigation }) {
       </TouchableOpacity>
     ),
     headerStyle: {
-      backgroundColor: COLORJS.surface, // Sfondo dell'header
+      backgroundColor: COLORJS.secondaryBackGroud, // Sfondo dell'header
     },
     headerTintColor: '#FFFFFF', // Colore del testo e delle icone
     headerTitleStyle: {
