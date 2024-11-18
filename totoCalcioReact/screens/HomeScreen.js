@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'; // Importa SafeAr
 import { Avatar } from 'react-native-paper';
 import { COLORJS } from '../theme/themeColor';
 import fontStyle from '../theme/fontStyle';
-import { BannerAdComponent } from '../components/Adv/AdvBanner';
+// import { BannerAdComponent } from '../components/Adv/AdvBanner';
 import Wrapper from './componentScreen/Container';
 
 
@@ -188,9 +188,9 @@ const HomeScreen = React.memo(() => {
                         labelStyle={{ fontSize: 12 }}
                         onPress={() => navigation.navigate('CreateLeague')}>Crea Lega</Button>
                 </View>
-                <View style={{ marginBottom: 20, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                {/* <View style={{ marginBottom: 20, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <BannerAdComponent />
-                </View>
+                </View> */}
 
 
                 {/* Stato di caricamento */}

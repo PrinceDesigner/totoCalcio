@@ -11,7 +11,7 @@ import moment from 'moment';
 import 'moment/locale/it';
 import { COLORJS } from '../theme/themeColor';
 import fontStyle from '../theme/fontStyle';
-import { BannerAdComponent } from '../components/Adv/AdvBanner';
+// import { BannerAdComponent } from '../components/Adv/AdvBanner';
 import Wrapper from './componentScreen/Container';
 
 
@@ -176,9 +176,10 @@ export default function InsertResultsScreen({ navigation }) {
                                     {moment(day).format('dddd, DD MMMM YYYY')} {/* E.g., "Sunday, 24 November 2024" */}
                                 </Text>
                             </View>
-                            {(i === 0 || i === 1 || i === 2) ? <View style={{ marginBottom: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                            {/* {(i === 0 || i === 1 || i === 2) ? 
+                            <View style={{ marginBottom: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                 <BannerAdComponent />
-                            </View> : null}
+                            </View> : null} */}
                             {/* Matches per ogni giorno */}
                             {dayMatches.map((match) => (
 
