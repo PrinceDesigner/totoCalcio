@@ -108,6 +108,7 @@ export default function LeagueDetails({ navigation }) {
             if (giornataAttuale && dayId && leagueId && userId && userIds.length) {
                 // Se sono disponibili, esegui fetchDataInParallel
                 fetchLeagueById(leagueId)
+                fetchGiornateDaCalcolare(leagueId)
                 fetchGiornataAttuale()
                 fetchDataInParallel()
             }

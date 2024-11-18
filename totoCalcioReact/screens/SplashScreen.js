@@ -60,17 +60,17 @@ const SplashScreen = ({ navigation }) => {
     }, [auth, dispatch, navigation]);
 
     return (
-        <View style={{ ...styles.container, backgroundColor: colors.background }}>
+        
+        <View style={{ ...styles.container, backgroundColor: '#00f310' }}>
             {/* Logo o immagine splash */}
             <Image
                 source={require('../league1.png')} // Cambia con il tuo logo
                 style={styles.logo}
             />
 
-            <Text style={styles.title}>Caricamento in TotoCalcio</Text>
 
             {/* Spinner di caricamento */}
-            <ActivityIndicator size="large" color={COLORJS.primary} style={styles.loader} />
+            <ActivityIndicator size="large" color={COLORJS.secondaryBackGroud} style={styles.loader} />
         </View>
     );
 };
@@ -78,20 +78,18 @@ const SplashScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
         alignItems: 'center',
+        justifyContent: 'center',
         backgroundColor: '#f7f7f7',
     },
     logo: {
-        width: 150,
-        height: 150,
-        marginBottom: 20,
+        width: 400,
+        height: 400,
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
         color: '#333',
-        marginBottom: 20,
     },
     loader: {
         marginTop: 20,

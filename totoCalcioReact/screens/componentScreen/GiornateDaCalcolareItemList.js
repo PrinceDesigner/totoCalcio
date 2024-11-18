@@ -1,15 +1,15 @@
 import { useNavigation } from '@react-navigation/native';
 import { httpsCallable } from 'firebase/functions';
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
 import { Avatar, Button } from 'react-native-paper';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useDispatch } from 'react-redux';
 import { functions } from '../../firebaseConfig';
+import { triggerRefresh } from '../../redux/slice/refreshSlice';
 import { hideLoading, showLoading } from '../../redux/slice/uiSlice';
 import { COLORJS } from '../../theme/themeColor';
 import { showToast } from '../../ToastContainer';
-
 
 // Funzione per determinare se la data è successiva (esempio, da implementare)
 const isDateAfter = (dayId) => {
@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
         padding: 15,
         marginBottom: 10,
         borderRadius: 10,
-        backgroundColor: COLORJS.secondaryBackGroud
+        backgroundColor: COLORJS.secondaryBackGroud,
     },
     participantRow: {
         flexDirection: 'row',
@@ -44,14 +44,57 @@ const styles = StyleSheet.create({
     calculateButton: {
         marginTop: 10,
     },
+    centeredView: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalView: {
+        margin: 20,
+        backgroundColor: 'white',
+        borderRadius: 10,
+        padding: 35,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    button: {
+        borderRadius: 5,
+        padding: 10,
+        elevation: 2,
+        marginTop: 10,
+    },
+    buttonConfirm: {
+        backgroundColor: '#3498db',
+    },
+    buttonCancel: {
+        backgroundColor: '#e74c3c',
+    },
+    textStyle: {
+        color: 'white',
+        fontWeight: 'bold',
+        textAlign: 'center',
+    },
+    modalText: {
+        marginBottom: 15,
+        textAlign: 'center',
+        fontSize: 18,
+    },
 });
-
-
 
 // Il componente principale
 const GiornateDaCalcolareItemList = ({ giornateCalcolate, leagueId }) => {
     const dispatch = useDispatch();
     const navigation = useNavigation();
+    const [selectedGiornata, setSelectedGiornata] = useState(null);
+    const [modalVisible, setModalVisible] = useState(false);
 
     const handleCalculatePoints = async (giornata) => {
         try {
@@ -61,7 +104,8 @@ const GiornateDaCalcolareItemList = ({ giornateCalcolate, leagueId }) => {
 
             if (result.data.success) {
                 showToast('success', 'Calcolo dei punti completato con successo!');
-                navigation.navigate('Home1', { refresh: true });
+                dispatch(triggerRefresh())
+                navigation.navigate('Home Lega');
             } else {
                 showToast('error', result.data.message);
             }
@@ -71,6 +115,22 @@ const GiornateDaCalcolareItemList = ({ giornateCalcolate, leagueId }) => {
         } finally {
             dispatch(hideLoading());
         }
+    };
+
+    const handleOpenModal = (giornata) => {
+        setSelectedGiornata(giornata);
+        setModalVisible(true);
+    };
+
+    const handleConfirmCalculation = () => {
+        if (selectedGiornata) {
+            handleCalculatePoints(selectedGiornata);
+        }
+        setModalVisible(false);
+    };
+
+    const handleCancel = () => {
+        setModalVisible(false);
     };
 
     return (
@@ -106,7 +166,7 @@ const GiornateDaCalcolareItemList = ({ giornateCalcolate, leagueId }) => {
                                 {/* Mostra sempre i bottoni */}
                                 <Button
                                     mode="contained"
-                                    onPress={() => handleCalculatePoints(giornata)}
+                                    onPress={() => handleOpenModal(giornata)}
                                     style={styles.calculateButton}
                                     color="#3498db" // Colore primario
                                 >
@@ -116,6 +176,34 @@ const GiornateDaCalcolareItemList = ({ giornateCalcolate, leagueId }) => {
                         </View>
                     ) : null;
                 })}
+
+            {/* Modale di conferma */}
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={modalVisible}
+                onRequestClose={() => {
+                    setModalVisible(false);
+                }}
+            >
+                <View style={styles.centeredView}>
+                    <View style={styles.modalView}>
+                        <Text style={styles.modalText}>Sei sicuro di voler calcolare i punti per questa giornata?</Text>
+                        <TouchableOpacity
+                            style={[styles.button, styles.buttonConfirm]}
+                            onPress={handleConfirmCalculation}
+                        >
+                            <Text style={styles.textStyle}>Conferma</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.button, styles.buttonCancel]}
+                            onPress={handleCancel}
+                        >
+                            <Text style={styles.textStyle}>Annulla</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 };
