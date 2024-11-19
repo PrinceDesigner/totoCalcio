@@ -2,7 +2,7 @@ import 'react-native-gesture-handler'; // Importa all'inizio del file
 import { GestureHandlerRootView } from 'react-native-gesture-handler'; // Avvolgi l'app con questo componente
 import * as React from 'react';
 import { Provider, useSelector } from 'react-redux';
-import { StyleSheet,View  } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import store from './redux/store'; // Importa lo store di Redux
 import { ActivityIndicator, Provider as PaperProvider, useTheme, Avatar } from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
@@ -23,17 +23,8 @@ import ProfileScreen from './screens/ProfileScreen';
 import SignupScreen from './screens/auth/SignupScreen';
 import SplashScreen from './screens/SplashScreen';
 import { COLORJS } from './theme/themeColor';
+import * as Font from 'expo-font';
 
-import {
-  useFonts,
-  Roboto_400Regular,
-  Roboto_500Medium,
-  Roboto_700Bold,
-  Roboto_400Italic,
-  Roboto_700Bold_Italic,
-  Roboto_300Light,
-  Roboto_900Black
-} from '@expo-google-fonts/roboto';
 
 import ToastContainer from './ToastContainer';
 import EmailVerificationScreen from './screens/EmailVerificationScreen';
@@ -43,30 +34,6 @@ import fontStyle from './theme/fontStyle';
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator(); // Crea un Drawer Navigator
 
-function GlobalLoadingIndicator() {
-  const loading = useSelector((state) => state.ui.loading); // Ottieni lo stato di loading dal Redux store
-  const { colors } = useTheme(); // Usa il tema per il colore del caricamento
-
-  const [fontsLoaded] = useFonts({
-    Roboto_400Regular,
-    Roboto_500Medium,
-    Roboto_700Bold,
-    Roboto_400Italic,
-    Roboto_700Bold_Italic,
-    Roboto_300Light,
-    Roboto_900Black,
-  });
-
-  if (!loading && !fontsLoaded) {
-    return null; // Non mostrare nulla se non c'è caricamento
-  }
-
-  return (
-    <View style={styles.loadingOverlay}>
-      <ActivityIndicator size="large" color={colors.primary} />
-    </View>
-  );
-}
 
 
 // Configura il Drawer Navigation con Custom Drawer Content
@@ -82,7 +49,7 @@ function DrawerNavigator() {
         drawerLabelStyle: {
           ...fontStyle.textBold,
           color: 'white',
-      },
+        },
         drawerActiveBackgroundColor: COLORJS.surface, // Colore di sfondo della voce attiva
         drawerActiveTintColor: COLORJS.primary, // Colore del testo della voce attiva
         drawerInactiveTintColor: COLORJS.primary, // Colore del testo delle voci inattive
@@ -130,6 +97,37 @@ export default function App() {
   // Cambia il tema in base allo stato
   const theme = customDarkTheme;
   const toastRef = React.useRef(); // Usa useRef per gestire il ref
+  const [fontsLoaded, setFontsLoaded] = React.useState(false);
+
+
+
+  React.useEffect(() => {
+    const loadFonts = async () => {
+      try {
+        // Carica tutti i font dalla cartella assets/fonts
+        await Font.loadAsync({
+          'Roboto-Black': require('./assets/fonts/Roboto-Black.ttf'),
+          'Roboto-BlackItalic': require('./assets/fonts/Roboto-BlackItalic.ttf'),
+          'Roboto-Bold': require('./assets/fonts/Roboto-Bold.ttf'),
+          'Roboto-BoldItalic': require('./assets/fonts/Roboto-BoldItalic.ttf'),
+          'Roboto-Italic': require('./assets/fonts/Roboto-Italic.ttf'),
+          'Roboto-Light': require('./assets/fonts/Roboto-Light.ttf'),
+          'Roboto-LightItalic': require('./assets/fonts/Roboto-LightItalic.ttf'),
+          'Roboto-Medium': require('./assets/fonts/Roboto-Medium.ttf'),
+          'Roboto-MediumItalic': require('./assets/fonts/Roboto-MediumItalic.ttf'),
+          'Roboto-Regular': require('./assets/fonts/Roboto-Regular.ttf'),
+          'Roboto-Thin': require('./assets/fonts/Roboto-Thin.ttf'),
+          'Roboto-ThinItalic': require('./assets/fonts/Roboto-ThinItalic.ttf'),
+        });
+        setFontsLoaded(true);
+      } catch (error) {
+        console.error('Errore durante il caricamento dei font:', error);
+      }
+    };
+
+    loadFonts();
+  }, []);
+
 
   React.useEffect(() => {
     if (toastRef.current) {
@@ -138,10 +136,19 @@ export default function App() {
   }, [toastRef]);
 
 
+  if (!fontsLoaded) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={COLORJS.primary} />
+      </View>
+    );
+  }
+
+
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <PaperProvider theme={theme}>
-        <Provider store={store}>
+    <GestureHandlerRootView>
+      <Provider store={store}>
+        <PaperProvider theme={theme}>
           <NavigationContainer>
             <View style={{ flex: 1 }}>
               <Stack.Navigator initialRouteName="SplashScreen">
@@ -188,12 +195,11 @@ export default function App() {
                 <Stack.Screen name="EmailVerificationScreen" component={EmailVerificationScreen} options={{ headerShown: false }} />
 
               </Stack.Navigator>
-              <GlobalLoadingIndicator />
             </View>
           </NavigationContainer>
           <ToastContainer />
-        </Provider>
-      </PaperProvider>
+        </PaperProvider>
+      </Provider>
     </GestureHandlerRootView>
   );
 }
@@ -209,4 +215,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
 });
