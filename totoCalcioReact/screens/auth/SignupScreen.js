@@ -53,6 +53,11 @@ export default function SignupScreen({ navigation }) {
             valid = false;
         }
 
+        if (password.trim().length < 6) {
+            setPasswordError('La password deve essere minimo 6 caratteri');
+            valid = false;
+        }
+
         return valid;
     };
 
@@ -134,7 +139,7 @@ export default function SignupScreen({ navigation }) {
             keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
         >
             <ScrollView contentContainerStyle={{ ...styles.container, backgroundColor: colors.background }}>
-                <Image source={require('../../image.png')} style={styles.logo} />
+                <Image source={require('../../league1.png')} style={styles.logo} />
 
                 <Text style={styles.title}>Crea il tuo Account</Text>
 
@@ -253,9 +258,11 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     logo: {
-        width: 150,
-        height: 150,
+        width: 250,
+        height: 250,
         marginBottom: 20,
+        backgroundColor: '#00f310',
+        borderRadius: 10
     },
     title: {
         fontSize: 24,
