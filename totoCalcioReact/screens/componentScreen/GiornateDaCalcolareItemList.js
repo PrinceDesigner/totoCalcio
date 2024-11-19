@@ -67,12 +67,8 @@ const styles = StyleSheet.create({
     },
     button: {
         borderRadius: 5,
-        padding: 10,
-        elevation: 2,
         marginTop: 10,
-    },
-    buttonConfirm: {
-        backgroundColor: '#3498db',
+        marginLeft: 5
     },
     buttonCancel: {
         backgroundColor: '#e74c3c',
@@ -85,7 +81,7 @@ const styles = StyleSheet.create({
     modalText: {
         marginBottom: 15,
         textAlign: 'center',
-        fontSize: 18,
+        fontSize: 20,
     },
 });
 
@@ -168,7 +164,6 @@ const GiornateDaCalcolareItemList = ({ giornateCalcolate, leagueId }) => {
                                     mode="contained"
                                     onPress={() => handleOpenModal(giornata)}
                                     style={styles.calculateButton}
-                                    color="#3498db" // Colore primario
                                 >
                                     Calcola
                                 </Button>
@@ -188,19 +183,25 @@ const GiornateDaCalcolareItemList = ({ giornateCalcolate, leagueId }) => {
             >
                 <View style={styles.centeredView}>
                     <View style={styles.modalView}>
-                        <Text style={styles.modalText}>Sei sicuro di voler calcolare i punti per questa giornata?</Text>
-                        <TouchableOpacity
+                        <Text style={styles.modalText}>Sei sicuro di voler calcolare la giornata {selectedGiornata?.dayId.replace('RegularSeason-', '')}?</Text>
+                        <View style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
+                        <Button
+                            mode="contained"
+                            onPress={() => handleConfirmCalculation(false)}
                             style={[styles.button, styles.buttonConfirm]}
-                            onPress={handleConfirmCalculation}
+
                         >
-                            <Text style={styles.textStyle}>Conferma</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.button, styles.buttonCancel]}
-                            onPress={handleCancel}
+                            Conferma
+                        </Button>
+                        <Button
+                            mode="outlined"
+                            onPress={() => handleCancel(false)}
+                            style={[styles.button]}
+
                         >
-                            <Text style={styles.textStyle}>Annulla</Text>
-                        </TouchableOpacity>
+                            Annulla
+                        </Button>
+                        </View>
                     </View>
                 </View>
             </Modal>
