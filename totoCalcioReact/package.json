@@ -19,6 +19,7 @@
     "@redux-devtools/core": "^4.0.0",
     "@reduxjs/toolkit": "^2.2.7",
     "axios": "^1.7.7",
+    "cross-spawn": "^7.0.6",
     "dotenv": "^16.4.5",
     "expo": "~51.0.28",
     "expo-asset": "~10.0.10",
@@ -32,6 +33,7 @@
     "expo-local-authentication": "~14.0.1",
     "expo-secure-store": "~13.0.2",
     "expo-status-bar": "~1.12.1",
+    "expo-tracking-transparency": "~4.0.2",
     "firebase": "^10.13.1",
     "formik": "^2.4.6",
     "install": "^0.13.0",
@@ -55,8 +57,7 @@
     "redux": "^5.0.1",
     "redux-logger": "^3.0.6",
     "reselect": "^5.1.1",
-    "yup": "^1.4.0",
-    "expo-tracking-transparency": "~4.0.2"
+    "yup": "^1.4.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
