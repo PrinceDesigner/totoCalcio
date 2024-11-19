@@ -26,7 +26,7 @@ const HomeScreen = React.memo(() => {
     const route = useRoute(); // Ottieni l'oggetto route
 
     const leaguesState = useSelector((state) => state.leagues); // Stato delle leghe
-    const leaguesStateLoading = useSelector((state) => state.loading); // Stato delle leghe
+    const leaguesStateLoading = useSelector((state) => state.leagues.loading); // Stato delle leghe
     const loadingState = useSelector((state) => state.ui.loading); // Stato di caricamento
     const userId = useSelector((state) => state.auth.user && state.auth.user.user.userId); // Recupera l'ID utente dallo stato
     const userName = useSelector((state) => state.auth.user && state.auth.user.user.fullName); // Recupera l'ID utente dallo stato
@@ -194,6 +194,7 @@ const HomeScreen = React.memo(() => {
 
 
                 {/* Stato di caricamento */}
+                
                 {leaguesStateLoading && <ActivityIndicator size="large" color={colors.primary} />}
 
                 {/* Lista delle leghe con RefreshControl */}
@@ -210,7 +211,7 @@ const HomeScreen = React.memo(() => {
                             colors={[colors.primary]}
                         />
                     }
-                    ListEmptyComponent={!loadingState && (
+                    ListEmptyComponent={!leaguesStateLoading && (
                         <View style={styles.emptyStateContainer}>
                             <Text style={styles.emptyStateText}>Nessuna lega trovata</Text>
                         </View>
