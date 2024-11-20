@@ -191,6 +191,10 @@ export default function LoginScreen({ navigation }) {
                         value={email}
                         onChangeText={setEmail}
                         mode="outlined"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoComplete="off" // Disabilita suggerimenti
+                        textContentType="none" // Disabilita autocompletamento su iOS
                         style={styles.input}
                         theme={{ colors: { text: 'black', placeholder: 'gray' } }}
                     />
@@ -205,7 +209,8 @@ export default function LoginScreen({ navigation }) {
                         onChangeText={setPassword}
                         mode="outlined"
                         secureTextEntry
-                        textContentType="none" // Evita i suggerimenti di password
+                        autoComplete="off" // Disabilita suggerimenti di password
+                        textContentType="none" // Disabilita autocompletamento su iOS
                         style={styles.input}
                         theme={{ colors: { text: 'black', placeholder: 'gray' } }}
                     />

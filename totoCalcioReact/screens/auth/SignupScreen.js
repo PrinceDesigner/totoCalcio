@@ -139,9 +139,9 @@ export default function SignupScreen({ navigation }) {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
         >
-            <ScrollView 
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ ...styles.container, backgroundColor: colors.background }}>
+            <ScrollView
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={{ ...styles.container, backgroundColor: colors.background }}>
                 <Image source={require('../../league1.png')} style={styles.logo} />
 
                 <Text style={styles.title}>Crea il tuo Account</Text>
@@ -169,6 +169,10 @@ export default function SignupScreen({ navigation }) {
                         onChangeText={setEmail}
                         mode="outlined"
                         style={styles.input}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoComplete="off" // Disabilita suggerimenti
+                        textContentType="none" // Disabilita autocompletamento su iOS
                         theme={{ colors: { text: 'black', placeholder: 'gray' } }}
                     />
                 </View>
@@ -183,7 +187,8 @@ export default function SignupScreen({ navigation }) {
                         onChangeText={setPassword}
                         mode="outlined"
                         secureTextEntry
-                        textContentType="oneTimeCode" // Evita i suggerimenti di password
+                        autoComplete="off" // Disabilita suggerimenti di password
+                        textContentType="none" // Disabilita autocomp
                         style={styles.input}
                         theme={{ colors: { text: 'black', placeholder: 'gray' } }}
                     />
