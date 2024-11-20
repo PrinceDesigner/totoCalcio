@@ -1,10 +1,10 @@
 import 'react-native-gesture-handler'; // Importa all'inizio del file
 import { GestureHandlerRootView } from 'react-native-gesture-handler'; // Avvolgi l'app con questo componente
 import * as React from 'react';
-import { Provider, useSelector } from 'react-redux';
+import { Provider, useDispatch, useSelector } from 'react-redux';
 import { StyleSheet, View } from 'react-native';
 import store from './redux/store'; // Importa lo store di Redux
-import { ActivityIndicator, Provider as PaperProvider, useTheme, Avatar } from 'react-native-paper';
+import { ActivityIndicator, Provider as PaperProvider, useTheme, Avatar, Text } from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator } from '@react-navigation/drawer'; // Aggiungi Drawer Navigation
@@ -13,7 +13,6 @@ import OnboardingScreen from './screens/OnboardingScreen';
 import LoginScreen from './screens/auth/LoginScreen';
 import HomeScreen from './screens/HomeScreen'; // Aggiungi la schermata Home
 import JoinLeagueScreen from './screens/JoinLeagueScreen'; // Aggiungi la schermata Home
-import { MaterialIcons } from '@expo/vector-icons'; // Importa l'icona dell'hamburger menu
 import CustomDrawerContent from './components/CustomDrawerContent';
 import LeagueStackNavigator from './navigation/LeagueStackNavigator';
 import CreateLeagueScreen from './screens/CreateLeagueScreen';
@@ -34,7 +33,7 @@ import { configureAxios } from './services/axiosInterceptor';
 import { navigationRef } from './navigation/navigationRef';
 import OnboardingCarousel from './screens/onBoardingScreen/OnBoardingTutorial';
 
-
+import NetInfo from '@react-native-community/netinfo'; // Per monitorare la connessione
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator(); // Crea un Drawer Navigator
@@ -43,7 +42,17 @@ const Drawer = createDrawerNavigator(); // Crea un Drawer Navigator
 function GlobalLoadingIndicator() {
   const loading = useSelector((state) => state.ui.loading); // Ottieni lo stato di loading dal Redux store
   const [fontsLoaded, setFontsLoaded] = React.useState(false);
+  const isConnected = useSelector((state) => state.network.isConnected); // Stato della connessione
+  const dispatch = useDispatch(); // Usa il dispatch di Redux
 
+  React.useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      dispatch({ type: 'SET_CONNECTION_STATUS', payload: state.isConnected });
+    });
+
+
+    return () => unsubscribe(); // Cleanup del listener
+  }, [dispatch]);
 
   React.useEffect(() => {
     const loadFonts = async () => {
@@ -72,13 +81,21 @@ function GlobalLoadingIndicator() {
   }, []);
 
 
-  if (!loading && fontsLoaded) {
-    return null; // Non mostrare nulla se non c'è caricamento
+  // Mostra il loading solo se c'è una richiesta in corso o manca la connessione
+  if (!loading && isConnected && fontsLoaded) {
+    return null; // Nessun overlay se non ci sono problemi
   }
 
   return (
     <View style={styles.loadingOverlay}>
-      <ActivityIndicator size="large" color={COLORJS.primary} />
+      {!isConnected ? (
+        <View>
+          <ActivityIndicator size="large" color={COLORJS.primary} />
+          <Text style={styles.loadingText}>Stiamo connettendo...</Text>
+        </View>
+      ) : (
+        <ActivityIndicator size="large" color={COLORJS.primary} />
+      )}
     </View>
   );
 }
@@ -148,7 +165,6 @@ export default function App() {
   // Cambia il tema in base allo stato
   const theme = customDarkTheme;
   const toastRef = React.useRef(); // Usa useRef per gestire il ref
-
 
   React.useEffect(() => {
     if (toastRef.current) {
@@ -233,5 +249,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)', // Sfondo trasparente scuro
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 18,
+    color: 'white',
   },
 });

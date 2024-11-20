@@ -11,6 +11,7 @@ import participantsReducer from '../redux/slice/partecipantsSlice'; // Importa i
 import storicoPerUtenteSelezionatoReducer from '../redux/slice/storicoPerUtenteSelezionatoSlice'; // Importa il reducer dei partecipanti
 import giornateDaCalcolareReducer from '../redux/slice/giornateDaCalcolareSlice'; // Importa il reducer dei partecipanti
 import refreshReducer from '../redux/slice/refreshSlice';
+import networkReducer from '../redux/reducers/networkReducer'; // Importa il reducer della connessione
 
 
 const store = configureStore({
@@ -24,7 +25,10 @@ const store = configureStore({
     partecipantiLegaCorrente: participantsReducer, // Aggiungi il reducer dei partecipanti
     storicoPerUtenteSelezionato: storicoPerUtenteSelezionatoReducer,
     refresh: refreshReducer,
-    giornateDaCalcolareReducer: giornateDaCalcolareReducer
+    giornateDaCalcolareReducer: giornateDaCalcolareReducer,
+    ui: uiReducer,
+    network: networkReducer, // Aggiungi il reducer
+
 
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(logger), // Aggiungi redux-logger
