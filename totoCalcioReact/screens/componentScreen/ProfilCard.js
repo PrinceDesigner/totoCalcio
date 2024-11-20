@@ -17,7 +17,7 @@ const ProfileCard = ({ onAvatarPress, fullName, photoProfile }) => {
                     <TouchableOpacity onPress={onAvatarPress}>
                         <Avatar.Image
                             size={80}
-                            source={photoProfile ? { uri: photoProfile } : { uri: 'https://via.placeholder.com/150' }}
+                            source={photoProfile ? { uri: photoProfile } : { uri: require('../../User-avatar.svg.png') }}
                             style={styles.avatar}
                         />
                     </TouchableOpacity>
@@ -25,7 +25,7 @@ const ProfileCard = ({ onAvatarPress, fullName, photoProfile }) => {
                     // Se onAvatarPress non è definito, mostra solo l'avatar senza interazione
                     <Avatar.Image
                         size={80}
-                        source={photoProfile ? { uri: photoProfile } : { uri: 'https://via.placeholder.com/150' }}
+                        source={photoProfile ? { uri: photoProfile } : { uri: require('../../User-avatar.svg.png') }}
                         style={styles.avatar}
                     />
                 )}
@@ -55,6 +55,8 @@ const styles = StyleSheet.create({
     },
     avatar: {
         marginRight: 20,
+        borderWidth: 2,
+        borderColor: COLORJS.background
 
     },
 
