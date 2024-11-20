@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
-import { Button, TextInput, useTheme } from 'react-native-paper'; 
+import { Button, TextInput, useTheme } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
-import { joinLeagueThunk } from '../redux/slice/leaguesSlice'; 
+import { joinLeagueThunk } from '../redux/slice/leaguesSlice';
 import { showLoading, hideLoading } from '../redux/slice/uiSlice';
 import fontStyle from '../theme/fontStyle';
 import { showToast } from '../ToastContainer';
@@ -40,7 +40,9 @@ export default function JoinLeagueScreen({ navigation }) {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ flexGrow: 1 }}>
         <Wrapper style={{ ...styles.container, backgroundColor: colors.background }}>
           <Text style={styles.title}>Inserisci il codice della lega</Text>
 
@@ -59,11 +61,11 @@ export default function JoinLeagueScreen({ navigation }) {
             style={styles.button}
             labelStyle={{
               ...fontStyle.textMedium
-          }}
+            }}
             loading={loading}
             disabled={loading}
           >
-          Unisciti alla Lega
+            Unisciti alla Lega
           </Button>
 
         </Wrapper>

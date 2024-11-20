@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert, Keyboard } from 'react-native';
 import { Button, TextInput, useTheme } from 'react-native-paper';
 import { getAuth, sendPasswordResetEmail } from 'firebase/auth'; // Firebase import
 import { showToast } from '../ToastContainer'; // Assume che il tuo ToastContainer gestisca i messaggi
@@ -10,6 +10,7 @@ export default function ForgotPasswordScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
 
   const handleForgotPassword = async () => {
+    Keyboard.dismiss();
     if (email.trim()) {
       setLoading(true);
       const auth = getAuth();
@@ -33,7 +34,9 @@ export default function ForgotPasswordScreen({ navigation }) {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ flexGrow: 1 }}>
         <View style={{ ...styles.container, backgroundColor: colors.background }}>
           <Text style={styles.title}>Recupero Password</Text>
 

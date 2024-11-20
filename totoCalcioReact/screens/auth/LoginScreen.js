@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Image, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, Modal, Pressable, Alert } from 'react-native';
+import { View, StyleSheet, Image, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, Modal, Pressable, Alert, Keyboard } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { Button, Text, TextInput, useTheme } from 'react-native-paper';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -174,7 +174,9 @@ export default function LoginScreen({ navigation }) {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
         >
-            <ScrollView contentContainerStyle={{ ...styles.container, backgroundColor: colors.background }}>
+            <ScrollView 
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ ...styles.container, backgroundColor: colors.background }}>
                 <Image
                     source={require('../../league1.png')}
                     style={styles.logo}
@@ -203,6 +205,7 @@ export default function LoginScreen({ navigation }) {
                         onChangeText={setPassword}
                         mode="outlined"
                         secureTextEntry
+                        textContentType="none" // Evita i suggerimenti di password
                         style={styles.input}
                         theme={{ colors: { text: 'black', placeholder: 'gray' } }}
                     />

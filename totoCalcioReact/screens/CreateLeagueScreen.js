@@ -39,7 +39,9 @@ export default function CreateLeagueScreen({ navigation }) {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ flexGrow: 1 }}>
         <Wrapper style={styles.container}>
           <Text style={styles.title}>Nome della tua nuova lega</Text>
 
@@ -64,7 +66,7 @@ export default function CreateLeagueScreen({ navigation }) {
             style={styles.button}
             labelStyle={{
               ...fontStyle.textMedium
-          }}
+            }}
           >
             Crea Lega
           </Button>
@@ -77,7 +79,7 @@ export default function CreateLeagueScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center', 
+    justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
@@ -86,7 +88,7 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   input: {
-    width: '100%', 
+    width: '100%',
     marginBottom: 20,
   },
   warningText: {
@@ -100,7 +102,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   button: {
-    width: '100%', 
+    width: '100%',
     height: 50,
     justifyContent: 'center',
     borderRadius: 10,

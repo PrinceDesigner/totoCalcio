@@ -7,14 +7,14 @@ import { showLoading, hideLoading } from '../redux/slice/uiSlice'; // Importa pe
 import { showToast } from '../ToastContainer';
 
 export default function EditLeagueScreen({ route, navigation }) {
-  
+
   const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
   const { colors } = useTheme();
   const dispatch = useDispatch();
 
   // Ottieni la lega attuale dallo store
   const league = useSelector((state) => state.leagues.leagues.find((l) => l.id === leagueId));
-  
+
   const [leagueName, setLeagueName] = useState(league ? league.name : ''); // Stato per il nome della lega
 
   useEffect(() => {
@@ -49,7 +49,9 @@ export default function EditLeagueScreen({ route, navigation }) {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ flexGrow: 1 }}>
         <View style={{ ...styles.container, backgroundColor: colors.background }}>
           <Text style={styles.title}>Modifica la tua Lega</Text>
 

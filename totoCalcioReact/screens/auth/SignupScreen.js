@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Image, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, Modal, Pressable } from 'react-native';
+import { View, StyleSheet, Image, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, Modal, Pressable, Keyboard } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { Button, Text, TextInput, useTheme } from 'react-native-paper';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -71,6 +71,7 @@ export default function SignupScreen({ navigation }) {
     };
 
     const handleSignUp = async () => {
+        Keyboard.dismiss();
         if (validateInputs()) {
             try {
                 dispatch(showLoading());
@@ -138,7 +139,9 @@ export default function SignupScreen({ navigation }) {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
         >
-            <ScrollView contentContainerStyle={{ ...styles.container, backgroundColor: colors.background }}>
+            <ScrollView 
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ ...styles.container, backgroundColor: colors.background }}>
                 <Image source={require('../../league1.png')} style={styles.logo} />
 
                 <Text style={styles.title}>Crea il tuo Account</Text>
@@ -180,6 +183,7 @@ export default function SignupScreen({ navigation }) {
                         onChangeText={setPassword}
                         mode="outlined"
                         secureTextEntry
+                        textContentType="oneTimeCode" // Evita i suggerimenti di password
                         style={styles.input}
                         theme={{ colors: { text: 'black', placeholder: 'gray' } }}
                     />
