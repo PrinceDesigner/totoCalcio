@@ -1,9 +1,10 @@
 {
   "expo": {
-    "name": "SoccerChallenge",
-    "slug": "totoCalcioReact",
+    "name": "Soccer Challenge",
+    "slug": "soccer-challenge",
     "version": "1.0.0",
     "orientation": "portrait",
+    "newArchEnabled": true,
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
@@ -20,7 +21,7 @@
       "FIREBASE_APP_ID": "1:700309241728:web:38f12c82fb5f684e44cb65",
       "FIREBASE_MEASUREMENT_ID": "G-J1KBDWK4SS",
       "eas": {
-        "projectId": "3b3cc619-7e49-4f2a-8657-881e3d987341"
+        "projectId": "d4c88629-f66e-43b4-ad2c-ad1094af38eb"
       }
     },
     "ios": {
@@ -28,16 +29,18 @@
       "infoPlist": {
         "NSFaceIDUsageDescription": "Questa app utilizza Face ID per autenticare l'utente.",
         "NSUserTrackingUsageDescription": "Questa identificazione verrà utilizzata per fornire annunci personalizzati."
-
       },
-      "bundleIdentifier": "com.anonymous.totoCalcioReact"
+      "bundleIdentifier": "com.anonymous.soccerChallenge"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.anonymous.totoCalcioReact"
+      "package": "com.anonymous.soccerChallenge",
+      "permissions": [
+        "com.google.android.gms.permission.AD_ID"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"

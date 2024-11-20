@@ -30,6 +30,10 @@ import ToastContainer from './ToastContainer';
 import EmailVerificationScreen from './screens/EmailVerificationScreen';
 import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
 import fontStyle from './theme/fontStyle';
+import { configureAxios } from './services/axiosInterceptor';
+import { navigationRef } from './navigation/navigationRef';
+
+
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator(); // Crea un Drawer Navigator
@@ -137,6 +141,7 @@ function DrawerNavigator() {
     </Drawer.Navigator>
   );
 }
+configureAxios(store.dispatch, navigationRef);
 
 export default function App() {
   // Cambia il tema in base allo stato
@@ -144,13 +149,13 @@ export default function App() {
   const toastRef = React.useRef(); // Usa useRef per gestire il ref
 
 
-
-
   React.useEffect(() => {
     if (toastRef.current) {
       Toast.setRef(toastRef.current); // Assicurati di settare il ref solo dopo che il componente è montato
     }
   }, [toastRef]);
+
+
 
 
   return (
