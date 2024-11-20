@@ -386,7 +386,7 @@ export default function LeagueDetails({ navigation }) {
                     {/* Classifica Provvisoria */}
                     <View style={{ ...styles.section, marginBottom: 0 }}>
                         <View style={styles.rowHeaderRanking}>
-                            <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica Provvisoria</Text>
+                            <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica</Text>
                         </View>
 
                         {provisionalRankingLoading ? (
@@ -425,7 +425,6 @@ export default function LeagueDetails({ navigation }) {
                             </TouchableOpacity>
                         </View>
                     </View>
-
                     {giornataSingolaDaCalcolare()}
 
                     {/* Daily question */}

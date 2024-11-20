@@ -105,7 +105,7 @@ export default function OnboardingScreen({ navigation }) {
 
                 }}
             >
-                Join
+                GIOCA
             </Button>
 
         </View>
