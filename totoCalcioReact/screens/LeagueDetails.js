@@ -317,7 +317,7 @@ export default function LeagueDetails({ navigation }) {
                     ...fontStyle.textBold
                 }}
             >
-                Clicca per guardare i tuoi Esiti
+                Clicca per guardare gli esiti
             </Button>
 
         </>

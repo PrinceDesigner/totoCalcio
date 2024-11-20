@@ -32,6 +32,7 @@ import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
 import fontStyle from './theme/fontStyle';
 import { configureAxios } from './services/axiosInterceptor';
 import { navigationRef } from './navigation/navigationRef';
+import OnboardingCarousel from './screens/onBoardingScreen/OnBoardingTutorial';
 
 
 
@@ -162,7 +163,7 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <PaperProvider theme={theme}>
         <Provider store={store}>
-          <NavigationContainer>
+          <NavigationContainer ref={navigationRef}>
             <View style={{ flex: 1 }}>
               <Stack.Navigator initialRouteName="SplashScreen">
                 <Stack.Screen
@@ -181,6 +182,11 @@ export default function App() {
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen
+                  name="OnBoardingTutorial"
+                  component={OnboardingCarousel}
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
                   name="SignupScreen"
                   component={SignupScreen}
                   options={{ headerShown: false }}
@@ -194,7 +200,6 @@ export default function App() {
                     ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
                   })}
                 />
-                {/* Usa il DrawerNavigator una volta loggato */}
                 <Stack.Screen
                   name="Home"
                   component={DrawerNavigator}

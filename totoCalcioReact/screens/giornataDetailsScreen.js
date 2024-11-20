@@ -70,7 +70,7 @@ export default function GiornataDetailsScreen({ route }) {
                         key={index + 1}
                         onPress={() => handleParticipantPress(participant)} // Funzione per gestire il click
                     >
-                        <View style={{ ...styles.card, backgroundColor: colors.surface }}>
+                        <View style={{ ...styles.card, backgroundColor: colors.secondaryBackGroud }}>
                             <View style={styles.participantRow}>
                                 <Text style={{ color: 'white' }}>{index + 1}</Text>
                                 <Avatar.Image

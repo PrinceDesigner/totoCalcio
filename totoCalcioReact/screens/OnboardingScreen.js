@@ -46,6 +46,19 @@ export default function OnboardingScreen({ navigation }) {
         await AsyncStorage.setItem('trackingConsent', consent ? 'granted' : 'denied');
     };
 
+    const handlePlayButton = async () => {
+        const isFirstAccess = await AsyncStorage.getItem('isFirstAccess');
+        console.log('isfirts', isFirstAccess);
+        if (isFirstAccess === null) {
+            // Primo accesso, porta al tutorial
+            await AsyncStorage.setItem('isFirstAccess', 'false'); // Imposta il primo accesso a "false"
+            navigation.navigate('OnBoardingTutorial'); // Porta al tutorial
+        } else {
+            // Accesso successivo, porta alla schermata di login
+            navigation.navigate('LoginScreen');
+        }
+    };
+
 
     return (
         <View style={{ ...styles.container, backgroundColor: '#00f310' }}>
@@ -97,7 +110,7 @@ export default function OnboardingScreen({ navigation }) {
             </Text>
             <Button
                 mode="contained"
-                onPress={() => navigation.navigate('LoginScreen')}
+                onPress={handlePlayButton}
                 style={styles.joinButton}
                 labelStyle={{
                     color: 'white',

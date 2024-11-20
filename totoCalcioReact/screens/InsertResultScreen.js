@@ -25,7 +25,7 @@ export default function InsertResultsScreen({ navigation }) {
     const { colors } = useTheme();
     const myLeagues = useSelector((state) => state.leagues); // Stato delle leghe
     let matches = useSelector((state) => state.infogiornataAttuale.matches);
-    const userId = useSelector((state) => state.auth.user.user.userId);
+    const userId = useSelector((state) => state.auth?.user?.user?.userId);
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale);
     const schedinaGiocata = useSelector((state) => state.insertPredictions.schedinaInserita.schedina);

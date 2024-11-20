@@ -45,7 +45,7 @@ const PredictionComponent = ({ prediction }) => {
 const styles = StyleSheet.create({
     matchCard: {
         borderBottomWidth: 1,
-        borderBottomColor: COLORJS.surface,
+        borderBottomColor: COLORJS.secondaryBackGroud,
         paddingBottom: 10,
         paddingTop: 10
     },
