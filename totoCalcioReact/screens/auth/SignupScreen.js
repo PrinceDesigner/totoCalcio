@@ -150,7 +150,7 @@ export default function SignupScreen({ navigation }) {
                 <View style={styles.inputContainer}>
                     <MaterialIcons name="person" size={24} color={colors.primary} style={styles.icon} />
                     <TextInput
-                        label="Nome Completo"
+                        label="Nickname"
                         value={fullName}
                         onChangeText={setFullName}
                         mode="outlined"
