@@ -17,7 +17,7 @@ import fontStyle from '../theme/fontStyle';
 import Wrapper from './componentScreen/Container';
 
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-import Reanimated from 'react-native-reanimated';
+import Reanimated, { useAnimatedStyle } from 'react-native-reanimated';
 
 
 // React.memo per ottimizzare il rendering di HomeScreen
@@ -112,11 +112,10 @@ const HomeScreen = React.memo(() => {
 
         return (
             <ReanimatedSwipeable
-                renderRightActions={() => isOwner ? renderRightActions(item) : null}
+                renderRightActions={(p, c) => isOwner ? renderRightActions(p, c, item) : null}
 
             >
                 <TouchableOpacity onPress={() => handleLeaguePress(item)}>
-
                     <Card
                         mode='outlined'
                         style={{ ...styles.leagueContainer }} >
@@ -133,13 +132,23 @@ const HomeScreen = React.memo(() => {
     });
 
     // Renderizza la UI che appare durante lo swipe
-    const renderRightActions = (league) => (
-        <Reanimated.View style={styles.deleteButton}>
-            <TouchableOpacity onPress={() => confirmDeleteLeague(league)}>
-                <MaterialIcons name="delete" size={30} color="white" />
-            </TouchableOpacity>
-        </Reanimated.View>
-    );
+    function renderRightActions(prog, drag, league) {
+        const styleAnimation = useAnimatedStyle(() => {
+
+            return {
+                transform: [{ translateX: drag.value + 70 }],
+            };
+        });
+
+        return (
+            <Reanimated.View style={[styleAnimation]}>
+                <TouchableOpacity style={{ height: '87%', ...styles.deleteButton }} onPress={() => confirmDeleteLeague(league)}>
+                    <MaterialIcons name="delete" size={30} color="white" />
+                </TouchableOpacity>
+            </Reanimated.View>
+        )
+
+    }
 
     // Renderizza ogni lega nella FlatList con swipeable
     const renderLeagueItem = ({ item }) => {
@@ -293,10 +302,8 @@ const styles = StyleSheet.create({
         backgroundColor: 'red',
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 6,
         width: 70,
-        marginRight: 5,
-        marginBottom: 5,
+        margin: 'auto',
     },
     modalOverlay: {
         flex: 1,
