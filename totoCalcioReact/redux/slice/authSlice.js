@@ -119,10 +119,11 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(updateProfileThunk.fulfilled, (state, action) => {
-        state.user = {
-          ...state.user,
+        state.user.user = {
+          ...state.user.user,
           email: action.payload.email,
           displayName: action.payload.displayName,
+          fullName: action.payload.displayName,
         };
         state.error = null; // Resetta l'errore
       })

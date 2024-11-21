@@ -5,7 +5,6 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { deleteLeagueThunk, getUserLeaguesThunk } from '../redux/slice/leaguesSlice';
 import { showLoading, hideLoading } from '../redux/slice/uiSlice';
-import { Swipeable } from 'react-native-gesture-handler';
 import { MaterialIcons } from '@expo/vector-icons';
 import { setSelectedLeagueGiornata } from '../redux/slice/selectedLeagueSlice';
 import { logout } from '../redux/slice/authSlice';
@@ -16,6 +15,9 @@ import { COLORJS } from '../theme/themeColor';
 import fontStyle from '../theme/fontStyle';
 // import { BannerAdComponent } from '../components/Adv/AdvBanner';
 import Wrapper from './componentScreen/Container';
+
+import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import Reanimated from 'react-native-reanimated';
 
 
 // React.memo per ottimizzare il rendering di HomeScreen
@@ -109,14 +111,15 @@ const HomeScreen = React.memo(() => {
         const isOwner = item.ownerId.includes(userId); // Cambia in base alla tua logica reale
 
         return (
-            <Swipeable
+            <ReanimatedSwipeable
                 renderRightActions={() => isOwner ? renderRightActions(item) : null}
+
             >
                 <TouchableOpacity onPress={() => handleLeaguePress(item)}>
 
                     <Card
                         mode='outlined'
-                         style={{ ...styles.leagueContainer }} >
+                        style={{ ...styles.leagueContainer }} >
                         <Card.Title
                             title={`${item.name}`}
                             // subtitle={`${item.members.length} Partecipanti`}
@@ -124,18 +127,18 @@ const HomeScreen = React.memo(() => {
                             left={(props) => <Avatar.Icon  {...props} icon="soccer" />}
                         />
                     </Card>
-                    </TouchableOpacity>
-            </Swipeable >
+                </TouchableOpacity>
+            </ReanimatedSwipeable >
         );
     });
 
     // Renderizza la UI che appare durante lo swipe
     const renderRightActions = (league) => (
-        <>
-            <TouchableOpacity style={styles.deleteButton} onPress={() => confirmDeleteLeague(league)}>
+        <Reanimated.View style={styles.deleteButton}>
+            <TouchableOpacity onPress={() => confirmDeleteLeague(league)}>
                 <MaterialIcons name="delete" size={30} color="white" />
             </TouchableOpacity>
-        </>
+        </Reanimated.View>
     );
 
     // Renderizza ogni lega nella FlatList con swipeable
@@ -194,7 +197,7 @@ const HomeScreen = React.memo(() => {
 
 
                 {/* Stato di caricamento */}
-                
+
                 {leaguesStateLoading && <ActivityIndicator size="large" color={colors.primary} />}
 
                 {/* Lista delle leghe con RefreshControl */}
@@ -290,10 +293,10 @@ const styles = StyleSheet.create({
         backgroundColor: 'red',
         justifyContent: 'center',
         alignItems: 'center',
+        marginTop: 6,
         width: 70,
-        marginBottom: 15,
-        borderTopLeftRadius: 10,
-        borderBottomLeftRadius: 10,
+        marginRight: 5,
+        marginBottom: 5,
     },
     modalOverlay: {
         flex: 1,
