@@ -34,6 +34,8 @@ import { navigationRef } from './navigation/navigationRef';
 import OnboardingCarousel from './screens/onBoardingScreen/OnBoardingTutorial';
 
 import NetInfo from '@react-native-community/netinfo'; // Per monitorare la connessione
+import TutorialAccordion from './screens/comegiocare/tutorialAccordion';
+import ContactPage from './screens/contatti/contattiScreen';
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator(); // Crea un Drawer Navigator
@@ -151,6 +153,24 @@ function DrawerNavigator() {
         component={ProfileScreen}
         options={({ navigation }) => ({
           title: 'Profilo',
+          headerShown: true, // Mostra l'header solo per questa schermata
+          ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
+        })}
+      />
+      <Drawer.Screen
+        name="TutorialAccordionScreen"
+        component={TutorialAccordion}
+        options={({ navigation }) => ({
+          title: 'Domande Frequenti',
+          headerShown: true, // Mostra l'header solo per questa schermata
+          ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
+        })}
+      />
+      <Drawer.Screen
+        name="ContactPageScreen"
+        component={ContactPage}
+        options={({ navigation }) => ({
+          title: 'Contattaci',
           headerShown: true, // Mostra l'header solo per questa schermata
           ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
         })}

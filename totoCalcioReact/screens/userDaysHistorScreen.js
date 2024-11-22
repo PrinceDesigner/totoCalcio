@@ -41,7 +41,7 @@ export default function UserHistoryScreen({ route, navigation }) {
         sumOfPoints = allPointOfUser.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
         numberOfPredictions = allPointOfUser.length;
         totalPredictions = allPointOfUser.length * 10;
-        percentage = (sumOfPoints / totalPredictions) * 100;
+        percentage = ((sumOfPoints / totalPredictions) * 100) || 0;
     }
 
     const dispatch = useDispatch();

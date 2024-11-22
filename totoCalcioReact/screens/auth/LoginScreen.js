@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
         width: 250,
         height: 250,
         marginBottom: 20,
-        backgroundColor: '#00f310',
+        backgroundColor: '#00f310', 
         borderRadius: 10
     },
     title: {
