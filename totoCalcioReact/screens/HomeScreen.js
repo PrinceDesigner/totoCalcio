@@ -174,11 +174,12 @@ const HomeScreen = React.memo(() => {
                             source={{ uri: photoProfile || 'https://via.placeholder.com/150' }}
                             size={40}
                         />
-                    </TouchableOpacity>
                     {/* Testo Nome e Sottotitolo */}
+                    </TouchableOpacity>
+                    
                     <View style={styles.textContainer}>
                         <Text style={styles.name}>{userName}</Text>
-                        <Text style={styles.subtitle}>Inserisci le tue predizioni</Text>
+                        <Text style={styles.subtitle}>Clicca sull'immagine per il profilo</Text>
                     </View>
 
                     {/* Icona Menu */}
