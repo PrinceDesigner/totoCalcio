@@ -166,6 +166,10 @@ export default function LeagueDetails({ navigation }) {
             const hours = Math.floor(duration.hours()); // Usa direttamente `.hours()` per maggiore chiarezza
             const minutes = Math.floor(duration.minutes());
 
+            if (days === 0 && hours === 0 && minutes === 0) {
+                setIsPast(true) 
+            }
+
             setCountdown({
                 days: days.toString(),
                 hours: hours < 10 ? `0${hours}` : hours.toString(),
