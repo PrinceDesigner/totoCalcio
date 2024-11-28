@@ -8,12 +8,15 @@ import { hideLoading, showLoading } from '../../redux/slice/uiSlice';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { Avatar } from 'react-native-paper';
 import fontStyle from '../../theme/fontStyle';
+import { COLORJS } from '../../theme/themeColor';
 
 
 const RankingList = ({ ranking, showAvatar = true, size = 40 }) => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
+  const userId = useSelector((state) => state.auth.user && state.auth.user.user.userId);
+
 
 
 
@@ -50,20 +53,25 @@ const RankingList = ({ ranking, showAvatar = true, size = 40 }) => {
         .sort((a, b) => b.punti - a.punti)
         .map((player, index) => (
           <TouchableOpacity key={index + 1} onPress={() => handleParticipantPress(player)}>
-            <View style={styles.rankItem}>
+            <View style={[
+              styles.rankItem,
+              player?.userId === userId && styles.currentUserRankItem, // Applica stile condizionale
+            ]}
+            >
               <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                 <Text style={styles.rankPosition}>{index + 1}</Text>
                 {showAvatar && <Avatar.Image
 
-                  source={player.photoURL ? { uri: player.photoURL } : require('../../User-avatar.svg.png')}
+                  source={player?.photoURL ? { uri: player?.photoURL } : require('../../User-avatar.svg.png')}
                   size={size}
                   style={styles.avatar} />}
-                <Text style={styles.rankName}>{player.displayName}</Text>
+                <Text style={styles.rankName}>{player?.displayName}</Text>
               </View>
-              <Text style={{ ...styles.rankPoints, color: 'white' }}>{player.punti} punti</Text>
+              <Text style={{ ...styles.rankPoints, color: 'white' }}>{player?.punti} punti</Text>
             </View>
           </TouchableOpacity>
-        ))}
+        )
+        )}
     </>
   );
 };
@@ -109,6 +117,9 @@ const styles = StyleSheet.create({
     marginRight: 5,
     backgroundColor: 'transparent'
   },
+  currentUserRankItem: {
+    backgroundColor: COLORJS.primary
+  }
 });
 
 export default RankingList;

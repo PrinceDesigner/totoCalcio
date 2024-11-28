@@ -61,7 +61,8 @@ export default function LeagueDetails({ navigation }) {
 
     const sortedMatches = [...matches].sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
 
-
+    // controllo per evidenziare la tua posizione
+    const sortedRanking = [...provisionalRanking].sort((a, b) => b.points - a.points).slice(0, 6);
 
     // Funzione per copiare l'ID della lega
     const copyToClipboard = async () => {
@@ -167,7 +168,7 @@ export default function LeagueDetails({ navigation }) {
             const minutes = Math.floor(duration.minutes());
 
             if (days === 0 && hours === 0 && minutes === 0) {
-                setIsPast(true) 
+                setIsPast(true)
             }
 
             setCountdown({
@@ -352,6 +353,23 @@ export default function LeagueDetails({ navigation }) {
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+            <View style={styles.headerOptions}>
+                <View style={styles.headerOptionsTitle}>
+                    <Text style={[fontStyle.textBold, styles.textHeaderOptions]}>SOCCER
+                        <Text>CHALLENGE</Text>
+                    </Text>
+                </View>
+                <View style={{ display: 'flex', flexDirection: 'row' }}>
+                    {/* <TouchableOpacity>
+                        <Avatar.Icon backgroundColor={'transparent'} color={COLORJS.primary} size={35} icon="bell" />
+                    </TouchableOpacity> */}
+                    {selectedLeague.ownerId.includes(userId) ?
+                        <TouchableOpacity onPress={() => navigation.navigate('EditLeagueScreen')} >
+                            <Avatar.Icon backgroundColor={'transparent'} color={COLORJS.primary} size={35} icon="cog" />
+                        </TouchableOpacity> : null
+                    }
+                </View>
+            </View>
             {/* Countdown Section */}
             <ImageBackground
                 source={require('../campo2.jpg')} // Sostituisci con il percorso dell'immagine
@@ -391,13 +409,14 @@ export default function LeagueDetails({ navigation }) {
                     <View style={{ ...styles.section, marginBottom: 0 }}>
                         <View style={styles.rowHeaderRanking}>
                             <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica</Text>
+                            <Text style={{ color: COLORJS.primary }}>{provisionalRanking.length} Partecipanti</Text>
                         </View>
 
                         {provisionalRankingLoading ? (
                             <ActivityIndicator size="large" color={colors.primary} />
                         ) : (
                             <>
-                                <RankingList ranking={provisionalRanking.slice(0, 6)} size={20} />
+                                <RankingList ranking={sortedRanking} size={20} />
 
                                 {/* Bottone per vedere la classifica completa */}
                                 <Button
@@ -431,6 +450,8 @@ export default function LeagueDetails({ navigation }) {
                     </View>
                     {giornataSingolaDaCalcolare()}
 
+
+
                     {/* Daily question */}
                     {/* <DailyQuestion /> */}
 
@@ -456,18 +477,6 @@ export default function LeagueDetails({ navigation }) {
                         )}
 
                     </View>
-
-                    {selectedLeague.ownerId.includes(userId) ? <Button
-                        mode="contained"
-                        onPress={() => navigation.navigate('EditLeagueScreen')}
-                        style={{ ...styles.insertButton }}
-                        labelStyle={{
-                            ...fontStyle.textBold
-                        }}
-
-                    >
-                        Modifica Lega
-                    </Button> : null}
                 </Wrapper>
             </ScrollView>
         </SafeAreaView>
@@ -539,6 +548,39 @@ const styles = StyleSheet.create({
         marginVertical: 10,
         justifyContent: 'space-between',
         flexWrap: 'wrap',
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center'
+    },
+    followAction: {
+        backgroundColor: COLORJS.primary, // Usa lo stesso sfondo per coerenza
+        padding: 10,
+        borderRadius: 5,
+        borderColor: COLORJS.surface,
+        borderWidth: 1,
+        marginVertical: 10,
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+      },
+            
+    headerOptions: {
+        padding: 5,
+        paddingHorizontal: '10',
+        borderRadius: 0,
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        // paddingBottom: 10,
+        // backgroundColor: 'red'
+    },
+    textHeaderOptions: {
+        color: COLORJS.primary,
+    },
+    headerOptionsTitle: {
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center'
