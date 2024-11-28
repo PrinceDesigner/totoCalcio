@@ -125,11 +125,11 @@ export default function ProfileScreen({ navigation }) {
       <View style={{ ...styles.container, backgroundColor: colors.background }}>
         <ProfileCard onAvatarPress={handleChangeImage} fullName={userDetail?.fullName} photoProfile={photoProfile} />
         <View style={styles.tabsContainer}>
-          <TouchableWithoutFeedback onPress={() => setActiveTab('other')}>
+          {/* <TouchableWithoutFeedback onPress={() => setActiveTab('other')}>
             <View style={[styles.tab, activeTab === 'other' && styles.activeTab]}>
               <Text style={[styles.tabText, activeTab === 'other' && styles.activeTabText]}>Altro</Text>
             </View>
-          </TouchableWithoutFeedback>
+          </TouchableWithoutFeedback> */}
           <TouchableWithoutFeedback onPress={() => setActiveTab('info')}>
             <View style={[styles.tab, activeTab === 'info' && styles.activeTab]}>
               <Text style={[styles.tabText, activeTab === 'info' && styles.activeTabText]}>Informazioni</Text>
