@@ -19,7 +19,7 @@ export default function ProfileScreen({ navigation }) {
   const [userEmail, setUserEmail] = useState(userDetail && userDetail.email);
   const [isImageModalVisible, setImageModalVisible] = useState(false);
   const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState('other');
+  const [activeTab, setActiveTab] = useState('info');
 
   const dispatch = useDispatch();
   const { colors } = useTheme();

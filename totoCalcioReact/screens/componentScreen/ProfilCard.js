@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Modal, Image, TouchableOpacity, Platform, Share } from 'react-native';
 import { Avatar, Button } from 'react-native-paper';
+import { useDispatch } from 'react-redux';
+import { hideLoading, showLoading } from '../../redux/slice/uiSlice';
 import fontStyle from '../../theme/fontStyle';
 import { COLORJS } from '../../theme/themeColor';
 
 const ProfileCard = ({ onAvatarPress, fullName, photoProfile }) => {
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const dispatch = useDispatch();
 
     const handleLongPress = () => {
         setIsModalVisible(true); // Mostra il modal
@@ -15,11 +18,32 @@ const ProfileCard = ({ onAvatarPress, fullName, photoProfile }) => {
         setIsModalVisible(false); // Chiudi il modal
     };
 
+    const handleInvitePress = async () => {
+        dispatch(showLoading()); // Mostra il caricamento
+
+        // Messaggio di condivisione
+        const appStoreUrl = 'https://apps.apple.com/it/app/soccer-challenge/id6738415488'; // Link App Store
+        const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.yourappname'; // Link Google Play
+        const url = Platform.OS === 'ios' ? appStoreUrl : playStoreUrl;
+        const message = `Scarica la nostra app Soccer Challenge e unisciti a noi! Ecco il link per il download: ${url}`;
+
+        try {
+            await Share.share({
+                message,
+                url, // Questo funziona meglio su iOS
+            });
+        } catch (err) {
+            console.error("Errore durante la condivisione:", err);
+        } finally {
+            dispatch(hideLoading()); // Nascondi il caricamento
+        }
+    };
+
     return (
         <View style={styles.profileSectionRow}>
             <View style={styles.avatarContainer}>
                 <TouchableOpacity
-                    onPress={onAvatarPress ? onAvatarPress: handleLongPress } // Funzionalità già esistente per il click
+                    onPress={onAvatarPress ? onAvatarPress : handleLongPress} // Funzionalità già esistente per il click
                     onLongPress={handleLongPress} // Aggiungi l'azione per il long press
                 >
                     <Avatar.Image
@@ -31,7 +55,9 @@ const ProfileCard = ({ onAvatarPress, fullName, photoProfile }) => {
             </View>
             <View style={styles.profileInfoContainer}>
                 <Text style={styles.userNameText}>{fullName}</Text>
-                <Button style={styles.inviteButton}>Invita amici</Button>
+                <Button style={styles.inviteButton} onPress={handleInvitePress}>
+                    Invita amici
+                </Button>
             </View>
 
             {/* Modal per l'immagine fullscreen */}
