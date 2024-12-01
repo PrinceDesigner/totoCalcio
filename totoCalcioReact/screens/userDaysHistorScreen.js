@@ -80,7 +80,9 @@ export default function UserHistoryScreen({ route, navigation }) {
             <View style={styles.warningContainer}>
                 <MaterialIcons name="info-outline" size={24} color="yellow" />
                 <Text style={styles.warningText}>
-                    I punti non sono visibili in classifica
+                    I punti
+                    <Text style={{ color: 'red' }}> LIVE </Text>
+                    non sono visibili in classifica
                 </Text>
             </View>
 

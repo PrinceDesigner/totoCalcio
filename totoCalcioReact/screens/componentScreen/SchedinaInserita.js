@@ -27,16 +27,34 @@ const PredictionComponent = ({ prediction }) => {
                                         <Text> - </Text>
                                         {match.awayTeam || 'Sconosciuto'}
                                     </Text>
-                                    <Text style={[styles.predictionText, { color: colors.accent }]}>
-                                        {item.esitoGiocato || 'N/A'}
-                                    </Text>
+                                    <View style={{ display: 'flex', alignItems: 'center', flexDirection: 'row' }}>
+                                        <View
+                                            style={[
+                                                styles.circle,
+                                                {
+                                                    backgroundColor:
+                                                        match.result === null ? colors.secondaryBackGroud : item.esitoGiocato === match.result ? 'green' : 'red',
+                                                },
+                                            ]}
+                                        >
+                                        </View>
+                                            {match.result === null ?
+                                                <Text style={[styles.predictionText, { color: 'white' }]}>
+                                                    {item.esitoGiocato || 'N/A'}
+                                                </Text> :
+                                                // giornata corrente
+                                                <Text style={[styles.predictionText, { color: 'white' }]}>
+                                                    {item.esitoGiocato || 'N/A'}
+                                                </Text>
+                                            }
+                                    </View>
                                 </View>
                             </View>
                         );
                     })}
                 </View>
             ) : (
-                    <Text style={[styles.noDataText, { color: colors.text }]}>Nessuna predizione per questa giornata.</Text>
+                <Text style={[styles.noDataText, { color: colors.text }]}>Nessuna predizione per questa giornata.</Text>
             )}
         </>
     );
@@ -59,7 +77,7 @@ const styles = StyleSheet.create({
     },
     predictionText: {
         fontSize: 18,
-        ...fontStyle.textLight
+        ...fontStyle.textMedium
     },
     noDataText: {
         textAlign: 'center',
@@ -71,6 +89,15 @@ const styles = StyleSheet.create({
     loadingText: {
         textAlign: 'center',
         fontSize: 18,
+    },
+    circle: {
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 6
     },
 });
 
