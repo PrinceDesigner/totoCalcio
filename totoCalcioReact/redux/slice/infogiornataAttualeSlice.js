@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import { getDayDetails } from '../../services/infoGiornataService';
 
 // Thunk per ottenere i dettagli della giornata e le partite

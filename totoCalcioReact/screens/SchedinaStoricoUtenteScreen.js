@@ -17,8 +17,13 @@ export default function GiornataSchedinaDetailsUserScreen({ route }) {
     const loading = useSelector((state) => state.ui.loading);
 
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
+    const giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale);
+    const infogiornataAttuale = useSelector((state) => state.infogiornataAttuale);
+    const matches = infogiornataAttuale.matches;
     const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
+
     const leagueName = selectedLeague.name;
+
 
     // Funzione per rendere le predizioni
     const renderPrediction = () => {
@@ -43,34 +48,54 @@ export default function GiornataSchedinaDetailsUserScreen({ route }) {
                     </Text>
                 </View>
                 <View style={{ marginTop: 10 }}>
-                    {schedina.map((item) => (
-                        <View key={item.matchId} style={{ ...styles.matchCard }}>
-                            <View style={styles.matchInfo}>
-                                <View style={{ flex: 9 }}>
-                                    <Text style={[styles.matchText, { color: 'white' }]}>
-                                        {item.homeTeam} - {item.awayTeam}
+                    {schedina.map((item) => {
+
+                        const match = matches.find(el => el.matchId === item.matchId)
+                        console.log(match);
+               
+                        return (
+                            <View key={item.matchId} style={{ ...styles.matchCard }}>
+                                <View style={styles.matchInfo}>
+                                    <View style={{ flex: 9 }}>
+                                        <Text style={[styles.matchText, { color: 'white' }]}>
+                                            {item.homeTeam} - {item.awayTeam}
+                                        </Text>
+                                    </View>
+
+                                    <Text style={{ flex: 1 }}>
+                                        {/* CERCHIO */}
+                                        {/* item.esitoGiocato === item.result ?  'green' : item.result === null ? colors.surface : 'red'  */}
+                                        {storicoItem.daysId !== giornataAttuale ?
+                                            <View style={{ display: 'flex', alignItems: 'center', flexDirection: 'row' }}>
+                                                <View
+                                                    style={[
+                                                        styles.circle,
+                                                        {
+                                                            backgroundColor:
+                                                                item.result === null ? colors.secondaryBackGroud : item.esitoGiocato === item.result ? 'green' : 'red',
+                                                        },
+                                                    ]}
+                                                />
+                                                <Text style={styles.predictionText}>{item.esitoGiocato}</Text>
+                                            </View> :
+                                            // SE è LA GIORNTA ATTUALE
+                                            <View style={{ display: 'flex', alignItems: 'center', flexDirection: 'row' }}>
+                                                <View
+                                                    style={[
+                                                        styles.circle,
+                                                        {
+                                                            backgroundColor:
+                                                                match.result === null ? colors.secondaryBackGroud : item.esitoGiocato === match.result ? 'green' : 'red',
+                                                        },
+                                                    ]}
+                                                />
+                                                <Text style={styles.predictionText}>{item.esitoGiocato}</Text>
+                                            </View>}
                                     </Text>
                                 </View>
-
-                                <Text style={{ flex: 1 }}>
-                                    {/* CERCHIO */}
-                                    {/* item.esitoGiocato === item.result ?  'green' : item.result === null ? colors.surface : 'red'  */}
-                                    <View style={{ display: 'flex', alignItems: 'center', flexDirection: 'row' }}>
-                                        <View
-                                            style={[
-                                                styles.circle,
-                                                {
-                                                    backgroundColor:
-                                                        item.result === null ? colors.secondaryBackGroud : item.esitoGiocato === item.result ? 'green' : 'red',
-                                                },
-                                            ]}
-                                        />
-                                        <Text style={styles.predictionText}>{item.esitoGiocato}</Text>
-                                    </View>
-                                </Text>
                             </View>
-                        </View>
-                    ))}
+                        )
+                    })}
                 </View>
             </View>
         );
@@ -78,7 +103,7 @@ export default function GiornataSchedinaDetailsUserScreen({ route }) {
 
     return (
         <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}>
-            <Wrapper style={{paddingTop: 10}}>
+            <Wrapper style={{ paddingTop: 10 }}>
                 {loading ? (
                     <Text style={{ ...styles.loadingText, color: colors.primary }}>Caricamento...</Text>
                 ) : (

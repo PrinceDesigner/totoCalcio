@@ -14,6 +14,7 @@ import { removeUserAdmin } from '../services/leagueService';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import fontStyle from '../theme/fontStyle';
 import Wrapper from './componentScreen/Container';
+import { selectMatchById } from '../redux/slice/infogiornataAttualeSlice';
 
 export default function UserHistoryScreen({ route, navigation }) {
     const { colors } = useTheme();
@@ -21,7 +22,10 @@ export default function UserHistoryScreen({ route, navigation }) {
     const userHistory = useSelector((state) => state.storicoPerUtenteSelezionato.storico); // Seleziona la lista delle giornate dallo stato
     const userSelectName = useSelector((state) => state.storicoPerUtenteSelezionato.user.displayName); // Seleziona la lista delle giornate dallo stato
     const inizioGiornata = useSelector((state) => state.infogiornataAttuale.startDate);
+    const matches = useSelector((state) => state.infogiornataAttuale.matches);
+
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
+    const giornataAttuale = useSelector((state) => state.giornataAttuale?.giornataAttuale);
     const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
     // UTENTE LOGGATO
     const userIdLogged = useSelector((state) => state.auth.user && state.auth.user.user.userId);
@@ -76,7 +80,7 @@ export default function UserHistoryScreen({ route, navigation }) {
             <View style={styles.warningContainer}>
                 <MaterialIcons name="info-outline" size={24} color="yellow" />
                 <Text style={styles.warningText}>
-                    I punti sono aggiornati solo quando la giornata sarà calcolata.
+                    I punti non sono visibili in classifica
                 </Text>
             </View>
 
@@ -87,6 +91,19 @@ export default function UserHistoryScreen({ route, navigation }) {
                     return dayB - dayA; // Ordinamento decrescente
                 })
                 .map((giornata, index) => {
+                    let puntiLive = 0;
+                    if (giornata.daysId === giornataAttuale) {
+                        giornata.schedina.forEach((giornataSchedina) => {
+                            console.log(giornataSchedina);
+                            let resultGiornataSchedina = giornataSchedina.esitoGiocato;
+                            let resultGiornataMatches = matches.find(el => el.matchId === giornataSchedina.matchId).result;
+                            if (resultGiornataSchedina === resultGiornataMatches) {
+                                puntiLive = puntiLive + 1
+                            }
+                        })
+                    }
+
+
                     if (giornata.daysId !== dayId || (giornata.daysId === dayId && isDatePast())) {
                         return (
                             <TouchableOpacity
@@ -102,7 +119,19 @@ export default function UserHistoryScreen({ route, navigation }) {
                                             style={styles.avatar}
                                         />
                                         <Text style={{ ...styles.participantName, color: 'white' }}>Giornata {giornata.daysId.replace('RegularSeason-', '')}</Text>
-                                        <Text style={{ ...styles.participantName, color: 'white' }}>{giornata.punti} punti</Text>
+                                        {giornata.daysId !== giornataAttuale ?
+                                            <Text style={{ ...styles.participantName, color: 'white' }}>{giornata.punti} punti</Text>
+                                            // punti per giornata attuale
+                                            :
+                                            <>
+                                                <Text style={{ ...styles.participantName, color: 'white' }}>{puntiLive} punti
+                                                    <Text style={{
+                                                        color: 'red',
+                                                    }}> LIVE</Text>
+
+                                                </Text>
+                                            </>
+                                        }
                                     </View>
                                 </View>
                             </TouchableOpacity>
@@ -118,7 +147,7 @@ export default function UserHistoryScreen({ route, navigation }) {
         if (userSelect.userId === userIdLogged) {
             return
         }
-        
+
         if (selectedLeague.ownerId.includes(userIdLogged)) {
             if (selectedLeague.ownerId.includes(userSelect.userId)) {
                 return <Button
@@ -217,7 +246,7 @@ export default function UserHistoryScreen({ route, navigation }) {
             <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>
                 <Wrapper>
 
-                {selectedTab === 'Storico' ? renderStoricoTab() : renderProfiloTab()}
+                    {selectedTab === 'Storico' ? renderStoricoTab() : renderProfiloTab()}
                 </Wrapper>
             </ScrollView>
 
