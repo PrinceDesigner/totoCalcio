@@ -13,11 +13,15 @@ import { SafeAreaView } from 'react-native-safe-area-context'; // Importa SafeAr
 import { Avatar } from 'react-native-paper';
 import { COLORJS } from '../theme/themeColor';
 import fontStyle from '../theme/fontStyle';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 // import { BannerAdComponent } from '../components/Adv/AdvBanner';
 import Wrapper from './componentScreen/Container';
 
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, { useAnimatedStyle } from 'react-native-reanimated';
+import { registerForPushNotificationsAsync } from '../services/pushNotifications';
+import { savePushToken } from '../services/authServices';
 
 
 // React.memo per ottimizzare il rendering di HomeScreen
@@ -38,6 +42,44 @@ const HomeScreen = React.memo(() => {
     const [refreshing, setRefreshing] = useState(false);
     const [selectedLeague, setSelectedLeague] = useState(null); // Stato per la lega selezionata per l'eliminazione
     const [isModalVisible, setModalVisible] = useState(false); // Stato per la visibilità della modale
+    const [expoPushToken, setExpoPushToken] = useState('');
+
+
+    //gestione notifiche
+
+    useEffect(() => {
+        // Controlla se c'è già un token salvato e se è valido
+        checkAndRegisterToken();
+    }, []);
+
+
+    const checkAndRegisterToken = async () => {
+        try {
+            // Recupera il token salvato da AsyncStorage
+            const savedToken = await AsyncStorage.getItem('expoPushToken');
+
+            // Ottieni il token corrente per verificare se è cambiato
+            const currentToken = await registerForPushNotificationsAsync();
+
+            // Se il token è diverso o non esiste, lo aggiorniamo
+            if (!savedToken || savedToken !== currentToken) {
+                if (currentToken) {
+                    setExpoPushToken(currentToken);
+                    console.log('token->Nuovos', currentToken);
+                    await savePushToken(userId, currentToken);
+                    await AsyncStorage.setItem('expoPushToken', currentToken); // Salva il nuovo token
+                    
+                }
+            } else {
+                console.log('Il token non è cambiato, rimane lo stesso:', savedToken);
+                setExpoPushToken(savedToken);
+            }
+        } catch (error) {
+            console.error('Errore nel recuperare o aggiornare il token:', error);
+        }
+    };
+
+
 
     useEffect(() => {
         if (route.params?.refresh) {
@@ -174,9 +216,9 @@ const HomeScreen = React.memo(() => {
                             source={{ uri: photoProfile || 'https://via.placeholder.com/150' }}
                             size={40}
                         />
-                    {/* Testo Nome e Sottotitolo */}
+                        {/* Testo Nome e Sottotitolo */}
                     </TouchableOpacity>
-                    
+
                     <View style={styles.textContainer}>
                         <Text style={styles.name}>{userName}</Text>
                         <Text style={styles.subtitle}>Clicca sull'immagine per il profilo</Text>

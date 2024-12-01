@@ -99,6 +99,33 @@ router.post('/users-info', async (req, res) => {
   }
 });
 
+
+
+// Endpoint per salvare il token di notifica push dell'utente
+router.post('/save-push-token', async (req, res) => {
+  const { userId, expoPushToken } = req.body;
+
+  // Controlla che userId ed expoPushToken siano presenti
+  if (!userId || !expoPushToken) {
+    return res.status(400).json({ error: 'userId e expoPushToken sono richiesti' });
+  }
+
+  try {
+    // Ottieni la referenza al documento utente su Firestore
+    const userRef = firestore.collection('users').doc(userId);
+
+    // Aggiorna il campo `tokenNotification` con il token push
+    await userRef.update({
+      tokenNotification: expoPushToken,
+    });
+
+    return res.status(200).json({ message: 'Token salvato correttamente nel database.' });
+  } catch (error) {
+    console.error('Errore durante il salvataggio del token nel database:', error);
+    return res.status(500).json({ message: 'Errore durante il salvataggio del token nel database.' });
+  }
+});
+
   
 
 

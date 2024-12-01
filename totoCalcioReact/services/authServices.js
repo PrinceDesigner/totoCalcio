@@ -3,8 +3,8 @@
 import axios from 'axios'; // Usa axios per fare le richieste HTTP
 import axiosInstance from './axiosInterceptor'; // Importa il tuo axiosInterceptor
 
-const API_URL = 'http://192.168.1.107:5001/api/auth'; // Imposta il tuo URL API
-
+// const API_URL = 'http://169.254.201.170:5001/api/auth'; // Imposta il tuo URL API
+const API_URL = 'https://totocalcioreact.uc.r.appspot.com/api/auth';
 export const signup = async (email, password, displayName) => {
   try {
     const response = await axios.post(`${API_URL}/signup`, {
@@ -47,6 +47,22 @@ export const updateUser = async (email, displayName, userId) => {
     return response.data; // Restituisci i dati della risposta
   } catch (error) {
     console.error('Errore durante l\'aggiornamento dell\'utente:', error);
+    throw error; // Rilancia l'errore per gestirlo nel componente
+  }
+};
+
+
+// Funzione per salvare il token di notifica push dell'utente
+export const savePushToken = async (userId, expoPushToken) => {
+  try {
+    // Effettua la chiamata API per salvare il token push dell'utente
+    const response = await axiosInstance.post('/save-push-token', {
+      userId,
+      expoPushToken,
+    });
+    return response.data; // Restituisci i dati della risposta
+  } catch (error) {
+    console.error('Errore durante il salvataggio del token push:', error);
     throw error; // Rilancia l'errore per gestirlo nel componente
   }
 };
