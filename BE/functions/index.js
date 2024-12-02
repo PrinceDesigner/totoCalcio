@@ -7,7 +7,6 @@ const moment = require('moment-timezone');
 const axios = require('axios');
 const { v4: uuidv4 } = require('uuid'); // Importa la funzione per generare UUID
 
-
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     databaseURL: "https://totocalcioreact-default-rtdb.europe-west1.firebasedatabase.app"
@@ -341,7 +340,7 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
         for (const match of fixtures) {
             console.info("match.fixture.status.short", match.fixture.status.short)
             const matchRef = firestore.collection('matches').doc(match.fixture.id.toString());
-            batchArray[batchIndex].update(matchRef, { result: determineResult(match.goals.home, match.goals.away), status: match.fixture.status.short });
+            batchArray[batchIndex].update(matchRef, { result: determineResult(match.goals.home, match.goals.away,match.fixture.status.short), status: match.fixture.status.short });
             operationCount++;
 
             // Controlla se il batch ha raggiunto la dimensione massima
@@ -458,8 +457,9 @@ exports.updateDateMatch = functions
 
 
 // Funzione per determinare il risultato
-function determineResult(homeGoals, awayGoals) {
-    if (homeGoals === null || awayGoals === null) {
+function determineResult(homeGoals, awayGoals,status) {
+
+    if (homeGoals === null || awayGoals === null || status=="ABD" ) {
         return null; // Se uno dei due valori è null, restituisci una stringa vuota
     }
     if (homeGoals > awayGoals) return "1"; // Vittoria squadra di casa
@@ -470,9 +470,22 @@ function determineResult(homeGoals, awayGoals) {
 
 // Funzione per aggiornare la giornata attuale
 async function updateCurrentGiornata(noStep) {
+
     if (noStep) {//Quando update match parte da una partita posticipata non andare avanti con la giornata
         return ""
     }
+
+    const projectId = 'totocalcioreact'; // Usa l'ID del progetto Firebase
+    // Usa il GoogleAuth per ottenere l'authClient con i corretti scopes
+    const auth = new google.auth.GoogleAuth({
+        scopes: ['https://www.googleapis.com/auth/cloud-scheduler', 'https://www.googleapis.com/auth/cloud-platform'],
+    });
+
+    const authClient = await auth.getClient();
+    // const authClient = await auth.getClient();
+    const scheduler = google.cloudscheduler('v1', { auth: authClient });
+
+
     const currentGiornataRef = firestore.collection('giornataAttuale').limit(1);
     const currentGiornataSnapshot = await currentGiornataRef.get();
 
@@ -484,11 +497,210 @@ async function updateCurrentGiornata(noStep) {
         const currentGiornataNumber = parseInt(currentGiornataData.split('-')[1], 10);
         const updatedGiornataNumber = currentGiornataNumber + 1;
         const updatedGiornataAttuale = `RegularSeason-${updatedGiornataNumber}`;
-
-        // Aggiorna il documento
+        //updatato prima giornata attuale a prescindere dai batch creati
         await doc.ref.update({ giornataAttuale: updatedGiornataAttuale });
         functions.logger.log(`Giornata attuale aggiornata a: ${updatedGiornataAttuale}`);
+
+        //query per recupero match della prossiam giornata attuale+1 in updatedGiornataAttuale
+        const [matches] = await Promise.all([
+            firestore.collection('matches').where('dayId', '==', updatedGiornataAttuale).select('startTime','matchId').get()
+        ]);
+        //Al passaggio da una giornata (10 -> 11) si aggiungono dei batch per ogni singolo match di quella giornata
+        //come input matchId così entriamo sul db direttamente ed aggiorniamo il singolo match -> Funz updateSingleMatchId
+        matches.forEach(singleMatch => {
+            const matchIdData = singleMatch.data();
+            const matchId = singleMatch.matchId;
+            // Ottieni la data di fine con moment
+            const endDate = moment(matchIdData.startTime);
+            // Aggiungi 2 ore alla data di fine
+            const scheduleTime = endDate.add(30, 'minutes');
+
+            // Estrai i componenti della data e dell'ora per la programmazione del task
+            const scheduleMinute = scheduleTime.minutes();
+            const scheduleHour = scheduleTime.hours();
+            const scheduleDay = scheduleTime.date();
+            const scheduleMonth = scheduleTime.month() + 1; // I mesi in Moment sono indicizzati da 0
+
+            console.log('schedule->', `0 ${scheduleHour} ${scheduleDay} ${scheduleMonth} *`);
+            console.log('endDate->', endDate.format());
+            console.log('scheduleTime->', scheduleTime.format());
+            console.log('matchId ->', matchId);
+
+            const job = {
+                name: `projects/${projectId}/locations/us-central1/jobs/update-Match-After-Finish-${matchId}`,
+                schedule: `${scheduleMinute} ${scheduleHour} ${scheduleDay} ${scheduleMonth} *`, // Configura l'orario con Moment
+                timeZone: 'Europe/Rome',
+                httpTarget: {
+                    uri: `https://us-central1-${projectId}.cloudfunctions.net/updateSingleMatchId?matchId=${matchId}`,
+                    httpMethod: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                },
+            };
+
+            const promise = scheduler.projects.locations.jobs.create({
+                parent: `projects/${projectId}/locations/us-central1`,
+                requestBody: job,
+                auth: authClient,
+            });
+            functions.logger.info('JOB->', job)
+            functions.logger.info('Auth ->', authClient)
+            promises.push(promise);
+    });
+        await Promise.all(promises); // Aspetta che tutte le promesse siano risolte
     }
+}
+//Invocato dal batch creato dal passaggio della giornata (10 -> 11)
+//Updata ogni singolo match 30 min dopo la loro fine
+//1 batch ->  1 partita
+exports.updateSingleMatchId = functions.https.onRequest(async (req, res) => {
+    functions.logger.info('Start updateSingleMatchId ');
+    const { matchId } = req.body;
+    const strMatchId = matchId.toString();
+    functions.logger.info('updateSingleMatchId - matchId ',strMatchId);
+     // Ottieni i dati dalla API di football
+    try {
+        // Chiamata all'API per ottenere i dati della partita
+        const response = await axios.get(`https://api-football-v1.p.rapidapi.com/v3/fixtures?id=${strMatchId}`, {
+            headers: {
+                'x-rapidapi-key': 'db73c3daeamshce50eba84993c27p1ebcadjsnb14d87bc676d',
+                'x-rapidapi-host': 'api-football-v1.p.rapidapi.com',
+            },
+        });
+
+        // Verifica che la risposta contenga dati
+        if (response.data && response.data.response && response.data.response.length > 0) {
+            const fulltimeScore = {
+                home: response.data.response[0].goals.home,
+                away: response.data.response[0].goals.away,
+                status: response.data.response[0].fixture.status.short,
+            };
+
+            functions.logger.info('updateSingleMatchId - fulltimeScore', fulltimeScore);
+
+            // Aggiorna il documento in Firestore
+            const matchRef = firestore.collection('matches').doc(strMatchId);
+
+            await matchRef.update({
+                result: determineResult(fulltimeScore.home, fulltimeScore.away,fulltimeScore.status),
+                status: fulltimeScore.status,
+            });
+
+            functions.logger.info('Finish updateSingleMatchId');
+            return res.status(200).send('Finish updateSingleMatchId successfully');
+        } else {
+            throw new Error('No match data found in the response.');
+        }
+    } catch (error) {
+        functions.logger.error('Error fetching match data or updating Firestore document', error);
+        return res.status(500).send('Error fetching match data or updating Firestore document');
+    }
+});
+
+
+//NOTIFICHE
+exports.sendWeeklyNotification = functions.https.onRequest(async (req, res) => {
+    functions.logger.info('Start sendWeeklyNotification');
+    const topicName = 'projects/totocalcioreact/topics/notify'; // Topic da utilizzare
+    try {
+        // Recupera tutti i token dalla collezione 'users' (selezionando solo il campo 'tokenNotification')
+        const tokensSnapshot = await firestore.collection('users').select('tokenNotification').get();
+
+        const tokens = tokensSnapshot.docs
+            .map(doc => doc.data().tokenNotification)  // Estrae direttamente i token
+            .filter(token => token);  // Filtra i valori falsy (ad esempio, token nulli o vuoti)
+
+        if (tokens.length === 0) {
+            functions.logger.info('Nessun token trovato per inviare notifiche.');
+            return res.status(200).send('Nessun token trovato.');
+        }
+
+        // Crea il messaggio con i token
+        const messageData = {
+            tokens: tokens,  // Array dei token
+            title: 'Inserisci la predizione',
+            body: 'Non dimenticare di inserire la schedina!',
+        };
+
+        // Crea un client Pub/Sub
+        const { PubSub } = require('@google-cloud/pubsub');
+        const pubSubClient = new PubSub();
+        functions.logger.info(`pubSubClient`,pubSubClient);
+
+        // Pubblica il messaggio nel topic Pub/Sub
+        const messageId = await pubSubClient.topic(topicName).publishMessage({
+            json: messageData,  // Pubblica direttamente come JSON
+        });
+
+        functions.logger.info(`Messaggio pubblicato con successo nel topic Pub/Sub, ID messaggio: ${messageId}`);
+
+        // Rispondi al client con successo
+        return res.status(200).send('Notifiche inviate con successo!');
+    } catch (error) {
+        // Gestione degli errori
+        functions.logger.error(`Errore nel pubblicare il messaggio: ${error.message}`);
+        return res.status(500).send(`Errore nel pubblicare il messaggio: ${error.message}`);
+    }
+});
+
+exports.sendWeeklyNotificationV2 = functions.runWith({ timeoutSeconds: 540, memory: '2GB' }).https.onRequest(async (req, res) => {
+    functions.logger.info('Start sendWeeklyNotification');
+    try {
+        // Recupera tutti i token dalla collezione 'users' (selezionando solo il campo 'tokenNotification')
+        const tokensSnapshot = await firestore.collection('users').select('tokenNotification').get();
+
+        const tokens = tokensSnapshot.docs
+            .map(doc => doc.data().tokenNotification)  // Estrae direttamente i token
+            .filter(token => token);  // Filtra i valori falsy (ad esempio, token nulli o vuoti)
+
+        if (tokens.length === 0) {
+            functions.logger.info('Nessun token trovato per inviare notifiche.');
+            return res.status(200).send('Nessun token trovato.');
+        }
+
+        // Crea un oggetto Expo
+        let expo = new Expo();
+
+        // Prepara il messaggio
+        const messages = tokens.map(token => ({
+            to: token,
+            sound: 'default',
+            title: 'Inserisci la predizione',
+            body: 'Non dimenticare di inserire la schedina!',
+            data: { extraData: 'value' },  // Dati extra che vuoi inviare insieme al messaggio
+        }));
+
+        // Filtra i messaggi con token non valido
+        const chunkSize = 100;  // Expo API permette di inviare al massimo 100 notifiche in un singolo invio
+        const chunks = chunkArray(messages, chunkSize);
+
+        let receiptIds = [];
+        for (let chunk of chunks) {
+            try {
+                const receipts = await expo.sendPushNotificationsAsync(chunk);
+                receiptIds.push(...receipts);
+            } catch (error) {
+                functions.logger.error('Errore nell\'invio delle notifiche: ', error);
+                return res.status(500).send(`Errore nell'invio delle notifiche: ${error.message}`);
+            }
+        }
+
+        // Rispondi con un messaggio di successo
+        functions.logger.info('Notifiche inviate con successo!');
+        return res.status(200).send('Notifiche inviate con successo!');
+    } catch (error) {
+        // Gestione degli errori
+        functions.logger.error(`Errore nel pubblicare il messaggio: ${error.message}`);
+        return res.status(500).send(`Errore nel pubblicare il messaggio: ${error.message}`);
+    }
+});
+
+// Funzione per dividere i messaggi in chunk (necessario per Expo API)
+function chunkArray(array, size) {
+    const chunked = [];
+    for (let i = 0; i < array.length; i += size) {
+        chunked.push(array.slice(i, i + size));
+    }
+    return chunked;
 }
 
 //User
@@ -558,7 +770,6 @@ exports.deleteUsersByIds = functions.https.onRequest(async (req, res) => {
 //User
 
 //predictions
-
 exports.writePredictions = functions.https.onRequest(async (req, res) => {
     // Controlla se la richiesta è un POST
     if (req.method !== 'POST') {
