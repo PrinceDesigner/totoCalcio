@@ -62,7 +62,7 @@ export default function LeagueDetails({ navigation }) {
     const sortedMatches = [...matches].sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
 
     // controllo per evidenziare la tua posizione
-    const sortedRanking = [...provisionalRanking].sort((a, b) => b.points - a.points).slice(0, 6);
+    const sortedRanking = [...provisionalRanking].sort((a, b) => b.punti - a.punti).slice(0, 6);
 
     // Funzione per copiare l'ID della lega
     const copyToClipboard = async () => {
