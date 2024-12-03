@@ -21,6 +21,7 @@ import DailyQuestion from './componentScreen/quiz/DailyQuestions';
 import Wrapper from './componentScreen/Container';
 import { fetchGiornateCalcolateThunk } from '../redux/slice/giornateDaCalcolareSlice';
 import GiornateDaCalcolareItemList from './componentScreen/GiornateDaCalcolareItemList';
+import { setSelectedGiornata } from '../redux/slice/selectedLeagueSlice';
 
 
 export default function LeagueDetails({ navigation }) {
@@ -28,13 +29,13 @@ export default function LeagueDetails({ navigation }) {
 
     const dispatch = useDispatch();
 
-    let [giornataAttuale, setGiornataAttuale] = useState();
+    // let [giornataAttuale, setGiornataAttuale] = useState();
     const [refreshing, setRefreshing] = useState(false);
     const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
     const [loading, setLoading] = useState(true); // Stato di loading per il cambiamento di isPast
     const [isPast, setIsPast] = useState(false);  // Stato che indica se la giornata è passata
 
-    giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale);
+    const giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale);
     const infogiornataAttuale = useSelector((state) => state.infogiornataAttuale);
     const schedinaGiocata = useSelector((state) => state.insertPredictions.schedinaInserita.schedina);
 
@@ -222,7 +223,8 @@ export default function LeagueDetails({ navigation }) {
     const fetchGiornataAttuale = async () => {
         try {
             const giornata = await getGiornataAttuale();
-            setGiornataAttuale(giornata)
+            dispatch(setSelectedGiornata({ giornataAttuale: giornata }));
+
         } catch (error) {
             console.error('Errore durante il recupero della giornata attuale:', error);
         }

@@ -14,6 +14,9 @@ const selectedLeagueSlice = createSlice({
       state.giornataAttuale = action.payload.giornataAttuale; // Imposta la lega selezionata
       state.legaSelezionata = action.payload.legaSelezionata; // Imposta la lega selezionata
     },
+    setSelectedGiornata: (state, action) => {
+      state.giornataAttuale = action.payload.giornataAttuale; // Imposta la lega selezionata
+    },
     clearSelectedLeague: (state) => {
       state.giornataAttuale = null; // Pulisce la selezione della lega
     },
@@ -21,6 +24,6 @@ const selectedLeagueSlice = createSlice({
 });
 
 // Esporta le azioni per selezionare o resettare la lega
-export const { setSelectedLeagueGiornata, clearSelectedLeague } = selectedLeagueSlice.actions;
+export const { setSelectedLeagueGiornata, setSelectedGiornata ,clearSelectedLeague } = selectedLeagueSlice.actions;
 
 export default selectedLeagueSlice.reducer;
