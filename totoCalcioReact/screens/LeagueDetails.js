@@ -21,8 +21,8 @@ import DailyQuestion from './componentScreen/quiz/DailyQuestions';
 import Wrapper from './componentScreen/Container';
 import { fetchGiornateCalcolateThunk } from '../redux/slice/giornateDaCalcolareSlice';
 import GiornateDaCalcolareItemList from './componentScreen/GiornateDaCalcolareItemList';
-import { setSelectedGiornata } from '../redux/slice/selectedLeagueSlice';
-
+import { setSelectedGiornata, setSelectedLeagueGiornata } from '../redux/slice/selectedLeagueSlice';
+import CustomDropdownSelectLeague from '../components/DropDownSelectLeague/DropDownSelectLeague';
 
 export default function LeagueDetails({ navigation }) {
     const { colors } = useTheme();
@@ -38,6 +38,8 @@ export default function LeagueDetails({ navigation }) {
     const giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale);
     const infogiornataAttuale = useSelector((state) => state.infogiornataAttuale);
     const schedinaGiocata = useSelector((state) => state.insertPredictions.schedinaInserita.schedina);
+
+    const leaguesState = useSelector((state) => state.leagues.leagues); // Stato delle leghe
 
     // Selettori per ottenere le informazioni necessarie
     const userId = useSelector((state) => state.auth.user && state.auth.user.user.userId);
@@ -146,7 +148,7 @@ export default function LeagueDetails({ navigation }) {
             // Se sono disponibili, esegui fetchDataInParallel
             fetchDataInParallel();
         }
-    }, [giornataAttuale, dayId]);
+    }, [giornataAttuale, dayId, leagueId]);
 
     useEffect(() => {
         if (!startDate) return; // Assicurati che startDate sia definito prima di avviare il countdown.
@@ -265,6 +267,9 @@ export default function LeagueDetails({ navigation }) {
         }
     };
 
+    const changeLeague = (idLega) => {
+        dispatch(setSelectedLeagueGiornata({ giornataAttuale: giornataAttuale, legaSelezionata: idLega }));
+    }
 
     // Funzione per gestire il refresh
     const onRefresh = () => {
@@ -357,9 +362,7 @@ export default function LeagueDetails({ navigation }) {
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
             <View style={styles.headerOptions}>
                 <View style={styles.headerOptionsTitle}>
-                    <Text style={[fontStyle.textBold, styles.textHeaderOptions]}>SOCCER
-                        <Text>CHALLENGE</Text>
-                    </Text>
+                    <CustomDropdownSelectLeague data={leaguesState} onSelect={changeLeague} leagueId={leagueId} />
                 </View>
                 <View style={{ display: 'flex', flexDirection: 'row' }}>
                     {/* <TouchableOpacity>
@@ -382,18 +385,17 @@ export default function LeagueDetails({ navigation }) {
                     <View style={styles.leagueBadgeCountDown}>
                         <Badge style={{ backgroundColor: colors.primary, ...fontStyle.textBold }}>Serie A</Badge>
                     </View>
-                    <View >
-                        <Text style={{ color: 'white', ...fontStyle.textBold }}>{selectedLeague?.name}</Text>
-                    </View>
 
                     {/* Numero di giornata */}
                     <View style={styles.leagueBadgeCountDown}>
                         <Badge style={{ backgroundColor: colors.primary, ...fontStyle.textBold }}> Giornata {matchdayNumber}</Badge>
                     </View>
+
                 </View>
 
                 {/* Contenuto della sezione Countdown e Live */}
                 {renderConuntDown()}
+
             </ImageBackground>
 
             <ScrollView contentContainerStyle={{ paddingBottom: 60 }}
@@ -566,18 +568,17 @@ const styles = StyleSheet.create({
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
-      },
-            
+    },
+
     headerOptions: {
         padding: 5,
-        paddingHorizontal: '10',
         borderRadius: 0,
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        // paddingBottom: 10,
-        // backgroundColor: 'red'
+        paddingLeft: 0
+
     },
     textHeaderOptions: {
         color: COLORJS.primary,

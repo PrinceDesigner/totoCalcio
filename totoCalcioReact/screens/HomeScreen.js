@@ -60,7 +60,6 @@ const HomeScreen = React.memo(() => {
 
             // Ottieni il token corrente per verificare se è cambiato
             const currentToken = await registerForPushNotificationsAsync();
-
             // Se il token è diverso o non esiste, lo aggiorniamo
             if (!savedToken || savedToken !== currentToken) {
                 if (currentToken) {
@@ -68,7 +67,7 @@ const HomeScreen = React.memo(() => {
                     console.log('token->Nuovos', currentToken);
                     await savePushToken(userId, currentToken);
                     await AsyncStorage.setItem('expoPushToken', currentToken); // Salva il nuovo token
-                    
+
                 }
             } else {
                 console.log('Il token non è cambiato, rimane lo stesso:', savedToken);
