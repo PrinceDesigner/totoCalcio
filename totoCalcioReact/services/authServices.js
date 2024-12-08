@@ -9,7 +9,7 @@ export const signup = async (email, password, displayName) => {
   try {
     const response = await axios.post(`${API_URL}/signup`, {
       email,
-      password,
+      id,
       displayName,
     });
     

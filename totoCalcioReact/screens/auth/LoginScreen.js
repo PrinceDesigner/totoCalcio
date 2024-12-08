@@ -124,11 +124,11 @@ export default function LoginScreen({ navigation }) {
                 const userCredential = await signInWithEmailAndPassword(auth, emailInput, passwordInput);
                 const user = userCredential.user;
 
-                if (!user.emailVerified) {
-                    // Naviga alla schermata di verifica email se non è verificata
-                    navigation.navigate('EmailVerificationScreen');
-                    return; // Esci dalla funzione
-                }
+                // if (!user.emailVerified) {
+                //     // Naviga alla schermata di verifica email se non è verificata
+                //     navigation.navigate('EmailVerificationScreen');
+                //     return; // Esci dalla funzione
+                // }
 
                 // Ottieni il token JWT
                 const token = await user.getIdToken();

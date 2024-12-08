@@ -10,6 +10,7 @@ import { auth, firestore } from '../../firebaseConfig'; // Importa la configuraz
 import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth'; // Firebase Auth SDK
 import { doc, setDoc } from 'firebase/firestore'; // Firebase Firestore SDK
 import AuthErrors from '../../AuthErrorFirebase';
+import { signup } from '../../services/authServices';
 
 
 export default function SignupScreen({ navigation }) {
@@ -91,11 +92,13 @@ export default function SignupScreen({ navigation }) {
                 const token = await user.getIdToken();
 
                 // Salva l'utente in Firestore
-                await setDoc(doc(firestore, 'users', user.uid), {
-                    uid: user.uid,
-                    email: user.email,
-                    displayName: fullName,
-                });
+                // await setDoc(doc(firestore, 'users', user.uid), {
+                //     uid: user.uid,
+                //     email: user.email,
+                //     displayName: fullName,
+                // });
+
+                await signup(user.email,user.uid, fullName);
 
                 // Salva il token JWT in AsyncStorage
                 await saveToken(token);
@@ -111,8 +114,8 @@ export default function SignupScreen({ navigation }) {
                 }));
 
                 // Naviga alla schermata principale
-                // navigation.navigate('Home');
-                navigation.navigate('EmailVerificationScreen'); // Naviga alla nuova schermata di verifica email
+                navigation.navigate('Home');
+                // navigation.navigate('EmailVerificationScreen'); // Naviga alla nuova schermata di verifica email
 
             } catch (error) {
                 console.error('Errore durante la registrazione:', error.code);
