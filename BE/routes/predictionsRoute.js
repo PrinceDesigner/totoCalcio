@@ -16,7 +16,6 @@ router.post('/add', authMiddleware, async (req, res) => {
         return res.status(400).json({ message: 'userId, leagueId, schedina e daysId sono obbligatori.' });
     }
 
-    // Step 1: Controllo sulla startDate della giornata
     const dayDoc = await firestore.collection('days').doc(daysId).get();
 
     if (!dayDoc.exists) {
@@ -34,54 +33,112 @@ router.post('/add', authMiddleware, async (req, res) => {
     }
 
     try {
-        // Controlla se esiste già una predizione con questi parametri
-        const existingPredictionQuery = await firestore.collection('predictions')
-            .where('userId', '==', userId)
-            .where('leagueId', '==', leagueId)
-            .where('daysId', '==', daysId)
-            .get();
+        // Verifica se `leagueId` contiene più ID separati da virgole
+        const leagueIds = leagueId.includes(',') ? leagueId.split(',') : [leagueId];
+        let schedineresponse = [];
+        // Cicla su ogni `leagueId` da processare
+        for (const singleLeagueId of leagueIds) {
+            // Controlla se esiste già una predizione con questi parametri
+            const existingPredictionQuery = await firestore.collection('predictions')
+                .where('userId', '==', userId)
+                .where('leagueId', '==', singleLeagueId)
+                .where('daysId', '==', daysId)
+                .get();
 
-        let predictionId;
-        let operation;
+            let predictionId;
+            let operation;
 
-        if (!existingPredictionQuery.empty) {
-            // Se esiste già una predizione, aggiornala
-            const existingPredictionDoc = existingPredictionQuery.docs[0]; // Ottieni il primo risultato
-            predictionId = existingPredictionDoc.id; // Usa l'ID del documento esistente
-            operation = 'update';
-        } else {
-            // Se non esiste, crea una nuova predizione
-            predictionId = uuidv4(); // Genera un nuovo UUID
-            operation = 'create';
+            if (!existingPredictionQuery.empty) {
+                // Se esiste già una predizione, aggiornala
+                const existingPredictionDoc = existingPredictionQuery.docs[0]; // Ottieni il primo risultato
+                predictionId = existingPredictionDoc.id; // Usa l'ID del documento esistente
+                operation = 'update';
+            } else {
+                // Se non esiste, crea una nuova predizione
+                predictionId = uuidv4(); // Genera un nuovo UUID
+                operation = 'create';
+            }
+
+            // Struttura del documento da salvare o aggiornare
+            const predictionData = {
+                predictionId,
+                userId,
+                leagueId: singleLeagueId, // Utilizza il leagueId corrente
+                daysId,
+                schedina,
+                punti: 0
+            };
+
+            // Salva o aggiorna il documento su Firestore nella collection "predictions"
+            const predictionRef = firestore.collection('predictions').doc(predictionId);
+            await predictionRef.set(predictionData, { merge: true }); // Usa { merge: true } per aggiornare solo i campi specificati
+
+            // Recupera il documento appena salvato o aggiornato
+            const savedPrediction = await predictionRef.get();
+
+            if (!savedPrediction.exists) {
+                console.error(`Errore durante il salvataggio della predizione per leagueId: ${singleLeagueId}`);
+                return res.status(500).json({ message: 'Errore durante il salvataggio della predizione.' });
+            }
+            schedineresponse.push(predictionData)
         }
 
-        // Struttura del documento da salvare o aggiornare
-        const predictionData = {
-            predictionId,
-            userId,
-            leagueId,
-            daysId,
-            schedina,
-            punti: 0
-        };
-
-        // Salva o aggiorna il documento su Firestore nella collection "predictions"
-        const predictionRef = firestore.collection('predictions').doc(predictionId);
-        await predictionRef.set(predictionData, { merge: true }); // Usa { merge: true } per aggiornare solo i campi specificati
-
-        // Recupera il documento appena salvato o aggiornato
-        const savedPrediction = await predictionRef.get();
-
-        if (!savedPrediction.exists) {
-            return res.status(500).json({ message: 'Errore durante il salvataggio della predizione.' });
-        }
-
-        // Restituisce il documento salvato come risposta
-        return res.status(201).json(savedPrediction.data());
+        // Se arriva qui, tutte le predizioni sono state salvate con successo
+        return res.status(201).json(schedineresponse);
     } catch (error) {
         console.error('Errore durante il salvataggio della predizione:', error);
         return res.status(500).json({ message: 'Errore durante il salvataggio della predizione.' });
     }
+
+    // try {
+    //     // Controlla se esiste già una predizione con questi parametri
+    //     const existingPredictionQuery = await firestore.collection('predictions')
+    //         .where('userId', '==', userId)
+    //         .where('leagueId', '==', leagueId)
+    //         .where('daysId', '==', daysId)
+    //         .get();
+
+    //     let predictionId;
+    //     let operation;
+
+    //     if (!existingPredictionQuery.empty) {
+    //         // Se esiste già una predizione, aggiornala
+    //         const existingPredictionDoc = existingPredictionQuery.docs[0]; // Ottieni il primo risultato
+    //         predictionId = existingPredictionDoc.id; // Usa l'ID del documento esistente
+    //         operation = 'update';
+    //     } else {
+    //         // Se non esiste, crea una nuova predizione
+    //         predictionId = uuidv4(); // Genera un nuovo UUID
+    //         operation = 'create';
+    //     }
+
+    //     // Struttura del documento da salvare o aggiornare
+    //     const predictionData = {
+    //         predictionId,
+    //         userId,
+    //         leagueId,
+    //         daysId,
+    //         schedina,
+    //         punti: 0
+    //     };
+
+    //     // Salva o aggiorna il documento su Firestore nella collection "predictions"
+    //     const predictionRef = firestore.collection('predictions').doc(predictionId);
+    //     await predictionRef.set(predictionData, { merge: true }); // Usa { merge: true } per aggiornare solo i campi specificati
+
+    //     // Recupera il documento appena salvato o aggiornato
+    //     const savedPrediction = await predictionRef.get();
+
+    //     if (!savedPrediction.exists) {
+    //         return res.status(500).json({ message: 'Errore durante il salvataggio della predizione.' });
+    //     }
+
+    //     // Restituisce il documento salvato come risposta
+    //     return res.status(201).json(savedPrediction.data());
+    // } catch (error) {
+    //     console.error('Errore durante il salvataggio della predizione:', error);
+    //     return res.status(500).json({ message: 'Errore durante il salvataggio della predizione.' });
+    // }
 });
 
 // Route per controllare se esiste già una predizione

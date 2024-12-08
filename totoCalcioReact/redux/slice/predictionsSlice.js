@@ -4,10 +4,10 @@ import { checkPrediction, createPrediction } from '../../services/predictionsSer
 // Thunk per salvare la predizione
 export const savePrediction = createAsyncThunk(
   'predictions/savePrediction',
-  async (predictionData, { rejectWithValue }) => {
+  async ({predictionData, leagueId}, { rejectWithValue }) => {
     try {
       const response = await createPrediction(predictionData);
-      return response;
+      return response.find(el => el.leagueId === leagueId);
     } catch (error) {
       return rejectWithValue(error.response.data);
     }

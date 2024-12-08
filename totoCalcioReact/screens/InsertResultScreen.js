@@ -11,6 +11,8 @@ import moment from 'moment';
 import 'moment/locale/it';
 import { COLORJS } from '../theme/themeColor';
 import fontStyle from '../theme/fontStyle';
+import { MaterialIcons } from '@expo/vector-icons';
+
 // import { BannerAdComponent } from '../components/Adv/AdvBanner';
 import Wrapper from './componentScreen/Container';
 
@@ -23,7 +25,7 @@ export default function InsertResultsScreen({ navigation }) {
     moment.locale('it');
 
     const { colors } = useTheme();
-    const myLeagues = useSelector((state) => state.leagues); // Stato delle leghe
+    const myLeagues = useSelector((state) => state.leagues.leagues); // Stato delle leghe
     let matches = useSelector((state) => state.infogiornataAttuale.matches);
     const userId = useSelector((state) => state.auth?.user?.user?.userId);
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
@@ -34,7 +36,7 @@ export default function InsertResultsScreen({ navigation }) {
     const [results, setResults] = useState({});
     const [modalVisible, setModalVisible] = useState(false);
 
-    const [checked, setChecked] = useState(false);
+    const [checked, setChecked] = useState(true);
 
 
     // Funzione per mappare l'array di predizioni in un oggetto compatibile con `setResults`
@@ -63,6 +65,7 @@ export default function InsertResultsScreen({ navigation }) {
 
     // Funzione per gestire la selezione dell'esito
     const handleSelectResult = (match, result) => {
+
         setResults(prevResults => ({
             ...prevResults,
             [match.matchId]: {
@@ -78,9 +81,16 @@ export default function InsertResultsScreen({ navigation }) {
 
     // Funzione per gestire la conferma degli esiti
     const handleConfirmResults = () => {
+        let stringOfId = "";
+
+        if (checked) {
+            stringOfId = myLeagues.map(el => el.id).join(',');
+            console.log(stringOfId);
+        } 
+
         const predictionData = {
             userId: userId,
-            leagueId: leagueId,
+            leagueId: !checked ? leagueId : stringOfId,
             daysId: giornataAttuale,
             schedina: Object.values(results).map(result => ({
                 matchId: result.matchId,
@@ -100,9 +110,10 @@ export default function InsertResultsScreen({ navigation }) {
 
     const insert = async (predictionData) => {
         try {
+            // let insertSchedinaResult = predictionData.map(el => el.leagueId === leagueId) ;
             setModalVisible(false); // Chiudi la modale
             dispatch(showLoading()); // Mostra lo stato di caricamento
-            await dispatch(savePrediction(predictionData)).unwrap(); // Attendi che il thunk termini
+            await dispatch(savePrediction({predictionData, leagueId})).unwrap(); // Attendi che il thunk termini
 
             // Se tutto va bene, mostra il toast di successo e naviga
             showToast('success', 'Esiti caricati con successo!');
@@ -127,27 +138,25 @@ export default function InsertResultsScreen({ navigation }) {
         }
     };
 
+    const CustomCheckbox = ({ checked, onToggle }) => {
+        return (
+            <TouchableOpacity
+                onPress={onToggle}
+                style={[
+                    styles.checkboxContainer,
+                    { borderColor: checked ? COLORJS.primary : COLORJS.primary },
+                ]}
+            >
+                {checked && (
+                    <MaterialIcons name="check" size={20} color={COLORJS.primary} />
+                )}
+            </TouchableOpacity>
+        );
+    };
 
     // Funzione per gestire il checkbox
     const renderCheckbox = () => {
-        const handleToggleCheckbox = () => {
-            setChecked(!checked);
-            console.log(checked);
-
-        };
-
-        return (
-            <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10 }}>
-                <Checkbox
-                    status={checked ? 'checked' : 'unchecked'}
-                    onPress={handleToggleCheckbox}
-                    color="#6200ee" // Cambia il colore del checkbox
-                />
-                <Text onPress={handleToggleCheckbox} style={{ marginLeft: 8, color: 'white' }}>
-                    Inserisci per tutte le tue leghe
-                </Text>
-            </View>
-        );
+        setChecked(!checked);
     };
 
     // Funzione per raggruppare i match per giorno
@@ -167,6 +176,7 @@ export default function InsertResultsScreen({ navigation }) {
     return (
         <View style={{ flex: 1, backgroundColor: colors.background }}>
             <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+
                 <Wrapper>
                     {Object.entries(groupMatchesByDay(sortedMatches)).map(([day, dayMatches], i) => (
                         <View key={day}>
@@ -229,8 +239,18 @@ export default function InsertResultsScreen({ navigation }) {
             {/* Bottone per inserire gli esiti */}
             <View style={styles.buttonContainer}>
                 {/* DA PENSARE  */}
-                {/* {renderCheckbox()} */}
-
+                <View style={styles.checkboxWrapper}>
+                    <CustomCheckbox
+                        checked={checked}
+                        onToggle={renderCheckbox}
+                    />
+                    <Text
+                        onPress={renderCheckbox}
+                        style={styles.label}
+                    >
+                        Inserisci per tutte le tue leghe
+                    </Text>
+                </View>
                 <Button
                     mode="contained"
                     disabled={Object.keys(results).length !== matches.length}
@@ -389,4 +409,24 @@ const styles = StyleSheet.create({
         borderRadius: 5         // Rendere l'intestazione più evidente
         // Arrotondamento degli angoli per un aspetto più moderno
     },
+    checkboxWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 10,
+    },
+    checkboxContainer: {
+        width: 24,
+        height: 24,
+        borderWidth: 2,
+        borderRadius: 4,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 8,
+    },
+    label: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+
 });
