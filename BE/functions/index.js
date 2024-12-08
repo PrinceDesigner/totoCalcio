@@ -554,7 +554,8 @@ async function updateCurrentGiornata(noStep) {
 //1 batch ->  1 partita
 exports.updateSingleMatchId = functions.https.onRequest(async (req, res) => {
     functions.logger.info('Start updateSingleMatchId ');
-    const { matchId } = req.body;
+    // Prendi il matchId dai query string parameters
+    const { matchId } = req.query;
     const strMatchId = matchId.toString();
     functions.logger.info('updateSingleMatchId - matchId ',strMatchId);
      // Ottieni i dati dalla API di football
