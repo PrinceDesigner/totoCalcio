@@ -24,8 +24,24 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
     const lockRef = rtdb.ref(`locks/${leagueId}/${dayId}`);
     const lockSnapshot = await lockRef.once('value');
     const isLocked = lockSnapshot.exists() && lockSnapshot.val() === true;
+    // Recupera il documento
+    //controllo che per non sia già stata calcolata nel caso in cui abbiamo cancellato il lock
+    let isCalculated = false;
+    const collectionName = "giornateCalcolate";
+    const docRef = doc(db, collectionName, documentId);
 
-    if (isLocked) {
+    getDoc(docRef)
+    .then((docSnapshot) => {
+        if (docSnapshot.exists()) {
+            const data = docSnapshot.data();
+            isCalculated = data.calcolate; // Aggiorna la variabile
+        }
+    })
+    .catch((error) => {
+        console.error("Errore durante il recupero del documento:", error);
+    });
+
+    if (isLocked || isCalculated) {//aggiunta condizione in OR
         console.log("Il documento è già bloccato.");
         return { success: false, message: "Gornata già calcolata" };
     }
