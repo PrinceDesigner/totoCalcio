@@ -28,7 +28,7 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
     //controllo che per non sia già stata calcolata nel caso in cui abbiamo cancellato il lock
     let isCalculated = false;
     const collectionName = "giornateCalcolate";
-    const docRef = doc(db, collectionName, documentId);
+    const docRef = doc(firestore, collectionName, documentId);
 
     getDoc(docRef)
     .then((docSnapshot) => {
