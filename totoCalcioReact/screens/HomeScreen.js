@@ -55,20 +55,20 @@ const HomeScreen = React.memo(() => {
 
     const checkAndRegisterToken = async () => {
         try {
-            // Recupera il token salvato da AsyncStorage
             const savedToken = await AsyncStorage.getItem('expoPushToken');
+            console.log('Token salvato recuperato:', savedToken);
 
-            // Ottieni il token corrente per verificare se è cambiato
             const currentToken = await registerForPushNotificationsAsync();
-            // Se il token è diverso o non esiste, lo aggiorniamo
-            if (!savedToken || savedToken !== currentToken) {
-                if (currentToken) {
-                    setExpoPushToken(currentToken);
-                    console.log('token->Nuovos', currentToken);
-                    await savePushToken(userId, currentToken);
-                    await AsyncStorage.setItem('expoPushToken', currentToken); // Salva il nuovo token
+            if (!currentToken) {
+                console.log('Nessun token generato (permessi non concessi o errore)');
+                return;
+            }
 
-                }
+            if (!savedToken || savedToken !== currentToken) {
+                console.log('Token aggiornato o nuovo:', currentToken);
+                await AsyncStorage.setItem('expoPushToken', currentToken);
+                await savePushToken(userId, currentToken);
+                setExpoPushToken(currentToken);
             } else {
                 console.log('Il token non è cambiato, rimane lo stesso:', savedToken);
                 setExpoPushToken(savedToken);
@@ -77,8 +77,6 @@ const HomeScreen = React.memo(() => {
             console.error('Errore nel recuperare o aggiornare il token:', error);
         }
     };
-
-
 
     useEffect(() => {
         if (route.params?.refresh) {
@@ -242,6 +240,7 @@ const HomeScreen = React.memo(() => {
                         labelStyle={{ fontSize: 12 }}
                         onPress={() => navigation.navigate('CreateLeague')}>Crea Lega</Button>
                 </View>
+
                 {/* <View style={{ marginBottom: 20, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <BannerAdComponent />
                 </View> */}
