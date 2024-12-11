@@ -6,6 +6,7 @@ const { google } = require('googleapis');
 const moment = require('moment-timezone');
 const axios = require('axios');
 const { v4: uuidv4 } = require('uuid'); // Importa la funzione per generare UUID
+const { log } = require("firebase-functions/logger");
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -24,10 +25,29 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
     const lockRef = rtdb.ref(`locks/${leagueId}/${dayId}`);
     const lockSnapshot = await lockRef.once('value');
     const isLocked = lockSnapshot.exists() && lockSnapshot.val() === true;
+    // Recupera il documento
+    //controllo che per non sia già stata calcolata nel caso in cui abbiamo cancellato il lock
+    let isCalculated = false;
+    const collectionName = "giornateCalcolate";
 
-    if (isLocked) {
+    const calcoloGiornataQuery = firestore
+        .collection(collectionName)
+        .where('leagueId', '==', leagueId)
+        .where('dayId', '==', dayId)
+        .select('calcolate'); // Seleziona solo il campo `calcolate`
+
+    const calcoloGiornataQuerySnapshot = await calcoloGiornataQuery.get(); // Esegui la query
+
+    if (!calcoloGiornataQuerySnapshot.empty) {
+        const giornataCalcolata = calcoloGiornataQuerySnapshot.docs[0].data(); // Ottieni i dati del primo documento
+        isCalculated = giornataCalcolata.calcolate; // Ottieni il valore booleano `calcolate`
+    }
+
+    if (isLocked || isCalculated) {//aggiunta condizione in OR
         console.log("Il documento è già bloccato.");
-        return { success: false, message: "Gornata già calcolata" };
+        console.log("isCalculated " ,isCalculated);
+        console.log("isLocked " , isLocked);
+        return { success: false, message: "Giornata già calcolata" };
     }
     await lockRef.set(true); // Blocca il documento
 
