@@ -36,6 +36,7 @@ import OnboardingCarousel from './screens/onBoardingScreen/OnBoardingTutorial';
 import NetInfo from '@react-native-community/netinfo'; // Per monitorare la connessione
 import TutorialAccordion from './screens/comegiocare/tutorialAccordion';
 import ContactPage from './screens/contatti/contattiScreen';
+import NotificationSettings from './screens/NotificationSettingsScreen';
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator(); // Crea un Drawer Navigator
@@ -171,6 +172,15 @@ function DrawerNavigator() {
         component={ContactPage}
         options={({ navigation }) => ({
           title: 'Contattaci',
+          headerShown: true, // Mostra l'header solo per questa schermata
+          ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
+        })}
+      />
+      <Drawer.Screen
+        name="NotificationSettings"
+        component={NotificationSettings}
+        options={({ navigation }) => ({
+          title: 'Notifiche',
           headerShown: true, // Mostra l'header solo per questa schermata
           ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
         })}
