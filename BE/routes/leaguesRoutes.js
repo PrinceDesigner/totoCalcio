@@ -204,9 +204,9 @@ router.post('/leagues/join', authMiddleware, async (req, res) => {
       return res.status(400).json({ message: 'L\'utente è già membro di questa lega.' });
     }
 
-    if (leagueData.members && leagueData.members.length >= 30) {
-      return res.status(400).json({ message: 'La lega ha raggiunto il numero massimo di 30 membri.' });
-    }
+    /*if (leagueData.members && leagueData.members.length >= 10) {
+      return res.status(400).json({ message: 'La lega ha raggiunto il numero massimo di 10 membri.' });
+    }*/
 
     const obj = {
       id: userId,
