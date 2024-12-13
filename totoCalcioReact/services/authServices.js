@@ -12,7 +12,7 @@ export const signup = async (email, password, displayName) => {
       id,
       displayName,
     });
-    
+
     return response.data;
   } catch (error) {
     console.error('Errore durante la registrazione:', error);
@@ -68,3 +68,17 @@ export const savePushToken = async (userId, expoPushToken) => {
 };
 
 
+// Funzione per verificare se il token push è già salvato sul server
+export const verifyPushToken = async (userId, expoPushToken) => {
+  try {
+    // Effettua la chiamata API per verificare il token push dell'utente
+    const response = await axiosInstance.post('/verify-push-token', {
+      userId,
+      expoPushToken,
+    });
+    return response.data.isTokenValid; // Presupponendo che il server restituisca questa proprietà
+  } catch (error) {
+    console.error('Errore durante la verifica del token push:', error);
+    throw error; // Rilancia l'errore per gestirlo nel componente
+  }
+};

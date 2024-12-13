@@ -21,7 +21,7 @@ import Wrapper from './componentScreen/Container';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, { useAnimatedStyle } from 'react-native-reanimated';
 import { registerForPushNotificationsAsync } from '../services/pushNotifications';
-import { savePushToken } from '../services/authServices';
+import { savePushToken, verifyPushToken } from '../services/authServices';
 
 
 // React.memo per ottimizzare il rendering di HomeScreen
@@ -55,26 +55,51 @@ const HomeScreen = React.memo(() => {
 
     const checkAndRegisterToken = async () => {
         try {
+            console.log('Inizio verifica e registrazione del token...');
+
+            // Recupera il token salvato in AsyncStorage
             const savedToken = await AsyncStorage.getItem('expoPushToken');
             console.log('Token salvato recuperato:', savedToken);
 
+            // Richiedi il token attuale
             const currentToken = await registerForPushNotificationsAsync();
             if (!currentToken) {
-                console.log('Nessun token generato (permessi non concessi o errore)');
+                console.log('Nessun token generato: permessi non concessi o errore.');
                 return;
             }
 
+            // Controlla se il token è nuovo o aggiornato
             if (!savedToken || savedToken !== currentToken) {
-                console.log('Token aggiornato o nuovo:', currentToken);
+                console.log('Token nuovo o aggiornato rilevato:', currentToken);
+
+                // Aggiorna AsyncStorage
                 await AsyncStorage.setItem('expoPushToken', currentToken);
+
+                // Salva il token sul server
                 await savePushToken(userId, currentToken);
+                console.log('Token salvato con successo sul server e localmente.');
+
+                // Aggiorna lo stato con il nuovo token
                 setExpoPushToken(currentToken);
             } else {
-                console.log('Il token non è cambiato, rimane lo stesso:', savedToken);
+                // Token invariato, verifica comunque sul server
+                console.log('Il token non è cambiato. Controllo sul server...');
+                const isTokenSavedOnServer = await verifyPushToken(userId, savedToken);
+
+                if (!isTokenSavedOnServer) {
+                    console.log('Token non trovato sul server, procedo con l\'invio...');
+                    //     // Invia il token al server
+                    await savePushToken(userId, savedToken);
+                    console.log('Token inviato nuovamente al server.');
+                } else {
+                    console.log('Token già salvato sul server, nessuna azione necessaria.');
+                }
+
+                // Aggiorna lo stato con il token esistente
                 setExpoPushToken(savedToken);
             }
         } catch (error) {
-            console.error('Errore nel recuperare o aggiornare il token:', error);
+            console.error('Errore durante la verifica o registrazione del token:', error);
         }
     };
 
