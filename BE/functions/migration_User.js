@@ -65,7 +65,7 @@ exports.onUserUpdated = functions.firestore.document('users/{userId}').onUpdate(
             displayname: updatedUser.displayName,
             email:       updatedUser.email
         };
-        info('Inzio Aggiormaneto dello user ',newUser.uid);
+        info('Inzio Aggiormaneto dello user ',updatedUser.uid);
 
 
         // Aggiornare i dati su Supabase
@@ -76,7 +76,7 @@ exports.onUserUpdated = functions.firestore.document('users/{userId}').onUpdate(
             return;
         }
 
-        info('Fine Aggiormaneto dello user ',newUser.uid);
+        info('Fine Aggiormaneto dello user ',updatedUser.uid);
 
     } catch (errorExc) {
         error(`Firebase error: ${errorExc.message}`);
