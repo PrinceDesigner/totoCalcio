@@ -1,4 +1,4 @@
 node_modules/
 *.local
-
+supaClient.js
 firebase-service-account.json
