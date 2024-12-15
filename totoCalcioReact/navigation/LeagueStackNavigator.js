@@ -11,6 +11,7 @@ import GiornataSchedinaDetailsUserScreen from '../screens/SchedinaStoricoUtenteS
 import EditLeagueScreen from '../screens/EditLeagueScreen';
 import FormazioneScreen from '../screens/FormazioneScreen';
 import { useSelector } from 'react-redux';
+import EsitiGiocatiPerPartitaScreen from '../screens/EsitiGiocatiPerPartitaScreen';
 
 const Stack = createStackNavigator();
 
@@ -41,6 +42,15 @@ export default function LeagueStackNavigator() {
                 component={FormazioneScreen}
                 options={({ navigation }) => ({
                     title: 'Formazioni',
+                    headerShown: true, // Mostra l'header solo per questa schermata
+                    ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
+                })}
+            />
+            <Stack.Screen
+                name="EsitiGiocatiPerPartitaScreen"
+                component={EsitiGiocatiPerPartitaScreen}
+                options={({ navigation, route }) => ({
+                    title: `${route.params.squadre.homeTeam}-${route.params.squadre.awayTeam}`,
                     headerShown: true, // Mostra l'header solo per questa schermata
                     ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
                 })}

@@ -11,7 +11,7 @@ import { COLORJS } from '../../theme/themeColor';
 // Imposta la lingua italiana per moment
 moment.locale('it');
 
-const MatchItem = ({ match }) => {
+const MatchItem = ({ match, isPast }) => {
     const { colors } = useTheme();
     const navigation = useNavigation();
 
@@ -23,6 +23,9 @@ const MatchItem = ({ match }) => {
     const handlePress = () => {
         // Naviga alla schermata di formazione quando viene premuto il MatchItem
         // navigation.navigate('FormazioneScreen', { fixtureId: match.matchId });
+        if (isPast) {
+            navigation.navigate('EsitiGiocatiPerPartitaScreen', { fixtureId: match.matchId, squadre: {homeTeam: match.homeTeam, awayTeam: match.awayTeam } });
+        }
     };
 
     return (
