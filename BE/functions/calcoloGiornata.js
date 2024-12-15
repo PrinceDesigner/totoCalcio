@@ -167,7 +167,6 @@ exports.calcolaPuntiGiornataTest = functions.https.onCall(async (data, context) 
     }
 });
 
-
 // Funzione per ottenere tutte le previsioni per una lega specifica e un matchId
 const getPredictionsForLeagueAndMatch = async (leagueId, dayId) => {
     try {

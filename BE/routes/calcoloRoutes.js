@@ -13,7 +13,7 @@ router.get('/giornate-calcolate/:leagueId', authMiddleware, async (req, res) => 
     const snapshot = await firestore.collection('giornateCalcolate')
       .where('leagueId', '==', leagueId)
       .get();
-
+    //get_giornate_calcolate_byleagueid -> già pronta da rivedere i tag di uscita
     // Controlla se sono stati trovati documenti
     if (snapshot.empty) {
       return res.status(200).json({ message: 'Nessun documento trovato per questa leagueId.', documents: []});
@@ -40,7 +40,18 @@ router.get('/giornate-calcolate/:leagueId', authMiddleware, async (req, res) => 
 // Route per ottenere tutti i documenti con una specifica leagueId e userId nella raccolta "giornateCalcolate"
 router.get('/giornate-calcolate/:leagueId/:userId', authMiddleware, async (req, res) => {
   const { leagueId, userId } = req.params;
-
+  /*post migrazione usare get_predictions_with_schedine con in input leagueid e userid
+    output jsonArray [
+    {
+    schedina_id: 'cf539621-525e-4222-9f24-29eac5549722',
+    esitogiocato: '1',
+    result: '1',
+    matchid: '1223735',
+    prediction_id: '130397dd-eb8c-4af9-88b8-c3ca474a974c',
+    dayid: 'RegularSeason-15'
+  },
+  ........
+  */
   try {
 
     const predictionsPromises = [];

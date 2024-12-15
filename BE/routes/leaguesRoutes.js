@@ -235,7 +235,7 @@ router.post('/leagues/join', authMiddleware, async (req, res) => {
 // Visualizza tutte le leghe a cui l'utente partecipa
 router.get('/leagues', authMiddleware, async (req, res) => {
   const userId = req.user.uid;
-
+  /*get_leagues_by_user caire cosa serve in output e aggiornare la funzione sul DB*/
   try {
     const leaguesSnapshot = await firestore
       .collection('leagues')
@@ -258,7 +258,8 @@ router.get('/leagues', authMiddleware, async (req, res) => {
 // Recupera una lega specifica utilizzando il suo ID
 router.get('/leagues/:leagueId', async (req, res) => {
   const leagueId = req.params.leagueId;
-
+  /*get_leagues_by_leagueid capire cosa serve in output anche i memebrs ?
+  Se si utilizzare get_members_by_league */
   try {
     const leagueDoc = await firestore.collection('leagues').doc(leagueId).get();
 
