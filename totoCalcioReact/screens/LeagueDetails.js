@@ -129,7 +129,6 @@ export default function LeagueDetails({ navigation }) {
 
                 // Calcola se la data è passata
                 const result = isDatePast(startDate);
-
                 // Aggiorna lo stato isPast con il risultato calcolato
                 setIsPast(result);
             } catch (error) {
@@ -172,6 +171,7 @@ export default function LeagueDetails({ navigation }) {
 
             if (days === 0 && hours === 0 && minutes === 0) {
                 setIsPast(true)
+
             }
 
             setCountdown({
@@ -255,7 +255,7 @@ export default function LeagueDetails({ navigation }) {
             await Promise.all([
                 dispatch(fetchDayDetails(giornataAttuale)).unwrap(), // Recupera i dettagli della giornata
                 dispatch(fetchPrediction({ dayId, leagueId, userId })).unwrap(),// Controlla la predizione
-                dispatch(fetchParticipantsThunk({ userIds, leagueId })).unwrap(),
+                dispatch(fetchParticipantsThunk({ userIds, leagueId,dayId })).unwrap(),
             ]);
 
 
@@ -470,11 +470,11 @@ export default function LeagueDetails({ navigation }) {
                                         {/* <View style={{ marginTop: 10, marginBottom: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                             <BannerAdComponent />
                                         </View> */}
-                                        <MatchItem match={match} />
+                                        <MatchItem match={match} isPast={isPast} />
                                     </React.Fragment>
                                 );
                             } else {
-                                return <MatchItem key={`match-${match.matchId}`} match={match} />;
+                                return <MatchItem key={`match-${match.matchId}`} match={match} isPast={isPast} />;
                             }
 
                         }

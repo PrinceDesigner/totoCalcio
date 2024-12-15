@@ -60,7 +60,7 @@ router.put('/update-user', authMiddleware, async (req, res) => {
 
 // Route per ottenere i displayName, userId, photoURL, punti e leagueId per un array di userId
 router.post('/users-info', async (req, res) => {
-  const { userIds, leagueId } = req.body; // Aggiunto leagueId alla richiesta
+  const { userIds, leagueId, dayId } = req.body; // Aggiunto leagueId alla richiesta
 
   // Controlla che userIds e leagueId siano forniti
   if (!userIds || !Array.isArray(userIds) || userIds.length === 0 || !leagueId) {
@@ -86,6 +86,21 @@ router.post('/users-info', async (req, res) => {
     const auth = getAuth();
     const userRecords = await Promise.all(userIds.map(userId => auth.getUser(userId).catch(() => null)));
 
+    // Recupera tutti i documenti schedina in un'unica query per dayId, leagueId e userIds
+    const schedineSnapshot = await firestore
+      .collection('predictions')
+      .where('daysId', '==', dayId)
+      .where('leagueId', '==', leagueId)
+      .where('userId', 'in', userIds) // Recupera tutte le schedine per questi userIds
+      .get();
+
+    // Crea una mappa userId -> schedina per accesso rapido
+    const schedineMap = new Map();
+    schedineSnapshot.forEach(doc => {
+      const data = doc.data();
+      schedineMap.set(data.userId, data); // Salva schedina con chiave userId
+    });
+
     // Crea un array per le informazioni degli utenti
     const usersInfo = [];
 
@@ -93,6 +108,8 @@ router.post('/users-info', async (req, res) => {
     for (let i = 0; i < userSnapshots.length; i++) {
       const snapshot = userSnapshots[i];
       const authUser = userRecords[i];
+      const schedina = schedineMap.get(snapshot.id); // Ottieni schedina dalla mappa
+
 
       if (snapshot.exists) {
         const data = snapshot.data();
@@ -106,7 +123,9 @@ router.post('/users-info', async (req, res) => {
           displayName: data.displayName || 'Nome non disponibile',
           photoURL: authUser ? authUser.photoURL : null, // Ottieni il photoURL dall'utente autenticato
           punti, // Includi i punti dell'utente
-          leagueId // Includi leagueId in ogni oggetto utente
+          leagueId,// Includi leagueId in ogni oggetto utente
+          schedina: schedina?.schedina || null // Includi il contenuto del documento schedina, se presente
+
         });
       }
     }

@@ -1,12 +1,19 @@
 // functions/index.js
-const functions = require("firebase-functions/v1");
-const admin = require("firebase-admin");
+const functions      = require("firebase-functions/v1");
+const admin          = require("firebase-admin");
 const serviceAccount = require('./firebase-service-account.json');
-const { google } = require('googleapis');
-const moment = require('moment-timezone');
-const axios = require('axios');
+const { google }     = require('googleapis');
+const moment         = require('moment-timezone');
+const axios          = require('axios');
 const { v4: uuidv4 } = require('uuid'); // Importa la funzione per generare UUID
-const { log } = require("firebase-functions/logger");
+const { log }        = require("firebase-functions/logger");
+
+const { createUserByJson,deleteUsersByIds,writePredictions,deletePredictions,createLeagues,deleteLeagues } = require('./uploadForTest');
+const { migrationUser,onUserAdded,onUserUpdated,onUserDeleted } = require('./migration_User');
+const { migrateDaysAndMatches,onDayUpdated,onMatchUpdated } = require('./migration_Days_Matches');
+const { migrateLeaguesAndMembers,onLeagueUpdated,migrateLeaguesAndMembersByCreate,onLeagueDeleted } = require('./migr_League_memersInfo');
+const { migratePredictionsAndSchedina,updateExistingPredictionsAndSchedina,migrationPredictionsAndSchedina } = require('./migr_Predictions_Schedina');
+const { migrateGiornateCalcolate,syncGiornateCalcolateOnCreate,syncGiornateCalcolateOnUpdate } = require('./migr_Giornate_Calcolate');
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -475,7 +482,6 @@ exports.updateDateMatch = functions
         }
     });
 
-
 // Funzione per determinare il risultato
 function determineResult(homeGoals, awayGoals,status) {
 
@@ -569,6 +575,7 @@ async function updateCurrentGiornata(noStep) {
         await Promise.all(promises); // Aspetta che tutte le promesse siano risolte
     }
 }
+
 //Invocato dal batch creato dal passaggio della giornata (10 -> 11)
 //Updata ogni singolo match 30 min dopo la loro fine
 //1 batch ->  1 partita
@@ -617,15 +624,15 @@ exports.updateSingleMatchId = functions.https.onRequest(async (req, res) => {
     }
 });
 
-
 //NOTIFICHE
 exports.sendWeeklyNotification = functions.https.onRequest(async (req, res) => {
     functions.logger.info('Start sendWeeklyNotification');
-    const topicName = 'projects/totocalcioreact/topics/notify'; // Topic da utilizzare
+
+    var  body  = '';
+    var  title = '';
     try {
         // Recupera tutti i token dalla collezione 'users' (selezionando solo il campo 'tokenNotification')
         const tokensSnapshot = await firestore.collection('users').select('tokenNotification').get();
-
         const tokens = tokensSnapshot.docs
             .map(doc => doc.data().tokenNotification)  // Estrae direttamente i token
             .filter(token => token);  // Filtra i valori falsy (ad esempio, token nulli o vuoti)
@@ -635,294 +642,68 @@ exports.sendWeeklyNotification = functions.https.onRequest(async (req, res) => {
             return res.status(200).send('Nessun token trovato.');
         }
 
-        // Crea il messaggio con i token
-        const messageData = {
-            tokens: tokens,  // Array dei token
-            title: 'Inserisci la predizione',
-            body: 'Non dimenticare di inserire la schedina!',
+        // Invia le notifiche utilizzando Expo
+        const Expo = require('expo-server-sdk').default;
+        const expo = new Expo();
+        // Recupera la notifica
+        const notificheQ = await firestore.collection('notifiche').select('body', 'title').limit(1).get();
+
+        if (!notificheQ.empty) {
+            const doc = notificheQ.docs[0];
+            ({ body, title } = doc.data());
+            console.log('Body:', body, 'Title:', title);
+        } else {
+            console.log('Nessun record trovato.');
+            return res.status(404).json({
+                message: 'Nessuna notifica trovata in tabella',
+            });
+        }
+        // Messaggio delle notifiche
+        const message = {
+            title: title,
+            body: body,
         };
+        // Crea messaggi per ogni token
+        const messages = tokens.map(token => {
+            if (!Expo.isExpoPushToken(token)) {
+                functions.logger.warn(`Token non valido: ${token}`);
+                return null; // Ignora token non validi
+            }
+            return {
+                to: token,
+                sound: 'default',
+                title: message.title,
+                body: message.body,
+            };
+        }).filter(msg => msg !== null); // Filtra i messaggi nulli
 
-        // Crea un client Pub/Sub
-        const { PubSub } = require('@google-cloud/pubsub');
-        const pubSubClient = new PubSub();
-        functions.logger.info(`pubSubClient`,pubSubClient);
+        // Invia le notifiche in batch (max 100 notifiche per batch)
+        const chunks = expo.chunkPushNotifications(messages);
+        const tickets = []; // Array per raccogliere tutti i ticket
 
-        // Pubblica il messaggio nel topic Pub/Sub
-        const messageId = await pubSubClient.topic(topicName).publishMessage({
-            json: messageData,  // Pubblica direttamente come JSON
-        });
+        for (const chunk of chunks) {
+            try {
+                const ticketChunk = await expo.sendPushNotificationsAsync(chunk); // Invio batch
+                tickets.push(...ticketChunk); // Aggiungi i ticket al risultato totale
+                functions.logger.info('Batch inviato con successo:', ticketChunk);
+            } catch (error) {
+                functions.logger.error('Errore durante l\'invio del batch:', error);
+            }
+        }
 
-        functions.logger.info(`Messaggio pubblicato con successo nel topic Pub/Sub, ID messaggio: ${messageId}`);
+        // Log dei ticket
+        functions.logger.info('Tutti i ticket:', tickets);
 
         // Rispondi al client con successo
-        return res.status(200).send('Notifiche inviate con successo!');
+        return res.status(200).send(`Notifiche inviate con successo a ${tokens.length} utenti!`);
     } catch (error) {
         // Gestione degli errori
-        functions.logger.error(`Errore nel pubblicare il messaggio: ${error.message}`);
-        return res.status(500).send(`Errore nel pubblicare il messaggio: ${error.message}`);
+        functions.logger.error(`Errore nell'invio delle notifiche: ${error.message}`);
+        return res.status(500).send(`Errore nell'invio delle notifiche: ${error.message}`);
     }
 });
-
-exports.sendWeeklyNotificationV2 = functions.runWith({ timeoutSeconds: 540, memory: '2GB' }).https.onRequest(async (req, res) => {
-    functions.logger.info('Start sendWeeklyNotification');
-    try {
-        // Recupera tutti i token dalla collezione 'users' (selezionando solo il campo 'tokenNotification')
-        const tokensSnapshot = await firestore.collection('users').select('tokenNotification').get();
-
-        const tokens = tokensSnapshot.docs
-            .map(doc => doc.data().tokenNotification)  // Estrae direttamente i token
-            .filter(token => token);  // Filtra i valori falsy (ad esempio, token nulli o vuoti)
-
-        if (tokens.length === 0) {
-            functions.logger.info('Nessun token trovato per inviare notifiche.');
-            return res.status(200).send('Nessun token trovato.');
-        }
-
-        // Crea un oggetto Expo
-        let expo = new Expo();
-
-        // Prepara il messaggio
-        const messages = tokens.map(token => ({
-            to: token,
-            sound: 'default',
-            title: 'Inserisci la predizione',
-            body: 'Non dimenticare di inserire la schedina!',
-            data: { extraData: 'value' },  // Dati extra che vuoi inviare insieme al messaggio
-        }));
-
-        // Filtra i messaggi con token non valido
-        const chunkSize = 100;  // Expo API permette di inviare al massimo 100 notifiche in un singolo invio
-        const chunks = chunkArray(messages, chunkSize);
-
-        let receiptIds = [];
-        for (let chunk of chunks) {
-            try {
-                const receipts = await expo.sendPushNotificationsAsync(chunk);
-                receiptIds.push(...receipts);
-            } catch (error) {
-                functions.logger.error('Errore nell\'invio delle notifiche: ', error);
-                return res.status(500).send(`Errore nell'invio delle notifiche: ${error.message}`);
-            }
-        }
-
-        // Rispondi con un messaggio di successo
-        functions.logger.info('Notifiche inviate con successo!');
-        return res.status(200).send('Notifiche inviate con successo!');
-    } catch (error) {
-        // Gestione degli errori
-        functions.logger.error(`Errore nel pubblicare il messaggio: ${error.message}`);
-        return res.status(500).send(`Errore nel pubblicare il messaggio: ${error.message}`);
-    }
-});
-
-// Funzione per dividere i messaggi in chunk (necessario per Expo API)
-function chunkArray(array, size) {
-    const chunked = [];
-    for (let i = 0; i < array.length; i += size) {
-        chunked.push(array.slice(i, i + size));
-    }
-    return chunked;
-}
-
-//User
-exports.createUserByJson = functions.https.onRequest(async (req, res) => {
-    // Assicurati che il metodo della richiesta sia POST
-    if (req.method !== 'POST') {
-        return res.status(405).send('Method Not Allowed');
-    }
-
-    const users = req.body; // Supponendo che il JSON sia inviato nel corpo della richiesta
-
-    const batch = admin.firestore().batch(); // Inizializza un batch
-    try {
-        users.forEach(user => {
-            const { displayName, email, uid } = user;
-
-            // Controlla se i dati richiesti sono presenti
-            if (!displayName || !email || !uid) {
-                throw new Error('User data is missing required fields: displayName, email, uid');
-            }
-
-            // Crea un riferimento al documento
-            const userRef = admin.firestore().collection('users').doc(uid);
-            // Aggiungi l'operazione di scrittura al batch
-            batch.set(userRef, {
-                displayName,
-                email,
-                uid,
-            });
-        });
-
-        // Esegui il batch
-        await batch.commit();
-        return res.status(200).send('Users added successfully');
-    } catch (error) {
-        console.error('Error adding users:', error);
-        return res.status(500).send('Error adding users: ' + error.message);
-    }
-});
-
-exports.deleteUsersByIds = functions.https.onRequest(async (req, res) => {
-    // Assicurati che il metodo della richiesta sia POST
-    if (req.method !== 'POST') {
-        return res.status(405).send('Method Not Allowed');
-    }
-
-    // Analizza direttamente il corpo della richiesta come JSON
-    const userIds = req.body;
-
-    const batch = admin.firestore().batch(); // Inizializza un batch
-    try {
-        userIds.forEach(uid => {
-            // Crea un riferimento al documento
-            const userRef = admin.firestore().collection('users').doc(uid);
-            // Aggiungi l'operazione di eliminazione al batch
-            batch.delete(userRef);
-        });
-
-        // Esegui il batch
-        await batch.commit();
-        return res.status(200).send('Users deleted successfully');
-    } catch (error) {
-        console.error('Error deleting users:', error);
-        return res.status(500).send('Error deleting users: ' + error.message);
-    }
-});
-//User
-
-//predictions
-exports.writePredictions = functions.https.onRequest(async (req, res) => {
-    // Controlla se la richiesta è un POST
-    if (req.method !== 'POST') {
-        return res.status(405).send('Metodo non consentito. Usa POST.');
-    }
-
-    // Estrai i dati dal corpo della richiesta
-    const predictionsData = req.body;
-    console.log("Dati ricevuti:", predictionsData);
-
-    // Verifica che i dati siano validi
-    if (!Array.isArray(predictionsData) || predictionsData.length === 0) {
-        return res.status(400).send('Nessuna previsione fornita o dati non validi.');
-    }
-
-    const db = admin.firestore();
-    const batch = db.batch();
-    const insertedIds = []; // Array per tenere traccia degli ID inseriti
-
-    try {
-        // Itera sulle previsioni e aggiungile al batch
-        predictionsData.forEach(prediction => {
-            const uniqueId = uuidv4(); // Genera un UUID unico per la previsione
-            const docRef = db.collection('predictions').doc(uniqueId); // Usa l'UUID come ID del documento
-            console.log("docRef ", docRef)
-            batch.set(docRef, { ...prediction, predictionId: uniqueId }); // Aggiungi l'operazione di scrittura al batch
-            insertedIds.push(uniqueId); // Aggiungi l'ID generato all'array degli ID inseriti
-        });
-        console.log("LISTA PREDICTION PRE COMMIT ", insertedIds)
-        await batch.commit(); // Esegui tutte le operazioni di batch
-
-        return res.status(200).json({
-            message: 'Previsioni scritte con successo.',
-            insertedIds: insertedIds // Restituisci l'array degli ID inseriti
-        });
-    } catch (error) {
-        console.error('Errore durante la scrittura delle previsioni:', error);
-
-        return res.status(500).send('Errore interno del server.');
-    }
-});
-
-
-exports.deletePredictions = functions.https.onRequest(async (req, res) => {
-    // Verifica che il metodo sia POST
-    if (req.method !== 'POST') {
-        return res.status(405).send('Method Not Allowed');
-    }
-
-    // Prendi l'array di ID direttamente dal corpo della richiesta
-    const predictionIds = req.body; // Modificato per usare predictionIds
-
-    // Verifica che l'input sia un array di stringhe non vuote
-    /* if (!Array.isArray(predictionIds) || predictionIds.length === 0 || !predictionIds.every(id => typeof id === 'string')) {
-        return res.status(400).send('Invalid input: must be a non-empty array of strings.');
-    }*/
-    console.error("QUI CI SONO LE PREDICTION", predictionIds);
-    const batch = admin.firestore().batch(); // Inizializza un batch
-
-    // Aggiungi le operazioni di eliminazione al batch
-    try {
-        predictionIds.forEach(id => {
-            console.error("QUI CI SONO LE PREDICTION nel for", id);
-            // Crea un riferimento al documento
-            const predictionRef = admin.firestore().collection('predictions').doc(id);
-            // Aggiungi l'operazione di eliminazione al batch
-            batch.delete(predictionRef);
-            console.log("predictionRef ", predictionRef)
-        });
-        // Esegui il batch
-        await batch.commit();
-        return res.status(200).send({ message: 'Predictions deleted successfully', deletedIds: predictionIds });
-    } catch (error) {
-        console.error('Error deleting predictions:', error);
-        return res.status(500).send('Error deleting predictions');
-    }
-});
-//prediction
-
-//league
-exports.createLeagues = functions.https.onRequest(async (req, res) => {
-    const { members, membersInfo, leagueId } = req.body;
-    console.log("League id input", leagueId)
-    // Verifica se l'input è valido
-    if (!Array.isArray(members) || members.length === 0) {
-        return res.status(400).send('Invalid input: members must be a non-empty array.');
-    }
-
-    if (!Array.isArray(membersInfo) || membersInfo.some(member => !member.id || member.punti === undefined)) {
-        return res.status(400).send('Invalid input: membersInfo must be an array of JSON objects with "id" and "punti" fields.');
-    }
-
-    const leagueRef = admin.firestore().collection('leagues').doc(leagueId);
-
-    try {
-        // Imposta i dati della lega insieme a `members` e `membersInfo`
-        await leagueRef.set({
-            id: leagueId,
-            members: admin.firestore.FieldValue.arrayUnion(...members),
-            membersInfo: admin.firestore.FieldValue.arrayUnion(...membersInfo) // Aggiorna `membersInfo` direttamente come array
-        }, { merge: true });
-
-        console.log(`League ${leagueId} created/updated with members and membersInfo:`, members, membersInfo);
-        return res.status(201).json({ leagueId: leagueId, members: members, membersInfo });
-    } catch (error) {
-        console.error('Error creating/updating league:', error);
-        return res.status(500).send('Error creating/updating league.', error);
-    }
-});
-
-exports.deleteLeagues = functions.https.onRequest(async (req, res) => {
-    const { leagueIds } = req.body;
-    console.log('Input received:', { leagueIds });
-
-    const batch = admin.firestore().batch(); // Inizializza un batch
-    try {
-        leagueIds.forEach(id => {
-            const leagueRef = admin.firestore().collection('leagues').doc(id); // Crea un riferimento alla lega
-            batch.delete(leagueRef); // Aggiungi l'operazione di eliminazione al batch
-        });
-
-        await batch.commit(); // Esegui il batch
-        return res.status(200).send('Leagues deleted successfully.');
-    } catch (error) {
-        console.error('Error deleting leagues:', error);
-        return res.status(500).send('Error deleting leagues.');
-    }
-});
-//league
 
 //gestione rinviati
-
 // Trigger per ascoltare gli aggiornamenti sul documento `matche`
 exports.scheduleJobOnUpdate = functions.firestore
     .document('matches/{matchId}')
@@ -997,3 +778,32 @@ exports.scheduleJobOnUpdate = functions.firestore
         }
     });
 //gestione rinviati
+
+exports.createUserByJson                    = createUserByJson;
+exports.deleteUsersByIds                    = deleteUsersByIds;
+exports.writePredictions                    = writePredictions;
+exports.deletePredictions                   = deletePredictions;
+exports.createLeagues                       = createLeagues;
+exports.deleteLeagues                       = deleteLeagues;
+
+exports.migrationUser                       = migrationUser;
+exports.onUserAdded                         = onUserAdded;
+exports.onUserUpdated                       = onUserUpdated;
+exports.onUserDeleted                       = onUserDeleted;
+
+exports.migrateDaysAndMatches               = migrateDaysAndMatches;
+exports.onDayUpdated                        = onDayUpdated;
+exports.onMatchUpdated                      = onMatchUpdated;
+
+exports.migrateLeaguesAndMembers            = migrateLeaguesAndMembers;
+exports.migrateLeaguesAndMembersByCreate    = migrateLeaguesAndMembersByCreate
+exports.onLeagueUpdated                     = onLeagueUpdated;
+exports.onLeagueDeleted                     = onLeagueDeleted;
+
+exports.migratePredictionsAndSchedina        = migratePredictionsAndSchedina
+exports.updateExistingPredictionsAndSchedina = updateExistingPredictionsAndSchedina;
+exports.migrationPredictionsAndSchedina      = migrationPredictionsAndSchedina;
+
+exports.migrateGiornateCalcolate             = migrateGiornateCalcolate;
+exports.syncGiornateCalcolateOnUpdate        = syncGiornateCalcolateOnUpdate;
+exports.syncGiornateCalcolateOnCreate        = syncGiornateCalcolateOnCreate;
