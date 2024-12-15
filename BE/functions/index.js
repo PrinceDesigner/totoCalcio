@@ -14,7 +14,7 @@ const { migrateDaysAndMatches,onDayUpdated,onMatchUpdated } = require('./migrati
 const { migrateLeaguesAndMembers,onLeagueUpdated,migrateLeaguesAndMembersByCreate,onLeagueDeleted } = require('./migr_League_memersInfo');
 const { migratePredictionsAndSchedina,updateExistingPredictionsAndSchedina,migrationPredictionsAndSchedina } = require('./migr_Predictions_Schedina');
 const { migrateGiornateCalcolate,syncGiornateCalcolateOnCreate,syncGiornateCalcolateOnUpdate } = require('./migr_Giornate_Calcolate');
-const {calcolaPuntiGiornataTest,calcolaPuntiGiornata } = require('./index_migr');
+const {calcolaPuntiGiornataTest,calcolaPuntiGiornata } = require('./calcoloGiornata');
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
