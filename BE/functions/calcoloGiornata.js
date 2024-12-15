@@ -3,7 +3,7 @@ const functions = require("firebase-functions/v1");
 const supabase     = require('./supaClient');
 const { info,error, log } = require("firebase-functions/logger");
 
-exports.calcolaPuntiGiornataTest = functions.https.call(async (data, context) => {
+exports.calcolaPuntiGiornataTest = functions.https.onCall(async (data, context) => {
     info('inizio calcolo giornata ');
     // Step di inizializzazione e verifica lock
     const { leagueId, dayId } = data;
