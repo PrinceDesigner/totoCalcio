@@ -6,9 +6,9 @@ const supabase = require('../superBaseConnect');
 
 const router = express.Router();
 
-async function update_user(uuid,displaName,email) {
+async function update_user(uuid, displaName, email) {
   const { data, error } = await supabase
-  .rpc('update_user', { p_uid:uuid,p_displayname:displaName,p_email:email})
+    .rpc('update_user', { p_uid: uuid, p_displayname: displaName, p_email: email })
 
 
   if (error) {
@@ -42,7 +42,7 @@ router.put('/update-user', authMiddleware, async (req, res) => {
     if (!updatedUserDoc.exists) {
       return res.status(404).json({ message: 'Utente non trovato.' });
     }
-  
+
     try {
       // 1. Aggiorna Firebase Authentication
       const auth = getAuth(); // Ottieni l'istanza di Firebase Auth
@@ -55,8 +55,12 @@ router.put('/update-user', authMiddleware, async (req, res) => {
       console.error('Errore durante l\'aggiornamento dell\'utente:', error);
       return res.status(500).json({ message: 'Errore durante l\'aggiornamento dell\'utente.' });
     }
-  });
-  
+  } catch (error) {
+    console.error('Errore durante l\'aggiornamento dell\'utente:', error);
+    return res.status(500).json({ message: 'Errore durante l\'aggiornamento dell\'utente.' });
+  }
+});
+
 
 // Route per ottenere i displayName, userId, photoURL, punti e leagueId per un array di userId
 router.post('/users-info', async (req, res) => {

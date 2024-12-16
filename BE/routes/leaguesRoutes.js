@@ -6,6 +6,7 @@ const router = express.Router();
 const axios = require('axios');
 // const moment = require('moment');
 const moment = require('moment-timezone');
+const supabase = require('../superBaseConnect');
 
 // Funzione per sanitizzare i matchId
 function sanitizeMatchId(matchId) {
@@ -232,20 +233,40 @@ router.post('/leagues/join', authMiddleware, async (req, res) => {
   }
 });
 
+
+async function getLeagueForUserId(userId) {
+  let { data, error } = await supabase
+    .rpc('get_leagueuser', {
+      p_userid: userId
+    });
+
+
+  if (error) {
+    console.error('Error fetching data:', error);
+  } else {
+    console.log('tutto ok', data)
+    return data
+  }
+}
+
+
 // Visualizza tutte le leghe a cui l'utente partecipa
 router.get('/leagues', authMiddleware, async (req, res) => {
   const userId = req.user.uid;
   /*get_leagues_by_user caire cosa serve in output e aggiornare la funzione sul DB*/
   try {
-    const leaguesSnapshot = await firestore
-      .collection('leagues')
-      .where('members', 'array-contains', userId)
-      .get();
 
-    const leagues = leaguesSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const response = await getLeagueForUserId(userId)
+
+    let leagues = []
+    if (response.length >= 1) {
+      leagues = response.map(doc => ({
+        id: doc.id_league_ret,
+        ownerId: doc.ownerid_ret,
+        name: doc.name_ret,
+        numeroPartecipanti: doc.membri_count_ret,
+      }));
+    }
 
     res.status(200).json({ message: 'Elenco delle leghe recuperato con successo', leagues });
   } catch (error) {
@@ -253,6 +274,37 @@ router.get('/leagues', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Errore durante il recupero delle leghe' });
   }
 });
+
+async function getMembersInfoForLeague(leagueId) {
+  const { data, error } = await supabase
+    .rpc('get_members_by_league', {
+      p_league_id: leagueId      // Il JSON che contiene i dati da aggiornare
+    });
+
+  if (error) {
+    console.error('Error fetching data:', error);
+  } else {
+    console.log('tutto ok', data)
+    return data
+  }
+}
+
+// PRENDO LE INFO DEI MEMBRI
+router.get('/leagues/:leagueId/members-info', authMiddleware, async (req, res) => {
+  const { leagueId } = req.params; // Ottieni l'ID della lega dai parametri dell'URL
+  /*get_leagues_by_user caire cosa serve in output e aggiornare la funzione sul DB*/
+  try {
+
+    const response = await getMembersInfoForLeague(leagueId)
+
+    res.status(200).json({ message: 'Elenco dei members info recuperato con successo', response });
+  } catch (error) {
+    console.error('Errore durante il recupero dei members info:', error);
+    res.status(500).json({ message: 'Errore durante il recupero dei members info' });
+  }
+});
+
+
 
 // prendi una legaById
 // Recupera una lega specifica utilizzando il suo ID

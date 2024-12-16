@@ -45,6 +45,19 @@ export const getUserLeagueById = async (leagueId) => {
   }
 };
 
+// Recupera info membri
+export const getMembersInfoForLeague = async (leagueId) => {
+  try {
+    const response = await axiosInstance.get(`/leagues/${leagueId}/members-info`);
+    // {membersInfo,members}
+    console.log('MembersInfo', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Errore durante dei membri MembersInfo', error);
+    throw error;
+  }
+};
+
 // Recupera la classifica di una lega
 export const getLeagueStandings = async (leagueId) => {
   try {

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
-import { createLeague, joinLeague, getUserLeagues, getLeagueStandings, deleteLeague, updateLeagueName, getUserLeagueById } from '../../services/leagueService';
+import { createLeague, joinLeague, getUserLeagues, getLeagueStandings, deleteLeague, updateLeagueName, getUserLeagueById, getMembersInfoForLeague } from '../../services/leagueService';
 
 // Creazione di una nuova lega
 export const createLeagueThunk = createAsyncThunk('leagues/create', async (name, { rejectWithValue }) => {
@@ -65,6 +65,15 @@ export const deleteLeagueThunk = createAsyncThunk('leagues/delete', async (leagu
 export const updateLeagueNameThunk = createAsyncThunk('leagues/updateName', async ({ leagueId, leagueName }, { rejectWithValue }) => {
     try {
         const response = await updateLeagueName(leagueId, leagueName);
+        return response; // Torna i dettagli della lega aggiornata
+    } catch (error) {
+        return rejectWithValue(error.response.data); // Gestisci l'errore
+    }
+});
+// Thunk asincrono per rcuperare members-info
+export const membersInfoForLeagueNameThunk = createAsyncThunk('leagues/membersInfo', async ({ leagueId }, { rejectWithValue }) => {
+    try {
+        const response = await getMembersInfoForLeague(leagueId);
         return response; // Torna i dettagli della lega aggiornata
     } catch (error) {
         return rejectWithValue(error.response.data); // Gestisci l'errore
@@ -249,7 +258,39 @@ const leaguesSlice = createSlice({
             .addCase(updateLeagueNameThunk.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
-            });
+            })
+            .addCase(membersInfoForLeagueNameThunk.pending, (state, action) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(membersInfoForLeagueNameThunk.fulfilled, (state, action) => {
+                state.loading = false;
+
+                // Recupera l'id della lega dal meta
+                const { leagueId } = action.meta.arg;
+
+                // Trova l'elemento della lega con l'id corrispondente
+                const leagueIndex = state.leagues.findIndex(league => league.id === leagueId);
+
+                if (leagueIndex !== -1) {
+                    // Prepara membersInfo e members
+                    const membersInfo = action.payload.response.map(member => ({
+                        id: member.id_user_ret,
+                        punti: member.punti_ret,
+                    }));
+
+                    const members = action.payload.response.map(member => member.id_user_ret);
+
+                    // Aggiorna lo stato della lega con i nuovi campi
+                    state.leagues[leagueIndex].membersInfo = membersInfo;
+                    state.leagues[leagueIndex].members = members;
+                }
+
+            })
+            .addCase(membersInfoForLeagueNameThunk.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
 
     }
 });
