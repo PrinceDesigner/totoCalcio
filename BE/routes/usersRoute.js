@@ -13,6 +13,7 @@ async function update_user(uuid, displaName, email) {
 
   if (error) {
     console.error('Error fetching data:', error);
+    throw new Error(error); // Lancia un'eccezione con il messaggio dell'errore
   } else {
     console.log('tutto ok', data)
     return data

@@ -119,32 +119,40 @@ function determineResult(homeGoals, awayGoals) {
 }
 
 
+async function createLeague(p_name, p_ownerid) {
+  let { data, error } = await supabase
+    .rpc('insert_league', {
+      p_name,
+      p_ownerid
+    })
+
+  if (error) {
+    console.error('Error fetching data:', error);
+    throw new Error(error); // Lancia un'eccezione con il messaggio dell'errore
+  } else {
+    console.log('tutto ok', data)
+    return data
+  }
+}
+
+
 // Creazione di una nuova lega
 router.post('/leagues', authMiddleware, async (req, res) => {
   const { name } = req.body;
   const userId = req.user.uid; // Ottieni l'ID utente dal token verificato
 
   try {
-    // Recupera la giornata attuale
-    const currentRound = await fetchCurrentRound();
-    // const currentRoundFormatted = currentRound.toString().trim().replace(/\s+/g, '');
-    const currentRoundFormatted = currentRound.toString().trim().replace(/\s+/g, '');
 
-    // Crea una nuova lega in Firestore con la giornata attuale
-    const leagueRef = await firestore.collection('leagues').add({
-      name,
-      ownerId: [userId],
-      createdAt: moment().utc().format('YYYY-MM-DDTHH:mm:ss+00:00'),
-      members: [userId], // L'utente che crea la lega è anche il primo membro
-      membersInfo: [{ id: userId, punti: 0 }],
-    });
-
-    const league = await leagueRef.get();
-    const leagueId = league.id;
-
+    const response = await createLeague(name, userId)
+    const resp = {
+      id: response[0].id_league_ret,
+      name: response[0].name_ret,
+      numeroPartecipanti: response[0].n_partecipanti_ret,
+      ownerId: response[0].ownerid_ret
+    }
 
     // Restituisci la risposta con i dati della lega appena creata
-    res.status(201).json({ message: 'Lega creata con successo', leagueData: { ...league.data(), id: leagueId } });
+    res.status(201).json({ message: 'Lega creata con successo', leagueData: { ...resp, id: response[0].id_league_ret } });
   } catch (error) {
     console.error('Errore durante la creazione della lega:', error);
     res.status(500).json({ message: 'Errore durante la creazione della lega' });
@@ -182,53 +190,49 @@ router.put('/leagues/:leagueId', authMiddleware, async (req, res) => {
   }
 });
 
+
+async function joinInLeague(p_league_id, p_userid) {
+  let { data, error } = await supabase
+    .rpc('join_league', {
+      p_league_id,
+      p_userid
+    });
+
+  if (error) {
+    console.error('Error fetching data:', error);
+    throw new Error(error.message); // Lancia un'eccezione con il messaggio dell'errore
+  } else {
+    console.log('Tutto ok', data);
+    return data;
+  }
+}
+
+
 // Partecipazione a una lega esistente
 router.post('/leagues/join', authMiddleware, async (req, res) => {
-  const { leagueId } = req.body; // Prendi leagueId dal body della richiesta
+  let { leagueId } = req.body; // Prendi leagueId dal body della richiesta
   const userId = req.user.uid;
 
-  if (!leagueId) {
-    return res.status(400).json({ message: 'ID della lega mancante.' });
-  }
+  leagueId = leagueId?.trim();
 
   try {
-    const leagueRef = firestore.collection('leagues').doc(leagueId);
-    const league = await leagueRef.get();
-
-    if (!league.exists) {
-      return res.status(404).json({ message: 'Lega non trovata' });
+    const response = await joinInLeague(leagueId, userId)
+    const resp = {
+      id: response[0].id_league_ret,
+      name: response[0].name_ret,
+      numeroPartecipanti: response[0].n_partecipanti_ret,
+      ownerId: response[0].ownerid_ret
     }
-
-    const leagueData = league.data();
-
-    // Controlla se l'utente è già membro della lega
-    if (leagueData.members && leagueData.members.includes(userId)) {
-      return res.status(400).json({ message: 'L\'utente è già membro di questa lega.' });
-    }
-
-    /*if (leagueData.members && leagueData.members.length >= 10) {
-      return res.status(400).json({ message: 'La lega ha raggiunto il numero massimo di 10 membri.' });
-    }*/
-
-    const obj = {
-      id: userId,
-      punti: 0
-    }
-
-    // Aggiungi l'utente ai membri della lega
-    await leagueRef.update({
-      members: FieldValue.arrayUnion(userId),
-      membersInfo: FieldValue.arrayUnion(obj)
-    });
-
-    // Ritorna la lega aggiornata insieme al messaggio di successo
-    const updatedLeague = await leagueRef.get();
-
     res.status(200).json({
       message: 'Partecipazione avvenuta con successo',
-      leagueData: { ...updatedLeague.data(), id: updatedLeague.id }, // Restituisci i dettagli della lega
+      leagueData: { ...resp, id: response[0].id_league_ret }, // Restituisci i dettagli della lega
     });
   } catch (error) {
+
+    if (error.message) {
+      return res.status(500).json({ message: error.message });
+    }
+
     console.error('Errore durante la partecipazione alla lega:', error);
     res.status(500).json({ message: 'Errore durante la partecipazione alla lega' });
   }
@@ -244,6 +248,7 @@ async function getLeagueForUserId(userId) {
 
   if (error) {
     console.error('Error fetching data:', error);
+    throw new Error(error); // Lancia un'eccezione con il messaggio dell'errore
   } else {
     console.log('tutto ok', data)
     return data
@@ -284,6 +289,7 @@ async function getMembersInfoForLeague(leagueId) {
 
   if (error) {
     console.error('Error fetching data:', error);
+    throw new Error(error); // Lancia un'eccezione con il messaggio dell'errore
   } else {
     console.log('tutto ok', data)
     return data
