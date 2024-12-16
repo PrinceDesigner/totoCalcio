@@ -7,8 +7,7 @@ import { fetchDayDetails } from '../redux/slice/infogiornataAttualeSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { COLORJS } from '../theme/themeColor';
 import { fetchPrediction } from '../redux/slice/predictionsSlice';
-import { fetchParticipantsThunk } from '../redux/slice/partecipantsSlice';
-import { getUserLeaguesByIdThunk, getUserLeaguesThunk, selectLeagueById } from '../redux/slice/leaguesSlice';
+import { membersInfoForLeagueNameThunk, selectLeagueById } from '../redux/slice/leaguesSlice';
 import * as Clipboard from 'expo-clipboard'; // Importa Clipboard
 import { Share } from 'react-native';
 import { getGiornataAttuale } from '../services/infoGiornataService';
@@ -46,8 +45,7 @@ export default function LeagueDetails({ navigation }) {
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const dayId = useSelector((state) => state.giornataAttuale.giornataAttuale);
     const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
-    const provisionalRanking = useSelector((state) => state.partecipantiLegaCorrente.participants);
-    const provisionalRankingLoading = useSelector((state) => state.partecipantiLegaCorrente.loading);
+    const provisionalRanking = selectedLeague?.membersInfo;
 
     const giornateCalcolate = useSelector((state) => state.giornateDaCalcolareReducer.giornate);
     const giornateCalcolateLoading = useSelector((state) => state.giornateDaCalcolareReducer.loading);
@@ -213,7 +211,7 @@ export default function LeagueDetails({ navigation }) {
     const fetchLeagueById = async (leagueId) => {
         try {
             dispatch(showLoading()); // Mostra lo stato di caricamento
-            await dispatch(getUserLeaguesByIdThunk(leagueId)).unwrap(); // Attendi che il thunk termini
+            await dispatch(membersInfoForLeagueNameThunk({ leagueId })).unwrap()
         } catch (error) {
             console.error('Errore durante il recupero della lega:', error);
         } finally {
@@ -255,7 +253,6 @@ export default function LeagueDetails({ navigation }) {
             await Promise.all([
                 dispatch(fetchDayDetails(giornataAttuale)).unwrap(), // Recupera i dettagli della giornata
                 dispatch(fetchPrediction({ dayId, leagueId, userId })).unwrap(),// Controlla la predizione
-                dispatch(fetchParticipantsThunk({ userIds, leagueId,dayId })).unwrap(),
             ]);
 
 
@@ -267,7 +264,8 @@ export default function LeagueDetails({ navigation }) {
         }
     };
 
-    const changeLeague = (idLega) => {
+    const changeLeague = async (idLega) => {
+        await fetchLeagueById(idLega)
         dispatch(setSelectedLeagueGiornata({ giornataAttuale: giornataAttuale, legaSelezionata: idLega }));
     }
 
@@ -415,10 +413,6 @@ export default function LeagueDetails({ navigation }) {
                             <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica</Text>
                             <Text style={{ color: COLORJS.primary }}>{provisionalRanking.length} Partecipanti</Text>
                         </View>
-
-                        {provisionalRankingLoading ? (
-                            <ActivityIndicator size="large" color={colors.primary} />
-                        ) : (
                             <>
                                 <RankingList ranking={sortedRanking} size={20} />
 
@@ -435,7 +429,6 @@ export default function LeagueDetails({ navigation }) {
                                     Classifica Completa
                                 </Button>
                             </>
-                        )}
                     </View>
                     <View style={styles.shareAction}>
                         <View style={{ paddingRight: 10 }}>

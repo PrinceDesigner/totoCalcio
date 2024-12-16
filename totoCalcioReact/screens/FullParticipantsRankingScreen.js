@@ -10,11 +10,13 @@ import { getPredictionsForDay } from '../services/predictionsService';
 import TabContainer from '../components/Tabs/TabContainer';
 import fontStyle from '../theme/fontStyle';
 import Wrapper from './componentScreen/Container';
+import { selectLeagueById } from '../redux/slice/leaguesSlice';
 
 export default function FullParticipantsRankingScreen({ navigation }) {
     const { colors } = useTheme();
-    const participants = useSelector((state) => state.partecipantiLegaCorrente.participants);
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
+    const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
+    const participants = selectedLeague?.membersInfo;
     const dispatch = useDispatch();
     const [selectedTab, setSelectedTab] = useState('Generale'); // Stato per selezionare il tab attivo
     const [selectedGiornata, setSelectedGiornata] = useState('1'); // Stato per selezionare la giornata attiva

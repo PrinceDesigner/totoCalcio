@@ -275,8 +275,10 @@ const leaguesSlice = createSlice({
                 if (leagueIndex !== -1) {
                     // Prepara membersInfo e members
                     const membersInfo = action.payload.response.map(member => ({
-                        id: member.id_user_ret,
+                        userId: member.id_user_ret,
                         punti: member.punti_ret,
+                        displayName: member.displayname_ret,
+                        photoURL: member.photoUrl
                     }));
 
                     const members = action.payload.response.map(member => member.id_user_ret);

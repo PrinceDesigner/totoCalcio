@@ -23,7 +23,7 @@ export default function ParticipantsListScreen({ navigation }) {
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const userId = useSelector((state) => state.auth.user.user.userId);
     const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
-    const participants = useSelector((state) => state.partecipantiLegaCorrente.participants);
+    const participants = selectedLeague?.membersInfo;
 
 
     // Funzione per mostrare la modale

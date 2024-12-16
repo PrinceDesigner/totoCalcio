@@ -8,6 +8,7 @@ import { checkPrediction } from '../services/predictionsService';
 import { useNavigation } from '@react-navigation/native';
 import PredictionComponent from './componentScreen/SchedinaInserita';
 import fontStyle from '../theme/fontStyle';
+import { selectLeagueById } from '../redux/slice/leaguesSlice';
 
 export default function GiornataDetailsScreen({ route }) {
     const { colors } = useTheme();
@@ -18,7 +19,8 @@ export default function GiornataDetailsScreen({ route }) {
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const dayId = useSelector((state) => state.giornataAttuale.giornataAttuale);
     const matches = useSelector((state) => state.infogiornataAttuale.matches);
-    const participants = useSelector((state) => state.partecipantiLegaCorrente.participants);
+    const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
+    const participants = selectedLeague?.membersInfo;    
     const prediction = useSelector((state) => state.insertPredictions.schedinaInserita);
     const loading = useSelector((state) => state.ui.loading);
 

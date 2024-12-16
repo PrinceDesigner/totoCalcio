@@ -148,9 +148,9 @@ const HomeScreen = React.memo(() => {
     const handleLeaguePress = async (league) => {
         try {
             dispatch(showLoading()); // Mostra lo stato di caricamento
-            dispatch(setSelectedLeagueGiornata({ giornataAttuale: giornataAttuale, legaSelezionata: league.id }));
-
+            
             // Dispatch del thunk e attendi la sua risoluzione
+            dispatch(setSelectedLeagueGiornata({ giornataAttuale: giornataAttuale, legaSelezionata: league.id }));
             await dispatch(membersInfoForLeagueNameThunk({ leagueId: league.id })).unwrap();
             navigation.navigate('LeagueDetailsStack');
 

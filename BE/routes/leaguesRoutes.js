@@ -7,6 +7,7 @@ const axios = require('axios');
 // const moment = require('moment');
 const moment = require('moment-timezone');
 const supabase = require('../superBaseConnect');
+const { getAuth } = require('firebase-admin/auth');
 
 // Funzione per sanitizzare i matchId
 function sanitizeMatchId(matchId) {
@@ -294,8 +295,31 @@ router.get('/leagues/:leagueId/members-info', authMiddleware, async (req, res) =
   const { leagueId } = req.params; // Ottieni l'ID della lega dai parametri dell'URL
   /*get_leagues_by_user caire cosa serve in output e aggiornare la funzione sul DB*/
   try {
+    const auth = getAuth();
 
-    const response = await getMembersInfoForLeague(leagueId)
+    const r = await getMembersInfoForLeague(leagueId)
+    // Mappa gli utenti con le informazioni aggiuntive da Firebase Authentication
+    const response = await Promise.all(
+
+      r.map(async (el) => {
+        try {
+          // Recupera le informazioni utente da Firebase Authentication
+          const userRecord = await auth.getUser(el.id_user_ret);
+          // Aggiungi photoUrl all'oggetto
+          return {
+            ...el,
+            photoUrl: userRecord.photoURL || null, // photoURL potrebbe essere null
+          };
+        } catch (error) {
+          console.error(`Errore per utente ${el.id_user_ret}:`, error);
+          // Se fallisce, restituisci comunque l'elemento senza photoUrl
+          return {
+            ...el,
+            photoUrl: null,
+          };
+        }
+      })
+    );
 
     res.status(200).json({ message: 'Elenco dei members info recuperato con successo', response });
   } catch (error) {
