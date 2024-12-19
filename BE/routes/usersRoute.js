@@ -39,19 +39,16 @@ router.put('/update-user', authMiddleware, async (req, res) => {
 });
 
 
-// Route per ottenere i displayName, userId, photoURL, punti e leagueId per un array di userId
 router.post('/users-info', async (req, res) => {
-  const { userIds, leagueId, dayId } = req.body; // Aggiunto leagueId alla richiesta
+  const { userIds, leagueId, dayId } = req.body;
 
-  // Controlla che userIds e leagueId siano forniti
   if (!userIds || !Array.isArray(userIds) || userIds.length === 0 || !leagueId) {
     return res.status(400).json({ message: 'Devi fornire un array di userId e un leagueId.' });
   }
 
   try {
-    // Ottieni il documento della lega per ottenere i punti
+    // Recupera il documento della lega e controlla l'esistenza
     const leagueDoc = await firestore.collection('leagues').doc(leagueId).get();
-
     if (!leagueDoc.exists) {
       return res.status(404).json({ message: 'Lega non trovata.' });
     }
@@ -59,64 +56,71 @@ router.post('/users-info', async (req, res) => {
     const leagueData = leagueDoc.data();
     const memberInfo = leagueData.membersInfo || [];
 
-    // Ottieni i documenti degli utenti in batch dalla collezione Firestore
-    const userRefs = userIds.map(userId => firestore.collection('users').doc(userId));
-    const userSnapshots = await firestore.getAll(...userRefs);
+    // Pre-processa memberInfo in una Map per accesso rapido
+    const memberMap = new Map(memberInfo.map(member => [member.id, member]));
 
-    // Ottieni i dettagli degli utenti da Firebase Authentication in parallelo
+    // Prepara le promesse per ottenere i dati
     const auth = getAuth();
-    const userRecords = await Promise.all(userIds.map(userId => auth.getUser(userId).catch(() => null)));
 
-    // Recupera tutti i documenti schedina in un'unica query per dayId, leagueId e userIds
-    const schedineSnapshot = await firestore
-      .collection('predictions')
-      .where('daysId', '==', dayId)
-      .where('leagueId', '==', leagueId)
-      .where('userId', 'in', userIds) // Recupera tutte le schedine per questi userIds
-      .get();
+    const [userSnapshots, userRecords, schedineSnapshot] = await Promise.all([
+      // Batch query per i documenti degli utenti
+      Promise.all(
+        userIds.map(userId =>
+          firestore.collection('users').doc(userId).get().catch(() => null)
+        )
+      ),
+      // Batch query per i dati di Firebase Authentication
+      Promise.all(
+        userIds.map(userId => auth.getUser(userId).catch(() => null))
+      ),
+      // Query unica per ottenere tutte le schedine
+      firestore
+        .collection('predictions')
+        .where('daysId', '==', dayId)
+        .where('leagueId', '==', leagueId)
+        .get(),
+    ]);
 
     // Crea una mappa userId -> schedina per accesso rapido
     const schedineMap = new Map();
     schedineSnapshot.forEach(doc => {
       const data = doc.data();
-      schedineMap.set(data.userId, data); // Salva schedina con chiave userId
+      schedineMap.set(data.userId, data);
     });
 
-    // Crea un array per le informazioni degli utenti
-    const usersInfo = [];
+    // Genera l'array delle informazioni degli utenti
+    const usersInfo = userIds.map((userId, index) => {
+      const userSnapshot = userSnapshots[index];
+      const authUser = userRecords[index];
+      const schedina = schedineMap.get(userId);
 
-    // Itera su userSnapshots e userRecords simultaneamente
-    for (let i = 0; i < userSnapshots.length; i++) {
-      const snapshot = userSnapshots[i];
-      const authUser = userRecords[i];
-      const schedina = schedineMap.get(snapshot.id); // Ottieni schedina dalla mappa
+      if (userSnapshot && userSnapshot.exists) {
+        const data = userSnapshot.data();
 
+        // Recupera il membro dalla Map invece di usare find
+        const member = memberMap.get(userId);
+        const punti = member ? member.punti : 0;
 
-      if (snapshot.exists) {
-        const data = snapshot.data();
-
-        // Trova i punti dell'utente all'interno dell'array members
-        const member = memberInfo.find(member => member.id === snapshot.id);
-        const punti = member ? member.punti : 0; // Se non trovi il membro, assegna 0 punti
-
-        usersInfo.push({
-          userId: snapshot.id,
+        return {
+          userId,
           displayName: data.displayName || 'Nome non disponibile',
-          photoURL: authUser ? authUser.photoURL : null, // Ottieni il photoURL dall'utente autenticato
-          punti, // Includi i punti dell'utente
-          leagueId,// Includi leagueId in ogni oggetto utente
-          schedina: schedina?.schedina || null // Includi il contenuto del documento schedina, se presente
-
-        });
+          photoURL: authUser?.photoURL || null,
+          punti,
+          leagueId,
+          schedina: schedina?.schedina || null,
+        };
       }
-    }
 
-    res.status(200).json({ leagueId, users: usersInfo }); // Risposta include leagueId e users
+      return null; // Se snapshot è nullo, saltiamo l'utente
+    }).filter(Boolean); // Filtra utenti nulli
+
+    res.status(200).json({ leagueId, users: usersInfo });
   } catch (error) {
     console.error('Errore durante il recupero delle informazioni degli utenti:', error);
-    return res.status(500).json({ message: 'Errore durante il recupero delle informazioni degli utenti.' });
+    res.status(500).json({ message: 'Errore durante il recupero delle informazioni degli utenti.' });
   }
 });
+
 
 
 
