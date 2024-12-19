@@ -249,36 +249,61 @@ export default function LeagueDetails({ navigation }) {
     };
 
 
-    // Calcola i partecipanti aggiornati con un useEffect
     useEffect(() => {
-
         if (isPast) {
-            // Mappa le partite
-            let mappaMatches = matches.map(el => ({
-                matchId: el.matchId,
-                result: el.result,
-            }));
+            // Crea una mappa dei risultati dei match per accesso rapido
+            const matchResultsMap = new Map(matches.map(el => [el.matchId, el.result]));
 
-            // Calcola i punti per ogni partecipante
-            let updatedCopy = provisionalRanking.map((el, i) => {
-                let punti = el.punti;
-                if (el.schedina) {
-                    el.schedina.forEach(element => {
-                        let { matchId, esitoGiocato } = element;
-                        const match = mappaMatches.find(c => c.matchId === matchId);
-                        if (match && match.result === esitoGiocato) {
-                            punti += 1;
-                        }
-                    });
-                    return { ...el, punti };
-                }
-                return el;
+            // Calcola i punti aggiornati per ogni partecipante
+            const updatedCopy = provisionalRanking.map(participant => {
+                if (!participant.schedina) return participant; // Se non c'è schedina, ritorna il partecipante invariato
+
+                const punti = participant.schedina.reduce((totalPoints, { matchId, esitoGiocato }) => {
+                    // Confronta il risultato con l'esito giocato
+                    const matchResult = matchResultsMap.get(matchId);
+                    return matchResult === esitoGiocato ? totalPoints + 1 : totalPoints;
+                }, participant.punti);
+
+                // Ritorna il partecipante con i punti aggiornati
+                return { ...participant, punti };
             });
 
             // Aggiorna lo stato locale
             setUpdatedParticipants(updatedCopy);
         }
-    }, [provisionalRanking, isPast]);
+    }, [provisionalRanking, isPast, matches]);
+
+
+    // // Calcola i partecipanti aggiornati con un useEffect
+    // useEffect(() => {
+
+    //     if (isPast) {
+    //         // Mappa le partite
+    //         let mappaMatches = matches.map(el => ({
+    //             matchId: el.matchId,
+    //             result: el.result,
+    //         }));
+
+    //         // Calcola i punti per ogni partecipante
+    //         let updatedCopy = provisionalRanking.map((el, i) => {
+    //             let punti = el.punti;
+    //             if (el.schedina) {
+    //                 el.schedina.forEach(element => {
+    //                     let { matchId, esitoGiocato } = element;
+    //                     const match = mappaMatches.find(c => c.matchId === matchId);
+    //                     if (match && match.result === esitoGiocato) {
+    //                         punti += 1;
+    //                     }
+    //                 });
+    //                 return { ...el, punti };
+    //             }
+    //             return el;
+    //         });
+
+    //         // Aggiorna lo stato locale
+    //         setUpdatedParticipants(updatedCopy);
+    //     }
+    // }, [provisionalRanking, isPast]);
 
     const fetchDataInParallel = async () => {
         try {
@@ -465,7 +490,7 @@ export default function LeagueDetails({ navigation }) {
                                     onPress={() =>
                                         navigation.navigate('FullParticipantsRankingScreen', {
                                             isLive: isPast,
-                                            liveParticipants: isPast ?  [...updatedParticipants].sort((a, b) => b.punti - a.punti) : [], // Passa l'array dei partecipanti live
+                                            liveParticipants: isPast ? [...updatedParticipants].sort((a, b) => b.punti - a.punti) : [], // Passa l'array dei partecipanti live
                                         })
                                     } style={styles.fullRankingButton}
                                     labelStyle={{
