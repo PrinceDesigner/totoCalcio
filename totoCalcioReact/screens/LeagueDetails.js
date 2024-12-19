@@ -59,6 +59,8 @@ export default function LeagueDetails({ navigation }) {
     const userIds = selectedLeague?.members;
     const matches = infogiornataAttuale.matches;
 
+    const [updatedParticipants, setUpdatedParticipants] = useState([]);
+
     const matchdayNumber = infogiornataAttuale.dayId && infogiornataAttuale.dayId.replace('RegularSeason-', '') || 0;
     const startDate = infogiornataAttuale && infogiornataAttuale.startDate;
 
@@ -247,6 +249,37 @@ export default function LeagueDetails({ navigation }) {
     };
 
 
+    // Calcola i partecipanti aggiornati con un useEffect
+    useEffect(() => {
+
+        if (isPast) {
+            // Mappa le partite
+            let mappaMatches = matches.map(el => ({
+                matchId: el.matchId,
+                result: el.result,
+            }));
+
+            // Calcola i punti per ogni partecipante
+            let updatedCopy = provisionalRanking.map((el, i) => {
+                let punti = el.punti;
+                if (el.schedina) {
+                    el.schedina.forEach(element => {
+                        let { matchId, esitoGiocato } = element;
+                        const match = mappaMatches.find(c => c.matchId === matchId);
+                        if (match && match.result === esitoGiocato) {
+                            punti += 1;
+                        }
+                    });
+                    return { ...el, punti };
+                }
+                return el;
+            });
+
+            // Aggiorna lo stato locale
+            setUpdatedParticipants(updatedCopy);
+        }
+    }, [provisionalRanking, isPast]);
+
     const fetchDataInParallel = async () => {
         try {
             dispatch(showLoading()); // Mostra lo stato di caricamento
@@ -255,7 +288,7 @@ export default function LeagueDetails({ navigation }) {
             await Promise.all([
                 dispatch(fetchDayDetails(giornataAttuale)).unwrap(), // Recupera i dettagli della giornata
                 dispatch(fetchPrediction({ dayId, leagueId, userId })).unwrap(),// Controlla la predizione
-                dispatch(fetchParticipantsThunk({ userIds, leagueId,dayId })).unwrap(),
+                dispatch(fetchParticipantsThunk({ userIds, leagueId, dayId })).unwrap(),
             ]);
 
 
@@ -410,9 +443,12 @@ export default function LeagueDetails({ navigation }) {
                         <BannerAdComponent />
                     </View> */}
                     {/* Classifica Provvisoria */}
-                    <View style={{ ...styles.section, marginBottom: 0 }}>
+                    <View style={[
+                        { ...styles.section, marginBottom: 0 },
+                        isPast ? styles.isLive : null
+                    ]}>
                         <View style={styles.rowHeaderRanking}>
-                            <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica</Text>
+                            <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica {isPast ? <Text style={{ color: 'red' }}>LIVE 🔴</Text> : null}</Text>
                             <Text style={{ color: COLORJS.primary }}>{provisionalRanking.length} Partecipanti</Text>
                         </View>
 
@@ -420,14 +456,18 @@ export default function LeagueDetails({ navigation }) {
                             <ActivityIndicator size="large" color={colors.primary} />
                         ) : (
                             <>
-                                <RankingList ranking={sortedRanking} size={20} />
+                                <RankingList ranking={!isPast ? sortedRanking : [...updatedParticipants].sort((a, b) => b.punti - a.punti).slice(0, 6)} size={20} />
 
                                 {/* Bottone per vedere la classifica completa */}
                                 <Button
                                     mode="outlined"
                                     icon={'format-list-bulleted'}
-                                    onPress={() => navigation.navigate('FullParticipantsRankingScreen')}
-                                    style={styles.fullRankingButton}
+                                    onPress={() =>
+                                        navigation.navigate('FullParticipantsRankingScreen', {
+                                            isLive: isPast,
+                                            liveParticipants: isPast ?  [...updatedParticipants].sort((a, b) => b.punti - a.punti) : [], // Passa l'array dei partecipanti live
+                                        })
+                                    } style={styles.fullRankingButton}
                                     labelStyle={{
                                         ...fontStyle.textBold
                                     }}
@@ -587,6 +627,9 @@ const styles = StyleSheet.create({
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center'
+    },
+    isLive: {
+        borderWidth: 1, borderColor: 'red'
     }
 });
 

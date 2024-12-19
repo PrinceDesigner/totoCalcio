@@ -11,8 +11,7 @@ import TabContainer from '../components/Tabs/TabContainer';
 import fontStyle from '../theme/fontStyle';
 import Wrapper from './componentScreen/Container';
 
-export default function FullParticipantsRankingScreen({ navigation }) {
-    const { colors } = useTheme();
+export default function FullParticipantsRankingScreen({ navigation, route }) {
     const participants = useSelector((state) => state.partecipantiLegaCorrente.participants);
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const dispatch = useDispatch();
@@ -24,6 +23,9 @@ export default function FullParticipantsRankingScreen({ navigation }) {
         [...Array(38).keys()].map((giornata) => ({ label: `Giornata ${giornata + 1}`, value: `${giornata + 1}` }))
     );
 
+    // Parametri ricevuti dalla route
+    const { isLive, liveParticipants } = route.params || { isLive: false, liveParticipants: [] };
+
     const tabs = [
         {
             label: 'Generale',
@@ -34,6 +36,10 @@ export default function FullParticipantsRankingScreen({ navigation }) {
             onPress: () => setSelectedTab('Giornate'),
         },
     ];
+
+    if (isLive) {
+        tabs.push({ label: 'Classifica Live', onPress: () => setSelectedTab('Live') });
+    }
 
     useEffect(() => {
         if (selectedTab === 'Giornate') {
@@ -79,6 +85,12 @@ export default function FullParticipantsRankingScreen({ navigation }) {
         </ScrollView>
     );
 
+    const renderLiveTab = () => (
+        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+            <RankingList ranking={liveParticipants} />
+        </ScrollView>
+    );
+
     const renderGiornateTab = () => (
         <View>
             <DropDownPicker
@@ -109,7 +121,9 @@ export default function FullParticipantsRankingScreen({ navigation }) {
             <TabContainer tabs={tabs} />
             {/* Contenuto del Tab */}
             <Wrapper>
-                {selectedTab === 'Generale' ? renderGeneraleTab() : renderGiornateTab()}
+                {selectedTab === 'Generale' && renderGeneraleTab()}
+                {selectedTab === 'Giornate' && renderGiornateTab()}
+                {selectedTab === 'Live' && isLive && renderLiveTab()}
             </Wrapper>
             {/* Contenuto del Tab */}
         </View>

@@ -10,7 +10,7 @@ const EsitiGiocatiPerPartitaScreen = ({ route }) => {
     const { fixtureId } = route.params;
     const participantsWithMatch = useSelector((state) =>
         selectParticipantAndMatchByMatchId(state, fixtureId)
-    );
+    ) || [];
 
 
 

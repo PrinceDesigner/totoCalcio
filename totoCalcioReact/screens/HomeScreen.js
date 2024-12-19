@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { deleteLeagueThunk, getUserLeaguesThunk } from '../redux/slice/leaguesSlice';
 import { showLoading, hideLoading } from '../redux/slice/uiSlice';
 import { MaterialIcons } from '@expo/vector-icons';
-import { setSelectedLeagueGiornata } from '../redux/slice/selectedLeagueSlice';
+import { setSelectedGiornata, setSelectedLeagueGiornata } from '../redux/slice/selectedLeagueSlice';
 import { logout } from '../redux/slice/authSlice';
 import { getGiornataAttuale } from '../services/infoGiornataService';
 import { SafeAreaView } from 'react-native-safe-area-context'; // Importa SafeAreaView
@@ -37,8 +37,7 @@ const HomeScreen = React.memo(() => {
     const userId = useSelector((state) => state.auth.user && state.auth.user.user.userId); // Recupera l'ID utente dallo stato
     const userName = useSelector((state) => state.auth.user && state.auth.user.user.fullName); // Recupera l'ID utente dallo stato
     const photoProfile = useSelector((state) => state.auth.photoUri); // Stato delle leghe
-
-    const [giornataAttuale, setGiornataAttuale] = useState();
+    const giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale);
     const [refreshing, setRefreshing] = useState(false);
     const [selectedLeague, setSelectedLeague] = useState(null); // Stato per la lega selezionata per l'eliminazione
     const [isModalVisible, setModalVisible] = useState(false); // Stato per la visibilità della modale
@@ -119,7 +118,7 @@ const HomeScreen = React.memo(() => {
             // Esegui fetchLeagues e fetchGiornataAttuale in parallelo
             await Promise.all([
                 dispatch(getUserLeaguesThunk()).unwrap(), // Recupera le leghe
-                getGiornataAttuale().then((giornata) => setGiornataAttuale(giornata)) // Recupera la giornata attuale
+                getGiornataAttuale().then((giornata) => dispatch(setSelectedGiornata({ giornataAttuale: giornata }))) // Recupera la giornata attuale
             ]);
         } catch (error) {
             if (error.status === 401 || error.status === 403 || error.status === 500) {
