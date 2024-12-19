@@ -22,7 +22,6 @@ const store = configureStore({
     infogiornataAttuale: infogiornataAttualeReducer,
     giornataAttuale: selectedLeagueReducer,
     insertPredictions: insertPredictionsReducer,
-    partecipantiLegaCorrente: participantsReducer, // Aggiungi il reducer dei partecipanti
     storicoPerUtenteSelezionato: storicoPerUtenteSelezionatoReducer,
     refresh: refreshReducer,
     giornateDaCalcolareReducer: giornateDaCalcolareReducer,

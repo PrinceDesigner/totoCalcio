@@ -7,9 +7,9 @@ export const savePrediction = createAsyncThunk(
   async ({predictionData, leagueId}, { rejectWithValue }) => {
     try {
       const response = await createPrediction(predictionData);
-      return response.find(el => el.leagueId === leagueId);
+      return {schedina: response.schedina};
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error);
     }
   }
 );
@@ -20,7 +20,7 @@ export const fetchPrediction = createAsyncThunk(
   async ({ dayId, leagueId, userId }, { rejectWithValue }) => {
     try {
       const prediction = await checkPrediction(dayId, leagueId, userId);
-      return prediction;
+      return {schedina: prediction.schedina};
     } catch (error) {
       return rejectWithValue(error.response?.data || 'Errore durante il controllo della predizione');
     }

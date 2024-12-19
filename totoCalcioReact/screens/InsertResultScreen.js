@@ -16,11 +16,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 // import { BannerAdComponent } from '../components/Adv/AdvBanner';
 import Wrapper from './componentScreen/Container';
 
-
-
-
-
-
 export default function InsertResultsScreen({ navigation }) {
     moment.locale('it');
 
@@ -89,6 +84,7 @@ export default function InsertResultsScreen({ navigation }) {
         } 
 
         const predictionData = {
+            legaSelezionata: leagueId,
             userId: userId,
             leagueId: !checked ? leagueId : stringOfId,
             daysId: giornataAttuale,
@@ -110,6 +106,7 @@ export default function InsertResultsScreen({ navigation }) {
 
     const insert = async (predictionData) => {
         try {
+
             // let insertSchedinaResult = predictionData.map(el => el.leagueId === leagueId) ;
             setModalVisible(false); // Chiudi la modale
             dispatch(showLoading()); // Mostra lo stato di caricamento
