@@ -14,7 +14,7 @@ const { migrateDaysAndMatches,onDayUpdated,onMatchUpdated } = require('./migrati
 const { migrateLeaguesAndMembers,onLeagueUpdated,migrateLeaguesAndMembersByCreate,onLeagueDeleted } = require('./migr_League_memersInfo');
 const { migratePredictionsAndSchedina,updateExistingPredictionsAndSchedina,migrationPredictionsAndSchedina } = require('./migr_Predictions_Schedina');
 const { migrateGiornateCalcolate,syncGiornateCalcolateOnCreate,syncGiornateCalcolateOnUpdate } = require('./migr_Giornate_Calcolate');
-const {calcolaPuntiGiornataTest,calcolaPuntiGiornata } = require('./calcoloGiornata');
+const {calcolaPuntiGiornataTest } = require('./calcoloGiornata');
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -501,7 +501,7 @@ async function updateCurrentGiornata(noStep) {
     if (noStep) {//Quando update match parte da una partita posticipata non andare avanti con la giornata
         return ""
     }
-
+    const promises = [];
     const projectId = 'totocalcioreact'; // Usa l'ID del progetto Firebase
     // Usa il GoogleAuth per ottenere l'authClient con i corretti scopes
     const auth = new google.auth.GoogleAuth({
@@ -536,7 +536,8 @@ async function updateCurrentGiornata(noStep) {
         //come input matchId così entriamo sul db direttamente ed aggiorniamo il singolo match -> Funz updateSingleMatchId
         matches.forEach(singleMatch => {
             const matchIdData = singleMatch.data();
-            const matchId = singleMatch.matchId;
+            log(matchIdData);
+            const matchId = matchIdData.matchId;
             // Ottieni la data di fine con moment
             const endDate = moment(matchIdData.startTime);
             // Aggiungi 2 ore alla data di fine
@@ -569,8 +570,8 @@ async function updateCurrentGiornata(noStep) {
                 requestBody: job,
                 auth: authClient,
             });
-            functions.logger.info('JOB->', job)
-            functions.logger.info('Auth ->', authClient)
+            /*functions.logger.info('JOB->', job)
+            functions.logger.info('Auth ->', authClient)*/
             promises.push(promise);
     });
         await Promise.all(promises); // Aspetta che tutte le promesse siano risolte
@@ -810,4 +811,3 @@ exports.syncGiornateCalcolateOnUpdate        = syncGiornateCalcolateOnUpdate;
 exports.syncGiornateCalcolateOnCreate        = syncGiornateCalcolateOnCreate;
 
 exports.calcolaPuntiGiornataTest             = calcolaPuntiGiornataTest;
-exports.calcolaPuntiGiornata                 = calcolaPuntiGiornata;
