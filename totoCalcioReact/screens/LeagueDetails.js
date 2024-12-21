@@ -92,19 +92,6 @@ export default function LeagueDetails({ navigation }) {
     };
 
     useEffect(() => {
-        const checkUserMembership = () => {
-            const userIds = selectedLeague?.members;
-            if (!userIds.includes(userId)) {
-                navigation.navigate('Home1', { refresh: true });
-            }
-        };
-
-        if (selectedLeague) {
-            checkUserMembership();
-        }
-    }, [selectedLeague]);
-
-    useEffect(() => {
         if (refreshRequired) {
             // Effettua la chiamata per aggiornare i dati
             if (giornataAttuale && dayId && leagueId && userId && userIds.length) {

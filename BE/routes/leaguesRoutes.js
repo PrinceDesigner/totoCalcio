@@ -160,6 +160,23 @@ router.post('/leagues', authMiddleware, async (req, res) => {
 });
 
 
+async function updateNameLeague(p_league_id,
+  p_new_name) {
+  let { data, error } = await supabase
+    .rpc('update_league_name', {
+      p_league_id,
+      p_new_name
+    })
+
+  if (error) {
+    console.error('Error fetching data:', error);
+    throw new Error(error); // Lancia un'eccezione con il messaggio dell'errore
+  } else {
+    console.log('tutto ok', data)
+    return data
+  }
+}
+
 // Route per aggiornare il nome della lega
 router.put('/leagues/:leagueId', authMiddleware, async (req, res) => {
   const { leagueId } = req.params; // Ottieni l'ID della lega dai parametri dell'URL
@@ -170,17 +187,8 @@ router.put('/leagues/:leagueId', authMiddleware, async (req, res) => {
   }
 
   try {
-    // Ottieni il riferimento al documento della lega
-    const leagueRef = firestore.collection('leagues').doc(leagueId);
-    const leagueDoc = await leagueRef.get();
 
-    // Verifica se la lega esiste
-    if (!leagueDoc.exists) {
-      return res.status(404).json({ message: 'Lega non trovata.' });
-    }
-
-    // Aggiorna il nome della lega
-    await leagueRef.update({ name: leagueName.trim() });
+    await updateNameLeague(leagueId, leagueName)
 
     // Restituisci l'ID della lega e il nuovo nome come risposta
     res.status(200).json({ leagueId, nomeNuovo: leagueName.trim() });
