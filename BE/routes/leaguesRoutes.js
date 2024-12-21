@@ -538,38 +538,28 @@ router.post('/leagues/upload-matches', async (req, res) => {
   }
 });
 
+async function getDayDetails(p_dayid) {
+  let { data, error } = await supabase
+    .rpc('get_mathes_by_dayid', {
+      p_dayid
+    })
+
+  if (error) {
+    console.error('Error fetching data:', error);
+    throw new Error(error); // Lancia un'eccezione con il messaggio dell'errore
+  } else {
+    console.log('tutto ok', data)
+    return data
+  }
+}
+
 // Route per ottenere i dettagli delle giornate con le partite in bulk
 router.get('/leagues/days/:dayId', async (req, res) => {
   const { dayId } = req.params;
 
   try {
-    // Ottieni il documento della giornata dalla collezione 'days'
-    const dayDoc = await firestore.collection('days').doc(dayId).get();
-
-    if (!dayDoc.exists) {
-      return res.status(404).json({ message: 'Giornata non trovata' });
-    }
-
-    const dayData = dayDoc.data();
-
-    // Recupera tutti i matchId della giornata in un array
-    const matchIds = dayData.matches.map(matchId => matchId.toString()); // Converti i matchId in stringa
-
-    // Recupera i documenti delle partite in bulk con una sola chiamata
-    const matchesSnapshot = await firestore.collection('matches').where(FieldPath.documentId(), 'in', matchIds).get();
-
-    // Estrai i dettagli delle partite dai documenti ottenuti
-    const matchesDetails = matchesSnapshot.docs.map(doc => doc.data());
-
-    // Risposta contenente i dati della giornata e i dettagli delle partite
-    res.status(200).json({
-      dayId: dayData.dayId,
-      dayNumber: dayData.dayNumber,
-      startDate: dayData.startDate,
-      endDate: dayData.endDate,
-      isCurrentDay: dayData.isCurrentDay,
-      matches: matchesDetails // Includi i dettagli delle partite
-    });
+   const detailsDay = await getDayDetails(dayId)
+    res.status(200).json(detailsDay);
 
   } catch (error) {
     console.error('Errore durante il recupero della giornata:', error);
