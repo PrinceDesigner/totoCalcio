@@ -8,7 +8,7 @@ import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { COLORJS } from '../theme/themeColor';
 import { fetchPrediction } from '../redux/slice/predictionsSlice';
 import { fetchParticipantsThunk } from '../redux/slice/partecipantsSlice';
-import { getUserLeaguesByIdThunk, getUserLeaguesThunk, selectLeagueById } from '../redux/slice/leaguesSlice';
+import { getUserLeaguesByIdThunk, selectLeagueById } from '../redux/slice/leaguesSlice';
 import * as Clipboard from 'expo-clipboard'; // Importa Clipboard
 import { Share } from 'react-native';
 import { getGiornataAttuale } from '../services/infoGiornataService';
@@ -17,7 +17,6 @@ import { clearRefresh } from '../redux/slice/refreshSlice';
 import RankingList from './componentScreen/RankingList';
 import fontStyle from '../theme/fontStyle';
 // import { BannerAdComponent } from '../components/Adv/AdvBanner';
-import DailyQuestion from './componentScreen/quiz/DailyQuestions';
 import Wrapper from './componentScreen/Container';
 import { fetchGiornateCalcolateThunk } from '../redux/slice/giornateDaCalcolareSlice';
 import GiornateDaCalcolareItemList from './componentScreen/GiornateDaCalcolareItemList';
@@ -273,37 +272,6 @@ export default function LeagueDetails({ navigation }) {
         }
     }, [provisionalRanking, isPast, matches]);
 
-
-    // // Calcola i partecipanti aggiornati con un useEffect
-    // useEffect(() => {
-
-    //     if (isPast) {
-    //         // Mappa le partite
-    //         let mappaMatches = matches.map(el => ({
-    //             matchId: el.matchId,
-    //             result: el.result,
-    //         }));
-
-    //         // Calcola i punti per ogni partecipante
-    //         let updatedCopy = provisionalRanking.map((el, i) => {
-    //             let punti = el.punti;
-    //             if (el.schedina) {
-    //                 el.schedina.forEach(element => {
-    //                     let { matchId, esitoGiocato } = element;
-    //                     const match = mappaMatches.find(c => c.matchId === matchId);
-    //                     if (match && match.result === esitoGiocato) {
-    //                         punti += 1;
-    //                     }
-    //                 });
-    //                 return { ...el, punti };
-    //             }
-    //             return el;
-    //         });
-
-    //         // Aggiorna lo stato locale
-    //         setUpdatedParticipants(updatedCopy);
-    //     }
-    // }, [provisionalRanking, isPast]);
 
     const fetchDataInParallel = async () => {
         try {
