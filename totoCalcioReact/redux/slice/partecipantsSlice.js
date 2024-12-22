@@ -58,14 +58,16 @@ export const selectParticipantAndMatchByMatchId = createSelector(
   (participants, matchId) => {
     return participants
       .map((participant) => {
-        const match = participant.schedina.find((schedina) => schedina.matchId === matchId);
-        if (match) {
-          return {
-            userId: participant.userId,
-            displayName: participant.displayName,
-            photoURL: participant.photoURL,
-            match: match, // Dettagli del match
-          };
+        if (participant.schedina) {
+          const match = participant.schedina.find((schedina) => schedina.matchId === matchId);
+          if (match) {
+            return {
+              userId: participant.userId,
+              displayName: participant.displayName,
+              photoURL: participant.photoURL,
+              match: match, // Dettagli del match
+            };
+          }
         }
         return null;
       })
