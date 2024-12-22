@@ -417,9 +417,13 @@ export default function LeagueDetails({ navigation }) {
                         <BannerAdComponent />
                     </View> */}
                     {/* Classifica Provvisoria */}
-                    <View style={{ ...styles.section, marginBottom: 0 }}>
+                    <View style={[{ ...styles.section, marginBottom: 0 },
+                    isPast ? styles.activeStyle : {}  // Aggiunge activeStyle quando isActive è true
+                    ]}>
                         <View style={styles.rowHeaderRanking}>
-                            <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica</Text>
+                            <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica
+                                {isPast ? <Text style={{ color: 'red', ...fontStyle.textBoldItalic }}> LIVE</Text> : null}
+                            </Text>
                             <Text style={{ color: COLORJS.primary }}>{provisionalRanking.length} Partecipanti</Text>
                         </View>
                         <>
@@ -589,6 +593,10 @@ const styles = StyleSheet.create({
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center'
-    }
+    },
+    activeStyle: {
+        borderWidth: 3,
+        borderColor: 'red'
+    },
 });
 
