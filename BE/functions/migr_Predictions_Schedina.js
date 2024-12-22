@@ -73,8 +73,8 @@ exports.migrationPredictionsAndSchedina = functions.https.onRequest(async (req, 
                         prediction_id: prediction.id,
                         matchid: schedina.matchId,
                         esitogiocato: schedina.esitoGiocato,
-                        result: schedina.result,
-                        punti_schedina: prediction.punti
+                        result: schedina.result
+
                     });
                 }
             }
