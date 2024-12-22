@@ -22,6 +22,8 @@ import { fetchGiornateCalcolateThunk } from '../redux/slice/giornateDaCalcolareS
 import GiornateDaCalcolareItemList from './componentScreen/GiornateDaCalcolareItemList';
 import { setSelectedGiornata, setSelectedLeagueGiornata } from '../redux/slice/selectedLeagueSlice';
 import CustomDropdownSelectLeague from '../components/DropDownSelectLeague/DropDownSelectLeague';
+import { getMembersInfoForLeague, getMembersInfoForLeagueLive } from '../services/leagueService';
+import { setLiveStatus } from '../redux/slice/isLiveSlice';
 
 export default function LeagueDetails({ navigation }) {
     const { colors } = useTheme();
@@ -33,6 +35,7 @@ export default function LeagueDetails({ navigation }) {
     const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
     const [loading, setLoading] = useState(true); // Stato di loading per il cambiamento di isPast
     const [isPast, setIsPast] = useState(false);  // Stato che indica se la giornata è passata
+    const [members, setMembers] = useState([]);  // Stato che indica se la giornata è passata
 
     const giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale);
     const infogiornataAttuale = useSelector((state) => state.infogiornataAttuale);
@@ -45,7 +48,8 @@ export default function LeagueDetails({ navigation }) {
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const dayId = useSelector((state) => state.giornataAttuale.giornataAttuale);
     const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
-    const provisionalRanking = selectedLeague?.membersInfo;
+
+    const provisionalRanking = members;
 
     const giornateCalcolate = useSelector((state) => state.giornateDaCalcolareReducer.giornate);
     const giornateCalcolateLoading = useSelector((state) => state.giornateDaCalcolareReducer.loading);
@@ -54,7 +58,7 @@ export default function LeagueDetails({ navigation }) {
     const refreshRequired = useSelector((state) => state.refresh.refreshRequired);
 
     // id Partecipanti
-    const userIds = selectedLeague?.members;
+    const userIds = members?.map(member => member.userId);
     const matches = infogiornataAttuale.matches;
 
     const matchdayNumber = infogiornataAttuale.dayId && infogiornataAttuale.dayId.replace('RegularSeason-', '') || 0;
@@ -115,7 +119,10 @@ export default function LeagueDetails({ navigation }) {
                 // Calcola se la data è passata
                 const result = isDatePast(startDate);
                 // Aggiorna lo stato isPast con il risultato calcolato
+                console.log('pastResult', result);
                 setIsPast(result);
+                dispatch(setLiveStatus(result))
+
             } catch (error) {
                 console.error('Errore durante il controllo della data:', error);
             } finally {
@@ -126,13 +133,22 @@ export default function LeagueDetails({ navigation }) {
         checkIsPast();
     }, [startDate]); // Ogni volta che cambia startDate, ricontrolla isPast
 
+
+    useEffect(() => {
+        if (isPast) {
+            fetchLeagueById(leagueId);
+        }
+    }, [isPast, leagueId]); // Effettua il fetch quando isPast cambia a true
+
+
     useEffect(() => {
         // Verifica che tutti i valori siano disponibili prima di effettuare le chiamate
-        if (giornataAttuale && dayId && leagueId && userId && userIds.length) {
+        if (giornataAttuale) {
             // Se sono disponibili, esegui fetchDataInParallel
+            // fetchLeagueById(leagueId)
             fetchDataInParallel();
         }
-    }, [giornataAttuale, dayId, leagueId]);
+    }, [giornataAttuale]);
 
     useEffect(() => {
         if (!startDate) return; // Assicurati che startDate sia definito prima di avviare il countdown.
@@ -156,7 +172,7 @@ export default function LeagueDetails({ navigation }) {
 
             if (days === 0 && hours === 0 && minutes === 0) {
                 setIsPast(true)
-
+                dispatch(setLiveStatus(true))
             }
 
             setCountdown({
@@ -197,8 +213,14 @@ export default function LeagueDetails({ navigation }) {
     // Fetch specific league by ID
     const fetchLeagueById = async (leagueId) => {
         try {
+            let membersResult;
             dispatch(showLoading()); // Mostra lo stato di caricamento
-            await dispatch(membersInfoForLeagueNameThunk({ leagueId })).unwrap()
+            if (isPast) {
+                membersResult = await getMembersInfoForLeagueLive(leagueId, dayId);
+            } else {
+                membersResult = await getMembersInfoForLeague(leagueId);
+            }
+            setMembers(membersResult)
         } catch (error) {
             console.error('Errore durante il recupero della lega:', error);
         } finally {
@@ -308,7 +330,7 @@ export default function LeagueDetails({ navigation }) {
             <Text style={{ textAlign: 'center', color: 'red', fontSize: 30, ...fontStyle.textMedium }}>LIVE</Text>
             <Button
                 mode="contained"
-                onPress={() => navigation.navigate('EsitiInseriti')}
+                onPress={() => navigation.navigate('EsitiInseriti', { members: members })}
                 style={styles.insertButton}
                 labelStyle={{
                     ...fontStyle.textBold
@@ -400,22 +422,22 @@ export default function LeagueDetails({ navigation }) {
                             <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica</Text>
                             <Text style={{ color: COLORJS.primary }}>{provisionalRanking.length} Partecipanti</Text>
                         </View>
-                            <>
-                                <RankingList ranking={sortedRanking} size={20} />
+                        <>
+                            <RankingList ranking={sortedRanking} size={20} />
 
-                                {/* Bottone per vedere la classifica completa */}
-                                <Button
-                                    mode="outlined"
-                                    icon={'format-list-bulleted'}
-                                    onPress={() => navigation.navigate('FullParticipantsRankingScreen')}
-                                    style={styles.fullRankingButton}
-                                    labelStyle={{
-                                        ...fontStyle.textBold
-                                    }}
-                                >
-                                    Classifica Completa
-                                </Button>
-                            </>
+                            {/* Bottone per vedere la classifica completa */}
+                            <Button
+                                mode="outlined"
+                                icon={'format-list-bulleted'}
+                                onPress={() => navigation.navigate('FullParticipantsRankingScreen')}
+                                style={styles.fullRankingButton}
+                                labelStyle={{
+                                    ...fontStyle.textBold
+                                }}
+                            >
+                                Classifica Completa
+                            </Button>
+                        </>
                     </View>
                     <View style={styles.shareAction}>
                         <View style={{ paddingRight: 10 }}>

@@ -151,7 +151,6 @@ const HomeScreen = React.memo(() => {
             
             // Dispatch del thunk e attendi la sua risoluzione
             dispatch(setSelectedLeagueGiornata({ giornataAttuale: giornataAttuale, legaSelezionata: league.id }));
-            await dispatch(membersInfoForLeagueNameThunk({ leagueId: league.id })).unwrap();
             navigation.navigate('LeagueDetailsStack');
 
         } catch (error) {

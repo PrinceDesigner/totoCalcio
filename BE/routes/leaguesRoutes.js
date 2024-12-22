@@ -343,6 +343,62 @@ router.get('/leagues/:leagueId/members-info', authMiddleware, async (req, res) =
 });
 
 
+async function getMembersInfoForLeagueLive(p_dayid,
+  p_id_league) {
+  let { data, error } = await supabase
+    .rpc('get_predictions_with_schedine_as_table', {
+      p_dayid,
+      p_id_league
+    })
+
+  if (error) {
+    console.error('Error fetching data:', error);
+    throw new Error(error); // Lancia un'eccezione con il messaggio dell'errore
+  } else {
+    console.log('tutto ok', data)
+    return data
+  }
+}
+
+// PRENDO LE INFO DEI MEMBRI
+router.get('/leagues/:leagueId/:dayId/members-info-live', authMiddleware, async (req, res) => {
+  const { leagueId, dayId } = req.params; // Ottieni l'ID della lega dai parametri dell'URL
+  /*get_leagues_by_user caire cosa serve in output e aggiornare la funzione sul DB*/
+  try {
+    const auth = getAuth();
+
+    const r = await getMembersInfoForLeagueLive(dayId, leagueId)
+    // Mappa gli utenti con le informazioni aggiuntive da Firebase Authentication
+    const response = await Promise.all(
+
+      r.map(async (el) => {
+        try {
+          // Recupera le informazioni utente da Firebase Authentication
+          const userRecord = await auth.getUser(el.id_user_ret);
+          // Aggiungi photoUrl all'oggetto
+          return {
+            ...el,
+            photoUrl: userRecord.photoURL || null, // photoURL potrebbe essere null
+          };
+        } catch (error) {
+          console.error(`Errore per utente ${el.id_user_ret}:`, error);
+          // Se fallisce, restituisci comunque l'elemento senza photoUrl
+          return {
+            ...el,
+            photoUrl: null,
+          };
+        }
+      })
+    );
+
+    res.status(200).json({ message: 'Elenco dei members info recuperato con successo', response });
+  } catch (error) {
+    console.error('Errore durante il recupero dei members info:', error);
+    res.status(500).json({ message: 'Errore durante il recupero dei members info' });
+  }
+});
+
+
 
 // prendi una legaById
 // Recupera una lega specifica utilizzando il suo ID
@@ -558,7 +614,7 @@ router.get('/leagues/days/:dayId', async (req, res) => {
   const { dayId } = req.params;
 
   try {
-   const detailsDay = await getDayDetails(dayId)
+    const detailsDay = await getDayDetails(dayId)
     res.status(200).json(detailsDay);
 
   } catch (error) {

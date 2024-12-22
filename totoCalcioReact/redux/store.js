@@ -6,12 +6,11 @@ import leaguesReducer from '../redux/slice/leaguesSlice';
 import infogiornataAttualeReducer from '../redux/slice/infogiornataAttualeSlice';
 import selectedLeagueReducer from '../redux/slice/selectedLeagueSlice';
 import insertPredictionsReducer from '../redux/slice/predictionsSlice';
-import getPredictionsReducer from '../redux/slice/predictionsSlice';
-import participantsReducer from '../redux/slice/partecipantsSlice'; // Importa il reducer dei partecipanti
 import storicoPerUtenteSelezionatoReducer from '../redux/slice/storicoPerUtenteSelezionatoSlice'; // Importa il reducer dei partecipanti
 import giornateDaCalcolareReducer from '../redux/slice/giornateDaCalcolareSlice'; // Importa il reducer dei partecipanti
 import refreshReducer from '../redux/slice/refreshSlice';
 import networkReducer from '../redux/reducers/networkReducer'; // Importa il reducer della connessione
+import liveStatusReducer from '../redux/slice/isLiveSlice'; // Importa il reducer della connessione
 
 
 const store = configureStore({
@@ -26,6 +25,7 @@ const store = configureStore({
     refresh: refreshReducer,
     giornateDaCalcolareReducer: giornateDaCalcolareReducer,
     ui: uiReducer,
+    liveStatus: liveStatusReducer,
     network: networkReducer, // Aggiungi il reducer
 
 

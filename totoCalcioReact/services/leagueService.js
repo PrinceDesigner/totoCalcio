@@ -50,8 +50,34 @@ export const getMembersInfoForLeague = async (leagueId) => {
   try {
     const response = await axiosInstance.get(`/leagues/${leagueId}/members-info`);
     // {membersInfo,members}
+    const membersInfo = response.data.response.map(member => ({
+      userId: member.id_user_ret,
+      punti: member.punti_ret,
+      displayName: member.displayname_ret,
+      photoURL: member.photoUrl
+  }));
+
     console.log('MembersInfo', response.data);
-    return response.data;
+    return membersInfo;
+  } catch (error) {
+    console.error('Errore durante dei membri MembersInfo', error);
+    throw error;
+  }
+};
+
+export const getMembersInfoForLeagueLive = async (leagueId, dayId) => {
+  try {
+    const response = await axiosInstance.get(`/leagues/${leagueId}/${dayId}/members-info-live`);
+    // {membersInfo,members}
+    const membersInfo = response.data.response.map(member => ({
+      userId: member.id_user_ret,
+      punti: member.punti_live_ret,
+      displayName: member.displayname_ret,
+      photoURL: member.photoUrl
+  }));
+
+    console.log('MembersInfo', response.data);
+    return membersInfo;
   } catch (error) {
     console.error('Errore durante dei membri MembersInfo', error);
     throw error;

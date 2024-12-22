@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { Card, useTheme, Avatar, Button } from 'react-native-paper';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; // Importa l'icona del cestino
@@ -7,7 +7,7 @@ import { removeUserFromLeagueReducer, selectLeagueById } from '../redux/slice/le
 import { removeParticipant } from '../redux/slice/partecipantsSlice';
 import { fetchStoricoPerUtenteSelezionato, setUser } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
-import { removeUserFromLeague } from '../services/leagueService';
+import { getMembersInfoForLeague, removeUserFromLeague } from '../services/leagueService';
 import fontStyle from '../theme/fontStyle';
 import { COLORJS } from '../theme/themeColor';
 import { showToast } from '../ToastContainer';
@@ -23,7 +23,10 @@ export default function ParticipantsListScreen({ navigation }) {
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const userId = useSelector((state) => state.auth.user.user.userId);
     const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
-    const participants = selectedLeague?.membersInfo;
+
+    const [members, setMembers] = useState([]);  // Stato che indica se la giornata è passata
+
+    const participants = members;
 
 
     // Funzione per mostrare la modale
@@ -32,7 +35,6 @@ export default function ParticipantsListScreen({ navigation }) {
         setModalVisible(true);
     };
 
-    // Funzione per confermare l'eliminazione del partecipante
     // Funzione per confermare l'eliminazione del partecipante
     const confirmDeleteParticipant = async () => {
         if (!selectedParticipant) {
@@ -64,6 +66,22 @@ export default function ParticipantsListScreen({ navigation }) {
         }
 
     };
+
+    const fetchLeagueById = async (leagueId) => {
+        try {
+            dispatch(showLoading()); // Mostra lo stato di caricamento
+            const membersResult = await getMembersInfoForLeague(leagueId);
+            setMembers(membersResult)
+        } catch (error) {
+            console.error('Errore durante il recupero della lega:', error);
+        } finally {
+            dispatch(hideLoading()); // Nascondi lo stato di caricamento
+        }
+    };
+
+    useEffect(() => {
+        fetchLeagueById(leagueId)
+    }, []);
 
     // Funzione per chiudere la modale
     const closeModal = () => {
