@@ -4,6 +4,7 @@ const supabase     = require('./supaClient');
 const { info,error, log } = require("firebase-functions/logger");
 const { google }     = require('googleapis');
 const axios          = require('axios');
+const moment         = require('moment-timezone');
 
 exports.updateMatchesSupa = functions.https.onRequest(async (req, res) => {
 
@@ -59,7 +60,7 @@ exports.updateMatchesSupa = functions.https.onRequest(async (req, res) => {
                     result: determineResult(match.goals.home, match.goals.away, match.fixture.status.short),
                     status: match.fixture.status.short,
                 })
-                .eq('id', match.fixture.id);
+                .eq('matchid', match.fixture.id);
 
             if (updateError) {
                 error('Errore aggiornando match:', updateError);
@@ -107,17 +108,17 @@ exports.updateDateMatchSupa = functions
             });
 
             const fixtures = response.data.response;
-            functions.logger.info('FIXTURES ->', fixtures);
+           // functions.logger.info('FIXTURES ->', fixtures);
 
             // Preparazione di una lista di aggiornamenti in bulk
             const updates = fixtures.map(match => ({
-                id: match.fixture.id.toString(),
-                startTime: moment.utc(match.fixture.date).tz("Europe/Rome").format('YYYY-MM-DDTHH:mm:ss+00:00')
+                matchid: match.fixture.id.toString(),
+                starttime: moment.utc(match.fixture.date).tz("Europe/Rome").format('YYYY-MM-DDTHH:mm:ss+00:00')
             }));
 
             // Aggiornamento in bulk con upsert e conflict_target
-            const { error } = await supabaseClient.from('matches')
-                .upsert(updates, { conflict_target: 'id' });
+            const { error } = await supabase.from('matches')
+                .upsert(updates, { conflict_target: 'matchid' });
 
             if (error) {
                 functions.logger.error('Errore durante l\'aggiornamento in bulk con upsert:', error);

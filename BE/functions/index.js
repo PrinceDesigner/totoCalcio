@@ -791,9 +791,11 @@ exports.scheduleJobOnUpdate = functions.firestore
 //gestione rinviati
 
 exports.scheduleJobOnUpdateSupa = functions.https.onRequest(async (req, res) => {
-        const { dayId,matchId,startTime } = req.body;
 
+    const { dayId,matchId,startTime } = req.body;
         info(' Request scheduleJobOnUpdateSupa ', req.body);
+        info('matchId - scheduleJobOnUpdateSupa',matchId);
+
         // Verifica se startTime è stato aggiornato e che lo stato precedente fosse 'PST'
         try {
             const projectId = 'totocalcioreact'; // Usa l'ID del progetto Firebase
@@ -832,7 +834,7 @@ exports.scheduleJobOnUpdateSupa = functions.https.onRequest(async (req, res) => 
 
             // Crea un job di Cloud Scheduler
             const job = {
-                name: `projects/${projectId}/locations/us-central1/jobs/update-matchesPosticipato-${matchId}`,
+                name: `projects/${projectId}/locations/us-central1/jobs/update-matchesPosticipatoSupa-${matchId}`,
                 schedule: `${scheduleMinute} ${scheduleHour} ${scheduleDay} ${scheduleMonth} *`, // Formato cron
                 timeZone: 'Europe/Rome',
                 httpTarget: {
