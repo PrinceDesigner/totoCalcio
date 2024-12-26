@@ -3,6 +3,7 @@ const functions = require("firebase-functions/v1");
 const supabase     = require('./supaClient');
 const { info,error, log } = require("firebase-functions/logger");
 const { google }     = require('googleapis');
+const axios          = require('axios');
 
 exports.updateMatchesSupa = functions.https.onRequest(async (req, res) => {
 

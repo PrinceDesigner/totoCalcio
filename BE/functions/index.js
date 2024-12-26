@@ -718,6 +718,10 @@ exports.scheduleJobOnUpdate = functions.firestore
         const beforeData = change.before.data(); // Stato precedente del documento
         const afterData = change.after.data(); // Stato successivo del documento
         const dayId = afterData.dayId;
+        log('ALL data match ',beforeData)
+        log('afterData.startTime',afterData.startTime)
+        log('beforeData.startTime',beforeData.startTime)
+        log('beforeData.status',afterData.status)
 
         // Verifica se startTime è stato aggiornato e che lo stato precedente fosse 'PST'
         if (afterData.startTime !== beforeData.startTime && beforeData.status === 'PST') {
