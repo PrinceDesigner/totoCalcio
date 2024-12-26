@@ -107,7 +107,7 @@ exports.migrationPredictionsAndSchedina = functions.https.onRequest(async (req, 
         res.status(500).send(`Errore: ${errorExc.message}`);
     }
 });
-
+/*
 exports.migratePredictionsAndSchedina = functions.firestore.document('predictions/{predictionId}').onCreate(async (snap, context) => {
     try {
         const prediction    = snap.data();
@@ -238,4 +238,4 @@ exports.updateExistingPredictionsAndSchedina = functions.firestore.document('pre
     } catch (errorExc) {
         error(`Errore durante l'aggiornamento: ${errorExc.message}`);
     }
-});
+});*/

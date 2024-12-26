@@ -5,18 +5,18 @@ const serviceAccount = require('./firebase-service-account.json');
 const { google }     = require('googleapis');
 const moment         = require('moment-timezone');
 const axios          = require('axios');
-const { v4: uuidv4 } = require('uuid'); // Importa la funzione per generare UUID
+//const { v4: uuidv4 } = require('uuid'); // Importa la funzione per generare UUID
 const { log,error,info }        = require("firebase-functions/logger");
 
-const { createUserByJson,deleteUsersByIds,writePredictions,deletePredictions,createLeagues,deleteLeagues } = require('./uploadForTest');
-const { migrationUser,onUserAdded,onUserUpdated,onUserDeleted } = require('./migration_User');
-const { migrateDaysAndMatches,onDayUpdated,onMatchUpdated } = require('./migration_Days_Matches');
-const { migrateLeaguesAndMembers,onLeagueUpdated,migrateLeaguesAndMembersByCreate,onLeagueDeleted } = require('./migr_League_memersInfo');
-const { migratePredictionsAndSchedina,updateExistingPredictionsAndSchedina,migrationPredictionsAndSchedina } = require('./migr_Predictions_Schedina');
-const { migrateGiornateCalcolate,syncGiornateCalcolateOnCreate,syncGiornateCalcolateOnUpdate } = require('./migr_Giornate_Calcolate');
-const {calcolaPuntiGiornataTest } = require('./calcoloGiornata');
+const { migrationUser } = require('./migration_User');
+const { migrateDaysAndMatches } = require('./migration_Days_Matches');
+const { migrateLeaguesAndMembers } = require('./migr_League_memersInfo');
+const {migrationPredictionsAndSchedina } = require('./migr_Predictions_Schedina');
+const { migrateGiornateCalcolate } = require('./migr_Giornate_Calcolate');
+const {calcolaPuntiGiornataTest,calcolaPuntiGiornataTest2 } = require('./calcoloGiornata');
 const {updateMatchesSupa,updateDateMatchSupa } = require('./updateMatch');
 const {sendWeeklyNotificationSupa} = require('./notifche');
+const {exportAllTables} = require('./backupTable');
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -205,8 +205,8 @@ exports.scheduleDayUpdateTasks = functions.https.onCall(async (data, context) =>
                 },
             };
 
-            functions.logger.info('JOB->', job)
-            functions.logger.info('Auth ->', authClient)
+            info('JOB->', job)
+            info('Auth ->', authClient)
 
             try {
                 await scheduler.projects.locations.jobs.create({
@@ -293,8 +293,8 @@ exports.scheduleDayUpdateTasksV2 = functions
                     requestBody: job,
                     auth: authClient,
                 });
-                functions.logger.info('JOB->', job)
-                functions.logger.info('Auth ->', authClient)
+                info('JOB->', job)
+                info('Auth ->', authClient)
                 promises.push(promise);
             });
             await Promise.all(promises); // Aspetta che tutte le promesse siano risolte
@@ -311,7 +311,7 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
     console.time('Data Retrieval Time');
 
     const { dayId, noStep = false } = req.body;
-    functions.logger.log('START--->>>', dayId);
+    log('START--->>>', dayId);
 
     if (!dayId) {
         return res.status(400).send({ success: false, message: "dayId è richiesto" });
@@ -332,7 +332,7 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
         });
 
         const fixtures = response.data.response;
-        functions.logger.log('FIXTURES->', fixtures);
+        log('FIXTURES->', fixtures);
         // Esegui le query per ottenere i dati da Firestore in parallelo
         const [leaguesSnapshot, predictionsSnapshot] = await Promise.all([
             firestore.collection('leagues').get(),
@@ -429,7 +429,7 @@ exports.updateDateMatch = functions
     .runWith({ timeoutSeconds: 540, memory: '2GB' })
     .https.onRequest(async (req, res) => {
         console.time('Data Retrieval Time');
-        functions.logger.info('START --> Updating Match Start Times');
+        info('START --> Updating Match Start Times');
 
         try {
             // Ottieni tutti i dati delle partite dalla API di football
@@ -445,7 +445,7 @@ exports.updateDateMatch = functions
             });
 
             const fixtures = response.data.response;
-            functions.logger.info('FIXTURES ->', fixtures);
+            info('FIXTURES ->', fixtures);
 
             console.timeEnd('Data Retrieval Time');
 
@@ -532,7 +532,7 @@ async function updateCurrentGiornata(noStep) {
         const updatedGiornataAttuale = `RegularSeason-${updatedGiornataNumber}`;
         //updatato prima giornata attuale a prescindere dai batch creati
         await doc.ref.update({ giornataAttuale: updatedGiornataAttuale });
-        functions.logger.log(`Giornata attuale aggiornata a: ${updatedGiornataAttuale}`);
+        log(`Giornata attuale aggiornata a: ${updatedGiornataAttuale}`);
 
         //query per recupero match della prossiam giornata attuale+1 in updatedGiornataAttuale
         const [matches] = await Promise.all([
@@ -575,8 +575,8 @@ async function updateCurrentGiornata(noStep) {
                 requestBody: job,
                 auth: authClient,
             });
-            /*functions.logger.info('JOB->', job)
-            functions.logger.info('Auth ->', authClient)*/
+            /*info('JOB->', job)
+            info('Auth ->', authClient)*/
             promises.push(promise);
     });
         await Promise.all(promises); // Aspetta che tutte le promesse siano risolte
@@ -587,11 +587,11 @@ async function updateCurrentGiornata(noStep) {
 //Updata ogni singolo match 30 min dopo la loro fine
 //1 batch ->  1 partita
 exports.updateSingleMatchId = functions.https.onRequest(async (req, res) => {
-    functions.logger.info('Start updateSingleMatchId ');
+    info('Start updateSingleMatchId ');
     // Prendi il matchId dai query string parameters
     const { matchId } = req.query;
     const strMatchId = matchId.toString();
-    functions.logger.info('updateSingleMatchId - matchId ',strMatchId);
+    info('updateSingleMatchId - matchId ',strMatchId);
      // Ottieni i dati dalla API di football
     try {
         // Chiamata all'API per ottenere i dati della partita
@@ -610,7 +610,7 @@ exports.updateSingleMatchId = functions.https.onRequest(async (req, res) => {
                 status: response.data.response[0].fixture.status.short,
             };
 
-            functions.logger.info('updateSingleMatchId - fulltimeScore', fulltimeScore);
+            info('updateSingleMatchId - fulltimeScore', fulltimeScore);
 
             // Aggiorna il documento in Firestore
             const matchRef = firestore.collection('matches').doc(strMatchId);
@@ -620,20 +620,20 @@ exports.updateSingleMatchId = functions.https.onRequest(async (req, res) => {
                 status: fulltimeScore.status,
             });
 
-            functions.logger.info('Finish updateSingleMatchId');
+            info('Finish updateSingleMatchId');
             return res.status(200).send('Finish updateSingleMatchId successfully');
         } else {
             throw new Error('No match data found in the response.');
         }
     } catch (error) {
-        functions.logger.error('Error fetching match data or updating Firestore document', error);
+        error('Error fetching match data or updating Firestore document', error);
         return res.status(500).send('Error fetching match data or updating Firestore document');
     }
 });
 
 //NOTIFICHE
 exports.sendWeeklyNotification = functions.https.onRequest(async (req, res) => {
-    functions.logger.info('Start sendWeeklyNotification');
+    info('Start sendWeeklyNotification');
 
     var  body  = '';
     var  title = '';
@@ -645,7 +645,7 @@ exports.sendWeeklyNotification = functions.https.onRequest(async (req, res) => {
             .filter(token => token);  // Filtra i valori falsy (ad esempio, token nulli o vuoti)
 
         if (tokens.length === 0) {
-            functions.logger.info('Nessun token trovato per inviare notifiche.');
+            info('Nessun token trovato per inviare notifiche.');
             return res.status(200).send('Nessun token trovato.');
         }
 
@@ -673,7 +673,7 @@ exports.sendWeeklyNotification = functions.https.onRequest(async (req, res) => {
         // Crea messaggi per ogni token
         const messages = tokens.map(token => {
             if (!Expo.isExpoPushToken(token)) {
-                functions.logger.warn(`Token non valido: ${token}`);
+                warn(`Token non valido: ${token}`);
                 return null; // Ignora token non validi
             }
             return {
@@ -692,20 +692,20 @@ exports.sendWeeklyNotification = functions.https.onRequest(async (req, res) => {
             try {
                 const ticketChunk = await expo.sendPushNotificationsAsync(chunk); // Invio batch
                 tickets.push(...ticketChunk); // Aggiungi i ticket al risultato totale
-                functions.logger.info('Batch inviato con successo:', ticketChunk);
+                info('Batch inviato con successo:', ticketChunk);
             } catch (error) {
-                functions.logger.error('Errore durante l\'invio del batch:', error);
+                error('Errore durante l\'invio del batch:', error);
             }
         }
 
         // Log dei ticket
-        functions.logger.info('Tutti i ticket:', tickets);
+        info('Tutti i ticket:', tickets);
 
         // Rispondi al client con successo
         return res.status(200).send(`Notifiche inviate con successo a ${tokens.length} utenti!`);
     } catch (error) {
         // Gestione degli errori
-        functions.logger.error(`Errore nell'invio delle notifiche: ${error.message}`);
+        error(`Errore nell'invio delle notifiche: ${error.message}`);
         return res.status(500).send(`Errore nell'invio delle notifiche: ${error.message}`);
     }
 });
@@ -735,7 +735,7 @@ exports.scheduleJobOnUpdate = functions.firestore
 
                 // Verifica che endDate sia valido
                 if (!endDate.isValid()) {
-                    functions.logger.error('startTime non valido:', afterData.startTime);
+                    error('startTime non valido:', afterData.startTime);
                     return null;
                 }
 
@@ -749,8 +749,8 @@ exports.scheduleJobOnUpdate = functions.firestore
                 const scheduleMonth = scheduleTime.month() + 1; // I mesi in Moment sono indicizzati da 0
 
                 // Log per verificare la data e l'orario di schedulazione
-                functions.logger.info('scheduleTime->', scheduleTime.format());
-                functions.logger.info('endDate->', endDate.format());
+                info('scheduleTime->', scheduleTime.format());
+                info('endDate->', endDate.format());
 
                 // Crea un job di Cloud Scheduler
                 const job = {
@@ -772,11 +772,11 @@ exports.scheduleJobOnUpdate = functions.firestore
                     auth: authClient,
                 });
 
-                functions.logger.info('Job creato:', job);
+                info('Job creato:', job);
                 await promise;
                 return promise;
             } catch (error) {
-                functions.logger.error('Errore nella creazione del job:', error);
+                error('Errore nella creazione del job:', error);
                 throw new Error('Impossibile creare il job nel Cloud Scheduler');
             }
         } else {
@@ -789,7 +789,7 @@ exports.scheduleJobOnUpdate = functions.firestore
 exports.scheduleJobOnUpdateSupa = functions.https.onRequest(async (req, res) => {
         const { dayId,matchId,startTime } = req.body;
 
-        functions.logger.info(' Request scheduleJobOnUpdateSupa ', req.body);
+        info(' Request scheduleJobOnUpdateSupa ', req.body);
         // Verifica se startTime è stato aggiornato e che lo stato precedente fosse 'PST'
         try {
             const projectId = 'totocalcioreact'; // Usa l'ID del progetto Firebase
@@ -819,12 +819,12 @@ exports.scheduleJobOnUpdateSupa = functions.https.onRequest(async (req, res) => 
             const scheduleMonth = scheduleTime.month() + 1; // I mesi in Moment sono indicizzati da 0
 
             // Log per verificare la data e l'orario di schedulazione
-            functions.logger.info('scheduleTime->', scheduleTime.format());
-            functions.logger.info('endDate->', endDate.format());
-            functions.logger.info('scheduleMinute', scheduleMinute);
-            functions.logger.info('scheduleHour', scheduleHour);
-            functions.logger.info('scheduleDay', scheduleDay);
-            functions.logger.info('scheduleMonth', scheduleMonth);
+            info('scheduleTime->', scheduleTime.format());
+            info('endDate->', endDate.format());
+            info('scheduleMinute', scheduleMinute);
+            info('scheduleHour', scheduleHour);
+            info('scheduleDay', scheduleDay);
+            info('scheduleMonth', scheduleMonth);
 
             // Crea un job di Cloud Scheduler
             const job = {
@@ -851,39 +851,19 @@ exports.scheduleJobOnUpdateSupa = functions.https.onRequest(async (req, res) => 
         }
 });
 
-
-exports.createUserByJson                    = createUserByJson;
-exports.deleteUsersByIds                    = deleteUsersByIds;
-exports.writePredictions                    = writePredictions;
-exports.deletePredictions                   = deletePredictions;
-exports.createLeagues                       = createLeagues;
-exports.deleteLeagues                       = deleteLeagues;
-
 exports.migrationUser                       = migrationUser;
-exports.onUserAdded                         = onUserAdded;
-exports.onUserUpdated                       = onUserUpdated;
-exports.onUserDeleted                       = onUserDeleted;
-
 exports.migrateDaysAndMatches               = migrateDaysAndMatches;
-exports.onDayUpdated                        = onDayUpdated;
-exports.onMatchUpdated                      = onMatchUpdated;
-
 exports.migrateLeaguesAndMembers            = migrateLeaguesAndMembers;
-exports.migrateLeaguesAndMembersByCreate    = migrateLeaguesAndMembersByCreate
-exports.onLeagueUpdated                     = onLeagueUpdated;
-exports.onLeagueDeleted                     = onLeagueDeleted;
-
-exports.migratePredictionsAndSchedina        = migratePredictionsAndSchedina
-exports.updateExistingPredictionsAndSchedina = updateExistingPredictionsAndSchedina;
 exports.migrationPredictionsAndSchedina      = migrationPredictionsAndSchedina;
-
 exports.migrateGiornateCalcolate             = migrateGiornateCalcolate;
-exports.syncGiornateCalcolateOnUpdate        = syncGiornateCalcolateOnUpdate;
-exports.syncGiornateCalcolateOnCreate        = syncGiornateCalcolateOnCreate;
 
+//utili per dei test prima della migrazione a supa
 exports.calcolaPuntiGiornataTest             = calcolaPuntiGiornataTest;
+exports.calcolaPuntiGiornataTest2            = calcolaPuntiGiornataTest2; //*
+//utili per dei test prima della migrazione a supa
 
 exports.updateMatchesSupa                    = updateMatchesSupa;
 exports.updateDateMatchSupa                  = updateDateMatchSupa;
 
 exports.sendWeeklyNotificationSupa           = sendWeeklyNotificationSupa;
+exports.exportAllTables                      = exportAllTables;

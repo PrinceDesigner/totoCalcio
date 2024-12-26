@@ -30,7 +30,7 @@ exports.migrationUser = functions.https.onRequest(async (req, res) => {
         res.status(500).send(`Firebase error: ${errorExc.message}`);
     }
 });
-
+/*
 exports.onUserAdded = functions.firestore.document('users/{userId}').onCreate(async (snap, context) => {
     try {
     const newUser = snap.data();
@@ -114,6 +114,6 @@ exports.onUserDeleted = functions.firestore.document('users/{userId}').onDelete(
     } catch (error) {
         error(`Errore durante la rimozione: ${error.message}`);
     }
-});
+});*/
 
 

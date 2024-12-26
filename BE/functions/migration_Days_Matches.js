@@ -91,7 +91,7 @@ exports.migrateDaysAndMatches = functions.https.onRequest(async (req, res) => {
         res.status(500).send(`Errore durante la migrazione: ${errorExc.message}`);
     }
 });
-
+/*
 exports.onDayUpdated = functions.firestore.document('days/{dayId}').onUpdate(async (change, context) => {
     try {
         const updatedDay = change.after.data();
@@ -149,5 +149,5 @@ exports.onMatchUpdated = functions.firestore.document('matches/{matchId}').onUpd
     } catch (errorExc) {
         error(`Firebase error: ${errorExc.message}`);
     }
-});
+});*/
 
