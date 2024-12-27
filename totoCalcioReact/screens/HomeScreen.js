@@ -34,7 +34,6 @@ const HomeScreen = React.memo(() => {
 
     const leaguesState = useSelector((state) => state.leagues); // Stato delle leghe
     const leaguesStateLoading = useSelector((state) => state.leagues.loading); // Stato delle leghe
-    const loadingState = useSelector((state) => state.ui.loading); // Stato di caricamento
     const userId = useSelector((state) => state.auth.user && state.auth.user.user.userId); // Recupera l'ID utente dallo stato
     const userName = useSelector((state) => state.auth.user && state.auth.user.user.fullName); // Recupera l'ID utente dallo stato
     const photoProfile = useSelector((state) => state.auth.photoUri); // Stato delle leghe
@@ -241,7 +240,6 @@ const HomeScreen = React.memo(() => {
         <SafeAreaView style={[{ backgroundColor: colors.background, flex: 1 }]}>
             <Wrapper>
 
-                {/* Intestazione con "Le mie leghe" e "Crea Lega" */}
                 <View style={styles.containerProfile}>
                     {/* Icona Profilo */}
                     <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
