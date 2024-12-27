@@ -135,9 +135,9 @@ export default function LeagueDetails({ navigation }) {
 
 
     useEffect(() => {
-        if (isPast) {
+        // if (isPast) {
             fetchLeagueById(leagueId);
-        }
+        // }
     }, [isPast, leagueId]); // Effettua il fetch quando isPast cambia a true
 
 
