@@ -5,6 +5,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; // Importa 
 import { useDispatch, useSelector } from 'react-redux';
 import { removeUserFromLeagueReducer, selectLeagueById } from '../redux/slice/leaguesSlice';
 import { removeParticipant } from '../redux/slice/partecipantsSlice';
+import { triggerRefresh } from '../redux/slice/refreshSlice';
 import { fetchStoricoPerUtenteSelezionato, setUser } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { getMembersInfoForLeague, removeUserFromLeague } from '../services/leagueService';
@@ -28,7 +29,6 @@ export default function ParticipantsListScreen({ navigation }) {
 
     const participants = members;
 
-
     // Funzione per mostrare la modale
     const handleDeleteParticipant = (participant) => {
         setSelectedParticipant(participant);
@@ -42,7 +42,7 @@ export default function ParticipantsListScreen({ navigation }) {
             return;
         }
 
-        const { leagueId, userId } = selectedParticipant;
+        const { userId } = selectedParticipant;
 
         // Chiudi la modale prima di procedere con l'operazione di rimozione
         setModalVisible(false);
@@ -121,10 +121,10 @@ export default function ParticipantsListScreen({ navigation }) {
 
     const handleRemoveUser = async (leagueId, userId) => {
         try {
+            console.log(leagueId, userId);
             const response = await removeUserFromLeague(leagueId, userId);
             showToast('success', 'Utente rimosso con successo');
-            dispatch(removeParticipant(userId));
-            dispatch(removeUserFromLeagueReducer({ leagueId, userId }));
+            dispatch(triggerRefresh())
 
             navigation.navigate('LeagueDetails', { screen: 'Home Lega' }); // Sostituisci la schermata per evitare duplicazioni
         } catch (error) {
