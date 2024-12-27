@@ -120,8 +120,10 @@ export default function LeagueDetails({ navigation }) {
                 const result = isDatePast(startDate);
                 // Aggiorna lo stato isPast con il risultato calcolato
                 console.log('pastResult', result);
-                setIsPast(result);
-                dispatch(setLiveStatus(result))
+                if (result !== null) {
+                    setIsPast(result);
+                    dispatch(setLiveStatus(result))
+                }
 
             } catch (error) {
                 console.error('Errore durante il controllo della data:', error);
@@ -219,7 +221,8 @@ export default function LeagueDetails({ navigation }) {
             dispatch(showLoading()); // Mostra lo stato di caricamento
             if (isPast) {
                 membersResult = await getMembersInfoForLeagueLive(leagueId, dayId);
-            } else {
+            } 
+            if (isPast === false){
                 membersResult = await getMembersInfoForLeague(leagueId);
             }
             setMembers(membersResult)
