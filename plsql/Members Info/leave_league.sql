@@ -13,6 +13,8 @@ BEGIN
 
   -- Rimuove l'utente dalla lega
   DELETE FROM members_info WHERE id_league = p_league_id AND userid = p_userid;
+  --rimozione predictions
+  DELETE FROM predictions WHERE id_league = p_league_id AND userid = p_userid;
 
   -- Restituisce un messaggio di successo
   RETURN json_build_object('status', 'OK', 'message', 'Member removed successfully', 'userid', p_userid, 'id_league', p_league_id);
