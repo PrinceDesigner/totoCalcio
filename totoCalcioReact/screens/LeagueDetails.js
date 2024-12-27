@@ -100,10 +100,10 @@ export default function LeagueDetails({ navigation }) {
             // Effettua la chiamata per aggiornare i dati
             if (giornataAttuale && dayId && leagueId && userId && userIds.length) {
                 // Se sono disponibili, esegui fetchDataInParallel
-                fetchLeagueById(leagueId)
                 fetchGiornateDaCalcolare(leagueId)
                 fetchGiornataAttuale()
                 fetchDataInParallel()
+                fetchLeagueById(leagueId)
             }
             // Una volta ricaricati i dati, ripristina il flag di refresh
             dispatch(clearRefresh());
@@ -134,11 +134,7 @@ export default function LeagueDetails({ navigation }) {
     }, [startDate]); // Ogni volta che cambia startDate, ricontrolla isPast
 
 
-    useEffect(() => {
-        // if (isPast) {
-            fetchLeagueById(leagueId);
-        // }
-    }, [isPast, leagueId]); // Effettua il fetch quando isPast cambia a true
+
 
 
     useEffect(() => {
@@ -149,6 +145,12 @@ export default function LeagueDetails({ navigation }) {
             fetchDataInParallel();
         }
     }, [giornataAttuale]);
+
+    useEffect(() => {
+        // if (isPast) {
+            fetchLeagueById(leagueId);
+        // }
+    }, [isPast, leagueId]); // Effettua il fetch quando isPast cambia a true
 
     useEffect(() => {
         if (!startDate) return; // Assicurati che startDate sia definito prima di avviare il countdown.
@@ -281,10 +283,10 @@ export default function LeagueDetails({ navigation }) {
     // Funzione per gestire il refresh
     const onRefresh = () => {
 
-        fetchLeagueById(leagueId).then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
         fetchGiornateDaCalcolare(leagueId).then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
         fetchGiornataAttuale().then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
         fetchDataInParallel();
+        fetchLeagueById(leagueId).then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
     };
 
     const renderConuntDown = () => {
