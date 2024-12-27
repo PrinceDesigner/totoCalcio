@@ -86,21 +86,31 @@ router.get('/match-lineup/:fixtureId', async (req, res) => {
   }
 });
 
+
+async function getGiornataAttuale() {
+  let { data, error } = await supabase
+    .rpc('get_giornataattuale')
+  if (error) console.error(error)
+  else console.log(data)
+
+  if (error) {
+    console.error('Error fetching data:', error);
+    throw new Error(error); // Lancia un'eccezione con il messaggio dell'errore
+  } else {
+    console.log('tutto ok', data)
+    return data
+  }
+}
+
+
 // Route per ottenere l'unico documento dalla raccolta 'nomeGiornataAttuale'
 router.get('/giornata-attuale', async (req, res) => {
 
   try {
-    const snapshot = await firestore.collection('giornataAttuale').limit(1).get(); // Ottieni solo il primo documento
 
-    if (snapshot.empty) {
-      return res.status(404).json({ success: false, message: 'Nessun documento trovato.' });
-    }
+    const result = await getGiornataAttuale()
 
-    // Estrai il primo documento dal risultato
-    const doc = snapshot.docs[0];
-    const data = doc.data();
-
-    res.status(200).json({ giornataAttuale: data.giornataAttuale });
+    res.status(200).json({ giornataAttuale: result });
   } catch (error) {
     console.error('Errore durante il recupero della giornata attuale:', error);
     res.status(500).json({ success: false, message: 'Errore durante il recupero della giornata attuale.' });
