@@ -34,7 +34,8 @@ export default function LeagueDetails({ navigation }) {
     const [refreshing, setRefreshing] = useState(false);
     const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
     const [loading, setLoading] = useState(true); // Stato di loading per il cambiamento di isPast
-    const [isPast, setIsPast] = useState(false);  // Stato che indica se la giornata è passata
+    const isPast = useSelector((state) => state.liveStatus.isLive);
+
     const [members, setMembers] = useState([]);  // Stato che indica se la giornata è passata
 
     const giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale);
@@ -121,7 +122,7 @@ export default function LeagueDetails({ navigation }) {
                 // Aggiorna lo stato isPast con il risultato calcolato
                 console.log('pastResult', result);
                 if (result !== null) {
-                    setIsPast(result);
+                    // setIsPast(result);
                     dispatch(setLiveStatus(result))
                 }
 
@@ -175,7 +176,7 @@ export default function LeagueDetails({ navigation }) {
             const minutes = Math.floor(duration.minutes());
 
             if (days === 0 && hours === 0 && minutes === 0) {
-                setIsPast(true)
+                // setIsPast(true)
                 dispatch(setLiveStatus(true))
             }
 

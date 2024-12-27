@@ -40,13 +40,6 @@ export default function UserHistoryScreen({ route, navigation }) {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isModalVisibleRemove, setIsModalVisibleRemove] = useState(false);
 
-    if (userHistory.length >= 1) {
-        allPointOfUser = userHistory.filter(el => el.daysId !== dayId).map(el => el.punti);
-        sumOfPoints = allPointOfUser.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
-        numberOfPredictions = allPointOfUser.length;
-        totalPredictions = allPointOfUser.length * 10;
-        percentage = ((sumOfPoints / totalPredictions) * 100) || 0;
-    }
 
     const dispatch = useDispatch();
 
@@ -170,32 +163,14 @@ export default function UserHistoryScreen({ route, navigation }) {
         }
     }
 
-    const PercentageCard = (percentage) => {
-        return (
-            <View style={styles.cardPercentualeContainer}>
-                <View style={styles.cardPercentuale}>
-                    <View style={styles.cardContent}>
-                        <Text style={styles.title}>Precisione 1X2</Text>
-                        <Text style={styles.percentage}>{percentage.toFixed(2)}%</Text>
-                    </View>
-                    <ProgressBar
-                        progress={(percentage || 0) / 100}
-                        color={COLORJS.primary}
-                        style={styles.progressBar}
-                    />
-                    <Text style={styles.schedineText}>Schedine giocate: {numberOfPredictions}</Text>
-                </View>
-            </View>
-        );
-    };
 
     const renderProfiloTab = () => (
         <>
             <ProfileCard fullName={userSelect.displayName} photoProfile={userSelect.photoURL} />
             {buttonMakeRemoveAdmin()}
-            <View style={{ display: 'flex', flexDirection: 'row' }}>
+            {/* <View style={{ display: 'flex', flexDirection: 'row' }}>
                 {PercentageCard(percentage)}
-            </View>
+            </View> */}
         </>
     );
 
