@@ -685,6 +685,25 @@ router.post('/leagues/removeUserFromLeague', async (req, res) => {
   }
 });
 
+async function addAdmin(p_league_id,
+  p_ownerid) {
+  let { data, error } = await supabase
+    .rpc('add_owners', {
+      p_league_id,
+      p_ownerid
+    })
+
+  if (error) {
+    console.error('Error fetching data:', error);
+    throw new Error(error); // Lancia un'eccezione con il messaggio dell'errore
+  } else {
+    console.log('tutto ok', data)
+    return data
+  }
+
+}
+
+
 // Rendi un utente amministratore di una lega
 router.post('/leagues/make-admin', authMiddleware, async (req, res) => {
   const { leagueId, userId } = req.body; // Ottieni l'ID della lega e dell'utente dal body della richiesta
@@ -695,33 +714,35 @@ router.post('/leagues/make-admin', authMiddleware, async (req, res) => {
   }
 
   try {
-    // Ottieni il riferimento al documento della lega
-    const leagueRef = firestore.collection('leagues').doc(leagueId);
-    const leagueDoc = await leagueRef.get();
 
-    // Verifica se la lega esiste
-    if (!leagueDoc.exists) {
-      return res.status(404).json({ message: 'Lega non trovata.' });
-    }
+    const result = await addAdmin(leagueId,userId);
 
-    const leagueData = leagueDoc.data();
-
-    // Verifica se l'utente è un membro della lega
-    if (!leagueData.members.includes(userId)) {
-      return res.status(400).json({ message: 'L\'utente non è un membro della lega.' });
-    }
-
-    // Aggiorna l'ownerId della lega aggiungendo l'ID dell'utente specificato
-    await leagueRef.update({
-      ownerId: FieldValue.arrayUnion(userId)
-    });
-
-    res.status(200).json({ message: 'Utente reso amministratore con successo.', leagueId, userId });
+    res.status(200).json({ message: 'Utente reso amministratore con successo.'});
   } catch (error) {
     console.error('Errore durante l\'assegnazione del ruolo di amministratore:', error);
     res.status(500).json({ message: 'Errore durante l\'assegnazione del ruolo di amministratore.' });
   }
 });
+
+
+async function removeAdmin(p_league_id,
+  p_ownerid) {
+  let { data, error } = await supabase
+    .rpc('remove_owners', {
+      p_league_id,
+      p_ownerid
+    })
+
+  if (error) {
+    console.error('Error fetching data:', error);
+    throw new Error(error); // Lancia un'eccezione con il messaggio dell'errore
+  } else {
+    console.log('tutto ok', data)
+    return data
+  }
+
+}
+
 
 // Rimuovi un utente come amministratore di una lega
 router.post('/leagues/remove-admin', authMiddleware, async (req, res) => {
@@ -734,27 +755,9 @@ router.post('/leagues/remove-admin', authMiddleware, async (req, res) => {
 
   try {
     // Ottieni il riferimento al documento della lega
-    const leagueRef = firestore.collection('leagues').doc(leagueId);
-    const leagueDoc = await leagueRef.get();
+    const result = await removeAdmin(leagueId, userId)
 
-    // Verifica se la lega esiste
-    if (!leagueDoc.exists) {
-      return res.status(404).json({ message: 'Lega non trovata.' });
-    }
-
-    const leagueData = leagueDoc.data();
-
-    // Verifica se l'utente è attualmente amministratore della lega
-    if (!leagueData.ownerId || !leagueData.ownerId.includes(userId)) {
-      return res.status(400).json({ message: 'L\'utente non è un amministratore della lega.' });
-    }
-
-    // Rimuovi l'ID dell'utente dal campo ownerId della lega
-    await leagueRef.update({
-      ownerId: FieldValue.arrayRemove(userId)
-    });
-
-    res.status(200).json({ message: 'Utente rimosso come amministratore con successo.', leagueId, userId });
+    res.status(200).json({ message: 'Utente rimosso come amministratore con successo.' });
   } catch (error) {
     console.error('Errore durante la rimozione del ruolo di amministratore:', error);
     res.status(500).json({ message: 'Errore durante la rimozione del ruolo di amministratore.' });
