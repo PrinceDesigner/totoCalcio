@@ -1,11 +1,10 @@
-
 CREATE OR REPLACE FUNCTION get_history_schedine_byleagueid(p_league_id text, p_user_id text)
 RETURNS TABLE(
-prediction_id UUID,
-dayId text,
-leagueId text,
-punti integer,
-schedine json
+    "predictionId" UUID,
+    "daysId" text,
+    "leagueId" text,
+    punti integer,
+    schedina json
 )
 LANGUAGE plpgsql AS
 $$
@@ -13,9 +12,9 @@ BEGIN
 -- Restituzione della tabella combinata con JSON array per schedine
 RETURN QUERY
 SELECT
-    p.predictionid AS prediction_id,
-    p.dayid AS daysId,
-    p.id_league AS leagueId,
+    p.predictionid ,
+    p.dayid ,
+    p.id_league ,
     p.punti,
     json_agg(jsonb_build_object(
     'esitoGiocato', s.esitogiocato,
@@ -32,7 +31,7 @@ SELECT
         THEN true
         ELSE false
         END
-    )) AS schedine
+    )) AS schedina
 FROM
     predictions p
 LEFT JOIN
@@ -48,5 +47,3 @@ ORDER BY
     p.dayid;  -- ordinare i risultati per dayid
 END;
 $$;
-
-select * from get_history_schedine_byleagueid('obgtDpgER3YuFgJYJHSA','WtfTOfwLoSRjDSqN6n07zouggUM2')
