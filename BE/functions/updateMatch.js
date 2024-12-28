@@ -226,3 +226,97 @@ function determineResult(homeGoals, awayGoals,status) {
     if (homeGoals == awayGoals) return "X"; // Pareggio
     return null;//-> nel caso di partita rinviata
 }
+
+exports.scheduleDayUpdateTasks_Supa = functions
+.runWith({ timeoutSeconds: 540, memory: '2GB' })
+.https.onRequest(async (req, res) => {
+console.log('START --> scheduleDayUpdateTasks SUPA');
+const promises = [];
+
+try {
+    // Recupera tutte le giornate dal database Supabase
+    const { data: days, error } = await supabase
+    .from('days')
+    .select('*');
+
+    if (error) {
+    console.error('Errore nel recupero delle giornate:', error);
+    return res.status(500).send({ success: false, message: 'Errore nel recupero delle giornate' });
+    }
+
+    if (!days || days.length === 0) {
+    return res.status(404).send({ success: false, message: 'Nessuna giornata trovata' });
+    }
+
+    const projectId = 'totocalcioreact'; // Usa l'ID del progetto Firebase
+    const auth = new google.auth.GoogleAuth({
+    scopes: ['https://www.googleapis.com/auth/cloud-scheduler', 'https://www.googleapis.com/auth/cloud-platform'],
+    });
+
+    const authClient = await auth.getClient();
+    const scheduler = google.cloudscheduler('v1', { auth: authClient });
+
+    for (const day of days) {
+        const dayId = day.dayid; // `dayid` è il nome corretto nella tabella Supabase
+
+        // Recupera la startDate più lontana per il dayId dalla tabella matches
+        const { data: match, error: matchError } = await supabase
+            .from('matches')
+            .select('starttime')
+            .eq('dayid', dayId)
+            .order('starttime', { ascending: false })
+            .limit(1)
+            .single();
+
+        if (matchError) {
+            console.error(`Errore nel recupero della startDate per dayId ${dayId}:`, matchError);
+            continue;
+        }
+
+        if (!match || !match.starttime) {
+            console.log(`Nessuna starttime trovata per dayId ${dayId}`);
+            continue;
+        }
+
+        const startDate = moment(match.starttime);
+        const scheduleTime = startDate.add(3, 'hours');
+
+        const scheduleMinute = scheduleTime.minutes();
+        const scheduleHour = scheduleTime.hours();
+        const scheduleDay = scheduleTime.date();
+        const scheduleMonth = scheduleTime.month() + 1; // I mesi in Moment sono indicizzati da 0
+
+        console.log('schedule->', `0 ${scheduleHour} ${scheduleDay} ${scheduleMonth} *`);
+        console.log('startDate->', startDate.format());
+        console.log('scheduleTime->', scheduleTime.format());
+        console.log('dayId ->', dayId);
+
+        const job = {
+            name: `projects/${projectId}/locations/us-central1/jobs/supa-update-matches-${dayId}`,
+            schedule: `${scheduleMinute} ${scheduleHour} ${scheduleDay} ${scheduleMonth} *`, // Configura l'orario
+            timeZone: 'Europe/Rome',
+            httpTarget: {
+            uri: `https://us-central1-${projectId}.cloudfunctions.net/updateMatches`,
+            httpMethod: 'POST',
+            body: Buffer.from(JSON.stringify({ dayId })).toString('base64'),
+            headers: { 'Content-Type': 'application/json' },
+            },
+        };
+
+        const promise = scheduler.projects.locations.jobs.create({
+            parent: `projects/${projectId}/locations/us-central1`,
+            requestBody: job,
+            auth: authClient,
+        });
+
+            promises.push(promise);
+    }
+
+    await Promise.all(promises); // Aspetta che tutte le promesse siano risolte
+
+    return res.status(200).send({ success: true, message: 'Tasks pianificati correttamente' });
+} catch (error) {
+    console.error('Errore durante la pianificazione dei task:', error);
+    return res.status(500).send({ success: false, message: 'Errore durante la pianificazione dei task' });
+}
+});
