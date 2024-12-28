@@ -64,9 +64,9 @@ node_modules/
 
 # dotenv environment variables file
 .env
-
 # dataconnect generated files
 .dataconnect
 
 firebase-service-account.json
+superBaseConnect.js
 
