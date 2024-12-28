@@ -19,6 +19,7 @@ BEGIN
       'tokenNotification', ''
     );
   END IF;
+
 END;
 $$ LANGUAGE plpgsql;
 

@@ -1,6 +1,7 @@
 CREATE OR REPLACE FUNCTION user_notify(p_tokenNotify text, p_uid text)
 RETURNS json AS $$
 DECLARE
+
   r_rows_updated int;
 BEGIN
   -- Esegui l'update e conta le righe aggiornate
