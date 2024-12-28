@@ -58,7 +58,7 @@ router.post('/add', authMiddleware, async (req, res) => {
         return res.status(500).json({ message: 'Errore durante il salvataggio della predizione.' });
     }
 
- 
+
 });
 
 // Route per controllare se esiste già una predizione
@@ -84,19 +84,40 @@ async function getPredictionsForDay(
 
 router.get('/check', async (req, res) => {
     const { dayId, leagueId, userId } = req.query;
-
     try {
-
-
-        const result = await getPredictionsForDay(dayId,leagueId,userId)
-
-
-        // // Se c'è almeno una predizione, restituiscila (assumo che ce ne sia solo una)
-        // const predictionData = predictionsSnapshot.docs[0].data();
+        const result = await getPredictionsForDay(dayId, leagueId, userId)
         res.status(200).json(result);
     } catch (error) {
         console.error('Errore durante il controllo della predizione:', error);
         res.status(500).json({ message: 'Errore durante il controllo della predizione' });
+    }
+});
+
+async function getResultOfUserForMatch(p_league_id,
+    p_match_id) {
+    let { data, error } = await supabase
+        .rpc('get_league_match_results', {
+            p_league_id,
+            p_match_id
+        })
+
+    if (error) {
+        console.error('Error fetching data:', error);
+        throw new Error(error); // Lancia un'eccezione con il messaggio dell'errore
+    } else {
+        console.log('tutto ok', data)
+        return data
+    }
+}
+
+router.get('/getResultOfUserForMatch', async (req, res) => {
+    const { leagueId, matchId } = req.query;
+    try {
+        const result = await getResultOfUserForMatch(leagueId, matchId)
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Errore durante il recupero dei risultati', error);
+        res.status(500).json({ message: 'Errore durante il recupero dei risultati' });
     }
 });
 

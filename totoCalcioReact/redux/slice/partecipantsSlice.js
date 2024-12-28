@@ -49,30 +49,5 @@ const participantsSlice = createSlice({
   },
 });
 
-// Selettore per accedere ai partecipanti
-const selectParticipants = (state) => state.partecipantiLegaCorrente.participants;
-
-// Selettore memorizzato per filtrare i partecipanti e i match per matchId
-export const selectParticipantAndMatchByMatchId = createSelector(
-  [selectParticipants, (_, matchId) => matchId],
-  (participants, matchId) => {
-    return participants
-      .map((participant) => {
-        const match = participant.schedina.find((schedina) => schedina.matchId === matchId);
-        if (match) {
-          return {
-            userId: participant.userId,
-            displayName: participant.displayName,
-            photoURL: participant.photoURL,
-            match: match, // Dettagli del match
-          };
-        }
-        return null;
-      })
-      .filter((result) => result !== null); // Rimuove eventuali null
-  }
-);
-
-
 export const { removeParticipant } = participantsSlice.actions;
 export default participantsSlice.reducer;
