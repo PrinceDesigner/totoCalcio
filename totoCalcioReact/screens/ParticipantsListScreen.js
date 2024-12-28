@@ -3,8 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'rea
 import { Card, useTheme, Avatar, Button } from 'react-native-paper';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; // Importa l'icona del cestino
 import { useDispatch, useSelector } from 'react-redux';
-import { removeUserFromLeagueReducer, selectLeagueById } from '../redux/slice/leaguesSlice';
-import { removeParticipant } from '../redux/slice/partecipantsSlice';
+import { selectLeagueById } from '../redux/slice/leaguesSlice';
 import { triggerRefresh } from '../redux/slice/refreshSlice';
 import { fetchStoricoPerUtenteSelezionato, setUser } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';

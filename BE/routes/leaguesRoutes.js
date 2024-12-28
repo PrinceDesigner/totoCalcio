@@ -1,19 +1,23 @@
 const express = require('express');
 const { firestore } = require('../firebaseAdmin'); // Assicurati di aver configurato Firebase Admin SDK
-const { FieldValue, FieldPath } = require('firebase-admin').firestore; // Importa FieldValue
 const authMiddleware = require('../middlewares/authMiddleware');
 const router = express.Router();
 const axios = require('axios');
-// const moment = require('moment');
 const moment = require('moment-timezone');
 const supabase = require('../superBaseConnect');
 const { getAuth } = require('firebase-admin/auth');
 
-// Funzione per sanitizzare i matchId
-function sanitizeMatchId(matchId) {
-  // Sostituisci caratteri non validi con un trattino (-)
-  return matchId.replace(/[\/.#$[\]]/g, '-');
+// Funzione per determinare il risultato finale (1, X, 2)
+function determineResult(homeGoals, awayGoals) {
+  if (homeGoals > awayGoals) {
+    return "1"; // Vittoria squadra di casa
+  } else if (homeGoals < awayGoals) {
+    return "2"; // Vittoria squadra ospite
+  } else {
+    return "X"; // Pareggio
+  }
 }
+
 
 // Funzione per caricare le giornate su Firebase
 async function fetchSerieAFixtures() {
@@ -116,17 +120,6 @@ router.get('/giornata-attuale', async (req, res) => {
     res.status(500).json({ success: false, message: 'Errore durante il recupero della giornata attuale.' });
   }
 });
-
-// Funzione per determinare il risultato finale (1, X, 2)
-function determineResult(homeGoals, awayGoals) {
-  if (homeGoals > awayGoals) {
-    return "1"; // Vittoria squadra di casa
-  } else if (homeGoals < awayGoals) {
-    return "2"; // Vittoria squadra ospite
-  } else {
-    return "X"; // Pareggio
-  }
-}
 
 
 async function createLeague(p_name, p_ownerid) {
@@ -257,10 +250,10 @@ router.post('/leagues/join', authMiddleware, async (req, res) => {
 });
 
 
-async function getLeagueForUserId(userId) {
+async function getLeagueForUserId(p_userid) {
   let { data, error } = await supabase
     .rpc('get_leagueuser', {
-      p_userid: userId
+      p_userid
     });
 
 
@@ -411,7 +404,6 @@ router.get('/leagues/:leagueId/:dayId/members-info-live', authMiddleware, async 
 
 
 // prendi una legaById
-// Recupera una lega specifica utilizzando il suo ID
 router.get('/leagues/:leagueId', async (req, res) => {
   const leagueId = req.params.leagueId;
   /*get_leagues_by_leagueid capire cosa serve in output anche i memebrs ?
@@ -432,47 +424,31 @@ router.get('/leagues/:leagueId', async (req, res) => {
   }
 });
 
-// Visualizza la classifica di una lega
-router.get('/leagues/:leagueId/standings', authMiddleware, async (req, res) => {
-  const { leagueId } = req.params;
 
-  try {
-    const leagueRef = firestore.collection('leagues').doc(leagueId);
-    const league = await leagueRef.get();
+async function deleteLeague(p_league_id) {
+  let { data, error } = await supabase
+    .rpc('delete_league', {
+      p_league_id
+    })
 
-    if (!league.exists) {
-      return res.status(404).json({ message: 'Lega non trovata' });
-    }
-
-    const standings = league.data().standings || [];
-
-    res.status(200).json({ message: 'Classifica recuperata con successo', standings });
-  } catch (error) {
-    console.error('Errore durante il recupero della classifica:', error);
-    res.status(500).json({ message: 'Errore durante il recupero della classifica' });
+  if (error) {
+    console.error('Error fetching data:', error);
+    throw new Error(error); // Lancia un'eccezione con il messaggio dell'errore
+  } else {
+    console.log('tutto ok', data)
+    return data
   }
-});
+}
+
+
 
 // Elimina una lega
 router.delete('/leagues/:leagueId', authMiddleware, async (req, res) => {
   const { leagueId } = req.params;
-  const userId = req.user.uid;
 
   try {
-    const leagueRef = firestore.collection('leagues').doc(leagueId);
-    const league = await leagueRef.get();
-
-    if (!league.exists) {
-      return res.status(404).json({ message: 'Lega non trovata' });
-    }
-
-    if (!league.data().ownerId.includes(userId)) {
-      return res.status(403).json({ message: 'Non sei autorizzato a eliminare questa lega' });
-    }
-
-    await leagueRef.delete();
-
-    res.status(200).json({ message: 'Lega eliminata con successo', leagueId });
+    const result = await deleteLeague(leagueId)
+    res.status(200).json({ message: 'Lega eliminata con successo', leagueId});
   } catch (error) {
     console.error('Errore durante l\'eliminazione della lega:', error);
     res.status(500).json({ message: 'Errore durante l\'eliminazione della lega' });
@@ -480,8 +456,6 @@ router.delete('/leagues/:leagueId', authMiddleware, async (req, res) => {
 });
 
 
-
-// Route per caricare le giornate
 // Route per caricare le giornate
 router.post('/leagues/upload-days', async (req, res) => {
   try {
@@ -557,9 +531,6 @@ router.post('/leagues/upload-days', async (req, res) => {
     res.status(500).send('Errore durante il caricamento delle giornate.');
   }
 });
-
-
-
 
 
 // Route per caricare le partite su Firestore usando gli stessi matchId presenti in 'days'
@@ -660,9 +631,9 @@ router.post('/leagues/removeUserFromLeague', async (req, res) => {
   }
 
   try {
-   await removeUserFromLeague(leagueId,userId);
+    await removeUserFromLeague(leagueId, userId);
 
-    return res.status(200).json({ message: 'Utente rimosso dalla lega e predizioni eliminate con successo.'});
+    return res.status(200).json({ message: 'Utente rimosso dalla lega e predizioni eliminate con successo.' });
   } catch (error) {
     console.error('Errore durante la rimozione dell\'utente dalla lega:', error);
     return res.status(500).json({ message: 'Errore durante la rimozione dell\'utente dalla lega.' });
@@ -726,7 +697,6 @@ async function removeAdmin(p_league_id,
   }
 
 }
-
 
 // Rimuovi un utente come amministratore di una lega
 router.post('/leagues/remove-admin', authMiddleware, async (req, res) => {

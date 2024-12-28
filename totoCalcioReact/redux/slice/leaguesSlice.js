@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
-import { createLeague, joinLeague, getUserLeagues, getLeagueStandings, deleteLeague, updateLeagueName, getUserLeagueById, getMembersInfoForLeague } from '../../services/leagueService';
+import { createLeague, joinLeague, getUserLeagues, deleteLeague, updateLeagueName, getUserLeagueById, getMembersInfoForLeague } from '../../services/leagueService';
 
 // Creazione di una nuova lega
 export const createLeagueThunk = createAsyncThunk('leagues/create', async (name, { rejectWithValue }) => {
@@ -41,15 +41,6 @@ export const getUserLeaguesByIdThunk = createAsyncThunk('leagues/getUserLeagueBy
     }
 });
 
-// Recupera la classifica di una lega
-export const getLeagueStandingsThunk = createAsyncThunk('leagues/getStandings', async (leagueId, { rejectWithValue }) => {
-    try {
-        const standings = await getLeagueStandings(leagueId);
-        return standings;
-    } catch (error) {
-        return rejectWithValue(error.response.data);
-    }
-});
 
 // Elimina una lega
 export const deleteLeagueThunk = createAsyncThunk('leagues/delete', async (leagueId, { rejectWithValue }) => {

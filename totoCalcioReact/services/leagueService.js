@@ -84,16 +84,6 @@ export const getMembersInfoForLeagueLive = async (leagueId, dayId) => {
   }
 };
 
-// Recupera la classifica di una lega
-export const getLeagueStandings = async (leagueId) => {
-  try {
-    const response = await axiosInstance.get(`/leagues/${leagueId}/standings`);
-    return response.data.standings;
-  } catch (error) {
-    console.error('Errore durante il recupero della classifica:', error);
-    throw error;
-  }
-};
 
 // Elimina una lega
 export const deleteLeague = async (leagueId) => {

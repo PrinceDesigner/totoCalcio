@@ -1,7 +1,5 @@
 const express = require('express');
-const { v4: uuidv4 } = require('uuid');
 const authMiddleware = require('../middlewares/authMiddleware');
-const moment = require('moment-timezone'); // Importa moment per gestire le date e i fusi orari
 const supabase = require('../superBaseConnect');
 
 
