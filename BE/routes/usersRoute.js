@@ -27,22 +27,37 @@ router.put('/update-user', authMiddleware, async (req, res) => {
   if (!email || !displayName) {
     return res.status(400).json({ message: 'Email e displayName sono obbligatori.' });
   }
-    try {
-      // 1. Aggiorna Firebase Authentication
-      const auth = getAuth(); // Ottieni l'istanza di Firebase Auth
-      await auth.updateUser(userId, { email, displayName });
+  try {
+    // 1. Aggiorna Firebase Authentication
+    const auth = getAuth(); // Ottieni l'istanza di Firebase Auth
+    await auth.updateUser(userId, { email, displayName });
 
-      const response = await update_user(userId, displayName, email);
+    const response = await update_user(userId, displayName, email);
 
-      res.status(200).json({ message: 'Email e displayName aggiornati con successo!', user: response });
-    } catch (error) {
-      console.error('Errore durante l\'aggiornamento dell\'utente:', error);
-      return res.status(500).json({ message: 'Errore durante l\'aggiornamento dell\'utente.' });
-    }
+    res.status(200).json({ message: 'Email e displayName aggiornati con successo!', user: response });
+  } catch (error) {
+    console.error('Errore durante l\'aggiornamento dell\'utente:', error);
+    return res.status(500).json({ message: 'Errore durante l\'aggiornamento dell\'utente.' });
+  }
 
 });
 
 
+async function saveUserToken(p_uid, p_tokennotify) {
+  let { data, error } = await supabase
+    .rpc('user_notify', {
+      p_tokennotify,
+      p_uid
+    })
+
+  if (error) {
+    console.error('Error fetching data:', error);
+    throw new Error(error); // Lancia un'eccezione con il messaggio dell'errore
+  } else {
+    console.log('tutto ok', data)
+    return data
+  }
+}
 
 // Endpoint per salvare il token di notifica push dell'utente
 router.post('/save-push-token', async (req, res) => {
@@ -54,13 +69,8 @@ router.post('/save-push-token', async (req, res) => {
   }
 
   try {
-    // Ottieni la referenza al documento utente su Firestore
-    const userRef = firestore.collection('users').doc(userId);
 
-    // Aggiorna il campo `tokenNotification` con il token push
-    await userRef.update({
-      tokenNotification: expoPushToken,
-    });
+    await saveUserToken(userId,expoPushToken);
 
     return res.status(200).json({ message: 'Token salvato correttamente nel database.' });
   } catch (error) {
@@ -69,6 +79,21 @@ router.post('/save-push-token', async (req, res) => {
   }
 });
 
+
+async function getUserToken(p_uid) {
+  let { data, error } = await supabase
+    .rpc('get_user_token', {
+      p_uid
+    })
+
+  if (error) {
+    console.error('Error fetching data:', error);
+    throw new Error(error); // Lancia un'eccezione con il messaggio dell'errore
+  } else {
+    console.log('tutto ok', data)
+    return data
+  }
+}
 
 // Endpoint per verificare se il token di notifica push dell'utente è già salvato
 router.post('/verify-push-token', async (req, res) => {
@@ -80,17 +105,10 @@ router.post('/verify-push-token', async (req, res) => {
   }
 
   try {
-    // Ottieni la referenza al documento utente su Firestore
-    const userRef = firestore.collection('users').doc(userId);
-    const userDoc = await userRef.get();
 
-    if (!userDoc.exists) {
-      return res.status(404).json({ error: 'Utente non trovato.' });
-    }
-
+    const result = await getUserToken(userId)
     // Controlla se il token coincide
-    const userData = userDoc.data();
-    const savedToken = userData?.tokenNotification;
+    const savedToken = result?.tokenNotification;
 
     if (savedToken === expoPushToken) {
       return res.status(200).json({ isTokenValid: true });
