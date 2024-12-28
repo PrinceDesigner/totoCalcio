@@ -47,7 +47,6 @@ export default function LeagueDetails({ navigation }) {
     // Selettori per ottenere le informazioni necessarie
     const userId = useSelector((state) => state.auth.user && state.auth.user.user.userId);
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
-    const dayId = useSelector((state) => state.giornataAttuale.giornataAttuale);
     const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
 
     const provisionalRanking = members;
@@ -99,11 +98,10 @@ export default function LeagueDetails({ navigation }) {
     useEffect(() => {
         if (refreshRequired) {
             // Effettua la chiamata per aggiornare i dati
-            if (giornataAttuale && dayId && leagueId && userId && userIds.length) {
+            if (giornataAttuale && leagueId && userId && userIds.length) {
                 // Se sono disponibili, esegui fetchDataInParallel
                 fetchGiornateDaCalcolare(leagueId)
                 fetchGiornataAttuale()
-                fetchDataInParallel()
                 fetchLeagueById(leagueId)
             }
             // Una volta ricaricati i dati, ripristina il flag di refresh
@@ -137,9 +135,6 @@ export default function LeagueDetails({ navigation }) {
     }, [startDate]); // Ogni volta che cambia startDate, ricontrolla isPast
 
 
-
-
-
     useEffect(() => {
         // Verifica che tutti i valori siano disponibili prima di effettuare le chiamate
         if (giornataAttuale) {
@@ -147,7 +142,7 @@ export default function LeagueDetails({ navigation }) {
             // fetchLeagueById(leagueId)
             fetchDataInParallel();
         }
-    }, [giornataAttuale]);
+    }, [giornataAttuale, leagueId]);
 
     useEffect(() => {
         // if (isPast) {
@@ -221,7 +216,7 @@ export default function LeagueDetails({ navigation }) {
             let membersResult;
             dispatch(showLoading()); // Mostra lo stato di caricamento
             if (isPast) {
-                membersResult = await getMembersInfoForLeagueLive(leagueId, dayId);
+                membersResult = await getMembersInfoForLeagueLive(leagueId, giornataAttuale);
             } 
             if (isPast === false){
                 membersResult = await getMembersInfoForLeague(leagueId);
@@ -239,7 +234,6 @@ export default function LeagueDetails({ navigation }) {
         try {
             const giornata = await getGiornataAttuale();
             dispatch(setSelectedGiornata({ giornataAttuale: giornata }));
-
         } catch (error) {
             console.error('Errore durante il recupero della giornata attuale:', error);
         }
@@ -267,7 +261,7 @@ export default function LeagueDetails({ navigation }) {
             // Esegui entrambe le chiamate in parallelo con Promise.all
             await Promise.all([
                 dispatch(fetchDayDetails(giornataAttuale)).unwrap(), // Recupera i dettagli della giornata
-                dispatch(fetchPrediction({ dayId, leagueId, userId })).unwrap(),// Controlla la predizione
+                dispatch(fetchPrediction({ giornataAttuale, leagueId, userId })).unwrap(),// Controlla la predizione
             ]);
 
 
@@ -280,7 +274,6 @@ export default function LeagueDetails({ navigation }) {
     };
 
     const changeLeague = async (idLega) => {
-        await fetchLeagueById(idLega)
         dispatch(setSelectedLeagueGiornata({ giornataAttuale: giornataAttuale, legaSelezionata: idLega }));
     }
 
@@ -289,7 +282,6 @@ export default function LeagueDetails({ navigation }) {
 
         fetchGiornateDaCalcolare(leagueId).then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
         fetchGiornataAttuale().then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
-        fetchDataInParallel();
         fetchLeagueById(leagueId).then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
     };
 
@@ -473,7 +465,7 @@ export default function LeagueDetails({ navigation }) {
 
                     {/* Schema delle Partite */}
                     <View style={{ ...styles.section, backgroundColor: 'transparent', padding: 0, marginBottom: 10 }}>
-                        <Text style={{ color: 'white', ...fontStyle.textLight, fontSize: 20, marginBottom: 10 }}>{`Giornata ${dayId}`.replace('RegularSeason-', '') || 0}</Text>
+                        <Text style={{ color: 'white', ...fontStyle.textLight, fontSize: 20, marginBottom: 10 }}>{`Giornata ${giornataAttuale}`.replace('RegularSeason-', '') || 0}</Text>
 
                         {sortedMatches.map((match, i) => {
                             if (i === 5) {

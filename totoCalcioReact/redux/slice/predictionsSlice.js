@@ -17,9 +17,9 @@ export const savePrediction = createAsyncThunk(
 // Thunk per controllare se una predizione esiste
 export const fetchPrediction = createAsyncThunk(
   'predictions/fetchPrediction',
-  async ({ dayId, leagueId, userId }, { rejectWithValue }) => {
+  async ({ giornataAttuale, leagueId, userId }, { rejectWithValue }) => {
     try {
-      const prediction = await checkPrediction(dayId, leagueId, userId);
+      const prediction = await checkPrediction(giornataAttuale, leagueId, userId);
       return {schedina: prediction.schedina};
     } catch (error) {
       return rejectWithValue(error.response?.data || 'Errore durante il controllo della predizione');
