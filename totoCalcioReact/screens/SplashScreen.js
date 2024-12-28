@@ -16,10 +16,10 @@ const SplashScreen = ({ navigation }) => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {         
                 
-                // if (!user.emailVerified) {
-                //     navigation.replace('EmailVerificationScreen'); // Naviga alla schermata di verifica email
-                //     return; // Esci dalla funzione
-                // }
+                if (!user.emailVerified) {
+                    navigation.replace('EmailVerificationScreen'); // Naviga alla schermata di verifica email
+                    return; // Esci dalla funzione
+                }
                 
                 try {
                     // L'utente è autenticato, recupera il token JWT
