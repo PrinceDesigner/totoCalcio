@@ -34,13 +34,20 @@ exports.updateMatchesSupa = functions.https.onRequest(async (req, res) => {
 
         // Ottieni dati da Supabase
         const { data: leagues, error: leaguesError } = await supabase.from('leagues').select('id_league');
-        if (leaguesError) throw leaguesError;
+        if (leaguesError){
+                console.error('Errore durante estrazione leagues ', leaguesError);
+                res.status(500).send({ success: false, message: "Errore durante estrazione leagues " +leaguesError });
+        }
+
 
         const { data: predictions, error: predictionsError } = await supabase
             .from('predictions')
             .select('id_league')
-            .eq('daysId', dayId);
-        if (predictionsError) throw predictionsError;
+            .eq('dayid', dayId);
+            if (predictionsError){
+                console.error('Errore durante estrazione predictions ', predictionsError);
+                res.status(500).send({ success: false, message: "Errore durante estrazione predictions " +leaguesError });
+            }
 
         const leagueMap = leagues.reduce((acc, league) => {
             acc[league.id_league] = { calcolata: false };
@@ -52,6 +59,7 @@ exports.updateMatchesSupa = functions.https.onRequest(async (req, res) => {
                 leagueMap[prediction.id_league].calcolata = true;
             }
         });
+
         // Aggiorna la tabella "matches" in Supabase
         for (const match of fixtures) {
             const { error: updateError } = await supabase
@@ -69,14 +77,18 @@ exports.updateMatchesSupa = functions.https.onRequest(async (req, res) => {
 
         // Inserisci le previsioni nella tabella "giornateCalcolate"
         const giornateCalcolate = predictions.map(prediction => ({
-            documentId: `${prediction.id_league}_${dayId}`,
+            idgiornatecalcolate: `${prediction.id_league}_${dayId}`,
             calcolate: false,
-            dayId,
+            dayid:dayId,
             id_league: prediction.id_league,
         }));
 
-        const { error: insertError } = await supabase.from('giornateCalcolate').upsert(giornateCalcolate);
-        if (insertError) throw insertError;
+        const { error: insertError } = await supabase.from('giornatecalcolate').upsert(giornateCalcolate);
+        if (insertError){
+            console.log('giornateCalcolate',giornateCalcolate);
+            console.error('Errore durante insert  giornateCalcolate ', insertError);
+            res.status(500).send({ success: false, message: "Errore  durante insert giornateCalcolate " +insertError });
+        }
 
         // Aggiorna il campo giornataAttuale
         await updateCurrentGiornata(noStep);
@@ -84,7 +96,7 @@ exports.updateMatchesSupa = functions.https.onRequest(async (req, res) => {
         res.status(200).send({ success: true, message: "Partite aggiornate con successo" });
     } catch (error) {
         console.error('Errore durante l\'aggiornamento delle partite:', error);
-        res.status(500).send({ success: false, message: "Errore durante l'aggiornamento delle partite" });
+        res.status(500).send({ success: false, message: "Errore durante l'aggiornamento delle partite" + error });
     }
 });
 
@@ -147,6 +159,7 @@ async function scheduleJob(job) {
         await scheduler.projects.locations.jobs.create({
             parent: `projects/totocalcioreact/locations/us-central1`,
             requestBody: job,
+            auth: authClient,
         });
 
         console.log(`Job creato con successo: ${job.name}`);
@@ -161,7 +174,7 @@ async function updateCurrentGiornata(noStep) {
     }
 
     const { data: giornataData, error: giornataError } = await supabase
-        .from('giornataAttuale')
+        .from('giornataattuale')
         .select('giornataAttuale')
         .single();
 
@@ -175,8 +188,9 @@ async function updateCurrentGiornata(noStep) {
     const updatedGiornataAttuale = `RegularSeason-${updatedGiornataNumber}`;
 
     const { error: updateError } = await supabase
-        .from('giornataAttuale')
-        .update({ giornataAttuale: updatedGiornataAttuale });
+        .from('giornataattuale')
+        .update({ giornataAttuale: updatedGiornataAttuale })
+        .eq('giornataAttuale',giornataData.giornataAttuale);
 
     if (updateError) {
         console.error('Errore durante l\'aggiornamento della giornata attuale:', updateError);
@@ -187,8 +201,8 @@ async function updateCurrentGiornata(noStep) {
 
     const { data: matches, error: matchesError } = await supabase
         .from('matches')
-        .select('startTime, id')
-        .eq('dayId', updatedGiornataAttuale);
+        .select('starttime, matchid')
+        .eq('dayid', updatedGiornataAttuale);
 
     if (matchesError) {
         console.error('Errore nel recupero delle partite per la nuova giornata:', matchesError);
@@ -196,14 +210,14 @@ async function updateCurrentGiornata(noStep) {
     }
 
     const promises = matches.map(singleMatch => {
-        const scheduleTime = moment(singleMatch.startTime).add(30, 'minutes');
+        const scheduleTime = moment(singleMatch.starttime).add(30, 'minutes');
 
         const job = {
-            name: `projects/totocalcioreact/locations/us-central1/jobs/update-Match-After-Finish-${singleMatch.id}`,
+            name: `projects/totocalcioreact/locations/us-central1/jobs/Supa-update-Match-After-Finish-${singleMatch.matchid}`,
             schedule: `${scheduleTime.minutes()} ${scheduleTime.hours()} ${scheduleTime.date()} ${scheduleTime.month() + 1} *`,
             timeZone: 'Europe/Rome',
             httpTarget: {
-                uri: `https://us-central1-totocalcioreact.cloudfunctions.net/updateSingleMatchId?matchId=${singleMatch.id}`,
+                uri: `https://us-central1-totocalcioreact.cloudfunctions.net/updateSingleMatchId?matchId=${singleMatch.matchid}`,
                 httpMethod: 'POST',
                 headers: { 'Content-Type': 'application/json' },
             },
@@ -250,7 +264,7 @@ try {
 
     const projectId = 'totocalcioreact'; // Usa l'ID del progetto Firebase
     const auth = new google.auth.GoogleAuth({
-    scopes: ['https://www.googleapis.com/auth/cloud-scheduler', 'https://www.googleapis.com/auth/cloud-platform'],
+        scopes: ['https://www.googleapis.com/auth/cloud-scheduler', 'https://www.googleapis.com/auth/cloud-platform'],
     });
 
     const authClient = await auth.getClient();
@@ -296,7 +310,7 @@ try {
             schedule: `${scheduleMinute} ${scheduleHour} ${scheduleDay} ${scheduleMonth} *`, // Configura l'orario
             timeZone: 'Europe/Rome',
             httpTarget: {
-            uri: `https://us-central1-${projectId}.cloudfunctions.net/updateMatches`,
+            uri: `https://us-central1-${projectId}.cloudfunctions.net/updateMatchesSupa`,
             httpMethod: 'POST',
             body: Buffer.from(JSON.stringify({ dayId })).toString('base64'),
             headers: { 'Content-Type': 'application/json' },
