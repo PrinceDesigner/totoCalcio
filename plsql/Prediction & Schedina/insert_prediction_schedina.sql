@@ -43,8 +43,8 @@ BEGIN
         INTO v_predictionid
         FROM predictions
         WHERE id_league = v_id_league
-            AND dayid = p_dayid
-            AND userid = p_userid
+          AND dayid = p_dayid
+          AND userid = p_userid
         LIMIT 1;
 
         -- Se esiste, aggiorna schedina per prediction_id
@@ -77,12 +77,12 @@ BEGIN
                     NULL AS result
                 FROM JSONB_ARRAY_ELEMENTS(p_schedina) AS schedina_Insert(value)
                 WHERE schedina_Insert.value->>'matchId' IS NOT NULL
-                    AND schedina_Insert.value->>'esitoGiocato' IS NOT NULL
-                    AND NOT EXISTS (
-                        SELECT 1 FROM schedina s
-                        WHERE s.prediction_id = v_predictionid
+                  AND schedina_Insert.value->>'esitoGiocato' IS NOT NULL
+                  AND NOT EXISTS (
+                      SELECT 1 FROM schedina s
+                      WHERE s.prediction_id = v_predictionid
                         AND s.matchid = schedina_Insert.value->>'matchId'
-                    );
+                  );
             END IF;
         END IF;
     END LOOP;
@@ -90,7 +90,7 @@ BEGIN
     -- Recupera prediction e schedine per il campo specifico `p_selectleague`
     IF p_selectleague IS NOT NULL THEN
         SELECT jsonb_build_object(
-            'prediction_id', (SELECT predictionid::TEXT FROM predictions WHERE id_league = p_selectleague AND userid = p_userid LIMIT 1),
+            'prediction_id', (SELECT predictionid::TEXT FROM predictions WHERE id_league = p_selectleague AND userid = p_userid AND dayid = p_dayid LIMIT 1),
             'schedina', jsonb_agg(
                 jsonb_build_object(
                     'matchId', schedina.matchid,
@@ -100,10 +100,13 @@ BEGIN
             )
         ) INTO v_predictions
         FROM schedina
-        WHERE prediction_id = (SELECT predictionid FROM predictions WHERE id_league = p_selectleague AND userid = p_userid LIMIT 1);
+        WHERE prediction_id = (SELECT predictionid FROM predictions WHERE id_league = p_selectleague AND userid = p_userid  AND dayid = p_dayid LIMIT 1);
     END IF;
 
     -- Ritorna il risultato finale
     RETURN v_predictions;
 END;
 $$ LANGUAGE plpgsql;
+
+
+SELECT * FROM insert_prediction_schedina
