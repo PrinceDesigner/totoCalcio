@@ -50,6 +50,9 @@ router.post('/add', authMiddleware, async (req, res) => {
         let schedineresponse = [];
         // Cicla su ogni `leagueId` da processare
         const response = await addSchedina(daysId, leagueIds, schedina, userId, legaSelezionata)
+        if (response.message === 'Giornata gia iniziata') {
+            return res.status(500).json({ message: 'Giornata già iniziata' });
+        }
         return res.status(201).json(response);
     } catch (error) {
         console.error('Errore durante il salvataggio della predizione:', error);

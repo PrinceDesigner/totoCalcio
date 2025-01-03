@@ -118,15 +118,14 @@ export default function InsertResultsScreen({ navigation }) {
             navigation.navigate('LeagueDetails'); // Naviga alla schermata LeagueDetails
         } catch (error) {
             console.error('Errore durante il salvataggio delle predizioni:', error);
-            if (error.message === 'La giornata è già iniziata.') {
+            if (error.data.message === 'Giornata già iniziata') {
 
                 showToast('error', 'La giornata è già iniziata. Aggiorna la pagina' + error.data);
                 dispatch(updateStartDate({ startDate: error.data }));
-
+                dispatch(triggerRefresh())
                 navigation.navigate('LeagueDetails'); // Sostituisci la schermata per evitare duplicazioni
 
             } else {
-                dispatch(triggerRefresh())
                 showToast('error', 'Errore durante il salvataggio delle predizioni');
             }
 

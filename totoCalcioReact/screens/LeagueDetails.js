@@ -110,6 +110,7 @@ export default function LeagueDetails({ navigation }) {
         if (refreshRequired) {
             // Effettua la chiamata per aggiornare i dati
             if (giornataAttuale && leagueId && userId) {
+                dispatch(fetchPrediction({ giornataAttuale, leagueId, userId })).unwrap()// Controlla la predizione
                 // Se sono disponibili, esegui fetchDataInParallel
                 if (selectedLeague.ownerId.includes(userId)) {
                     fetchGiornateDaCalcolare(leagueId)
