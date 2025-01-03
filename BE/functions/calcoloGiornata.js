@@ -15,11 +15,11 @@ exports.calcolaPuntiGiornataTest = functions.https.onCall(async (data, context) 
         const lockStatus = await supabase.rpc('lock_record', { id: idGiornataCalcolata});
         if (lockStatus.data.status === 'in_progress') {
             info('Il calcolo è in corso');
-            context.send('calcolo in corso');
+            //context.send('calcolo in corso');
             return { success: false, message: lockStatus.message };
         } else if (lockStatus.data.status === 'completed') {
             info('Giornata già calcolata');
-            context.send('Giornata già calcolata');
+            //context.send('Giornata già calcolata');
             return { success: false, message: lockStatus.message };
         }
     } catch (errorExc) {
