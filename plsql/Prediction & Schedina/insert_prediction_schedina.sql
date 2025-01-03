@@ -32,7 +32,7 @@ BEGIN
     IF CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Rome' > v_earliest_starttime::timestamptz THEN
         RETURN jsonb_build_object(
             'status', 'error',
-            'message', 'Giornata già iniziata'
+            'message', 'Giornata gia iniziata'
         );
     END IF;
 
