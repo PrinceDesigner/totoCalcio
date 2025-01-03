@@ -9,7 +9,33 @@ DECLARE
     v_predictionid UUID;
     v_predictions JSONB := '[]'::JSONB; -- Array JSON vuoto per raccogliere i risultati
     v_id_league TEXT; -- Variabile temporanea per iterare su ogni lega
+    v_earliest_starttime TEXT; -- Variabile per la data di inizio più vicina
+
 BEGIN
+    -- Recupera la starttime più vicina per la giornata indicata
+    SELECT starttime
+    INTO v_earliest_starttime
+    FROM matches
+    WHERE dayid = p_dayid
+    ORDER BY starttime::timestamptz ASC
+    LIMIT 1;
+
+    -- Se non ci sono risultati, restituisci un messaggio in JSON
+    IF v_earliest_starttime IS NULL THEN
+        RETURN jsonb_build_object(
+            'status', 'error',
+            'message', 'Errore imprevisto',
+        );
+    END IF;
+
+    -- Confronta la starttime più vicina con la data attuale
+    IF CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Rome' > v_earliest_starttime::timestamptz THEN
+        RETURN jsonb_build_object(
+            'status', 'error',
+            'message', 'Giornata già iniziata',
+        );
+    END IF;
+
     -- Itera sull'array delle leghe
     FOREACH v_id_league IN ARRAY p_id_league LOOP
         -- Controlla se esiste già una prediction per la tripletta userid-leagueId-dayId
@@ -81,4 +107,3 @@ BEGIN
     RETURN v_predictions;
 END;
 $$ LANGUAGE plpgsql;
-
