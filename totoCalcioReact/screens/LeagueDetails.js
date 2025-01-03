@@ -111,9 +111,13 @@ export default function LeagueDetails({ navigation }) {
             // Effettua la chiamata per aggiornare i dati
             if (giornataAttuale && leagueId && userId) {
                 // Se sono disponibili, esegui fetchDataInParallel
-                fetchGiornateDaCalcolare(leagueId)
-                fetchGiornataAttuale()
-                fetchLeagueById(leagueId)
+                if (selectedLeague.ownerId.includes(userId)) {
+                    fetchGiornateDaCalcolare(leagueId)
+                }
+                fetchGiornataAttuale().then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
+                dispatch(fetchDayDetails(giornataAttuale)).unwrap(), // Recupera i dettagli della giornata
+                    fetchLeagueById(leagueId).then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
+
             }
             // Una volta ricaricati i dati, ripristina il flag di refresh
             dispatch(clearRefresh());
@@ -263,7 +267,6 @@ export default function LeagueDetails({ navigation }) {
 
     // Funzione per gestire il refresh
     const onRefresh = () => {
-        fetchGiornateDaCalcolare(leagueId).then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
         fetchGiornataAttuale().then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
         dispatch(fetchDayDetails(giornataAttuale)).unwrap(), // Recupera i dettagli della giornata
             fetchLeagueById(leagueId).then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh

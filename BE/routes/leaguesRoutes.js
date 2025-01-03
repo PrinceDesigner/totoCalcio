@@ -404,25 +404,25 @@ router.get('/leagues/:leagueId/:dayId/members-info-live', authMiddleware, async 
 
 
 // prendi una legaById
-router.get('/leagues/:leagueId', async (req, res) => {
-  const leagueId = req.params.leagueId;
-  /*get_leagues_by_leagueid capire cosa serve in output anche i memebrs ?
-  Se si utilizzare get_members_by_league */
-  try {
-    const leagueDoc = await firestore.collection('leagues').doc(leagueId).get();
+// router.get('/leagues/:leagueId', async (req, res) => {
+//   const leagueId = req.params.leagueId;
+//   /*get_leagues_by_leagueid capire cosa serve in output anche i memebrs ?
+//   Se si utilizzare get_members_by_league */
+//   try {
+//     const leagueDoc = await firestore.collection('leagues').doc(leagueId).get();
 
-    if (!leagueDoc.exists) {
-      return res.status(404).json({ message: 'Lega non trovata' });
-    }
+//     if (!leagueDoc.exists) {
+//       return res.status(404).json({ message: 'Lega non trovata' });
+//     }
 
-    const leagueData = leagueDoc.data();
+//     const leagueData = leagueDoc.data();
 
-    res.status(200).json({ message: 'Lega recuperata con successo', league: { id: leagueDoc.id, ...leagueData } });
-  } catch (error) {
-    console.error('Errore durante il recupero della lega:', error);
-    res.status(500).json({ message: 'Errore durante il recupero della lega' });
-  }
-});
+//     res.status(200).json({ message: 'Lega recuperata con successo', league: { id: leagueDoc.id, ...leagueData } });
+//   } catch (error) {
+//     console.error('Errore durante il recupero della lega:', error);
+//     res.status(500).json({ message: 'Errore durante il recupero della lega' });
+//   }
+// });
 
 
 async function deleteLeague(p_league_id) {
@@ -456,124 +456,124 @@ router.delete('/leagues/:leagueId', authMiddleware, async (req, res) => {
 });
 
 
-// Route per caricare le giornate
-router.post('/leagues/upload-days', async (req, res) => {
-  try {
-    const fixtures = await fetchSerieAFixtures();
-    const currentRound = await fetchCurrentRound();
+// // Route per caricare le giornate
+// router.post('/leagues/upload-days', async (req, res) => {
+//   try {
+//     const fixtures = await fetchSerieAFixtures();
+//     const currentRound = await fetchCurrentRound();
 
-    // Raggruppiamo i fixture per "round" (giornata)
-    const groupedByDay = fixtures.reduce((acc, fixture) => {
-      const dayNumber = fixture.league.round;  // Es. "Regular Season - 31"
-      const matchId = fixture.fixture.id;
+//     // Raggruppiamo i fixture per "round" (giornata)
+//     const groupedByDay = fixtures.reduce((acc, fixture) => {
+//       const dayNumber = fixture.league.round;  // Es. "Regular Season - 31"
+//       const matchId = fixture.fixture.id;
 
-      // Se non esiste ancora un gruppo per questa giornata, crealo
-      if (!acc[dayNumber]) {
-        acc[dayNumber] = {
-          dayNumber,
-          matches: [],
-          startDate: fixture.fixture.date,  // Imposta inizialmente la data di inizio come quella della prima partita
-          endDate: fixture.fixture.date     // Anche la data di fine è inizialmente la data della prima partita
-        };
-      }
+//       // Se non esiste ancora un gruppo per questa giornata, crealo
+//       if (!acc[dayNumber]) {
+//         acc[dayNumber] = {
+//           dayNumber,
+//           matches: [],
+//           startDate: fixture.fixture.date,  // Imposta inizialmente la data di inizio come quella della prima partita
+//           endDate: fixture.fixture.date     // Anche la data di fine è inizialmente la data della prima partita
+//         };
+//       }
 
-      acc[dayNumber].matches.push(matchId);
+//       acc[dayNumber].matches.push(matchId);
 
-      const matchDate = new Date(fixture.fixture.date);  // Data della partita
-      const currentStartDate = new Date(acc[dayNumber].startDate);
-      const currentEndDate = new Date(acc[dayNumber].endDate);
+//       const matchDate = new Date(fixture.fixture.date);  // Data della partita
+//       const currentStartDate = new Date(acc[dayNumber].startDate);
+//       const currentEndDate = new Date(acc[dayNumber].endDate);
 
-      // Aggiorna la data di inizio se la partita corrente è prima della data di inizio attuale
-      if (matchDate < currentStartDate) {
-        acc[dayNumber].startDate = fixture.fixture.date;
-      }
+//       // Aggiorna la data di inizio se la partita corrente è prima della data di inizio attuale
+//       if (matchDate < currentStartDate) {
+//         acc[dayNumber].startDate = fixture.fixture.date;
+//       }
 
-      // Aggiorna la data di fine se la partita corrente è dopo la data di fine attuale
-      if (matchDate > currentEndDate) {
-        acc[dayNumber].endDate = fixture.fixture.date;
-      }
+//       // Aggiorna la data di fine se la partita corrente è dopo la data di fine attuale
+//       if (matchDate > currentEndDate) {
+//         acc[dayNumber].endDate = fixture.fixture.date;
+//       }
 
-      return acc;
-    }, {});
+//       return acc;
+//     }, {});
 
-    // Ordina le giornate in base al numero
-    const daysArray = Object.values(groupedByDay).sort((a, b) => parseInt(a.dayNumber.match(/\d+/)) - parseInt(b.dayNumber.match(/\d+/)));
+//     // Ordina le giornate in base al numero
+//     const daysArray = Object.values(groupedByDay).sort((a, b) => parseInt(a.dayNumber.match(/\d+/)) - parseInt(b.dayNumber.match(/\d+/)));
 
-    // Carichiamo ogni giornata su Firebase
-    for (const day of daysArray) {
-      const dayId = day.dayNumber.toString().trim().replace(/\s+/g, ''); // Genera un UUID per la giornata
+//     // Carichiamo ogni giornata su Firebase
+//     for (const day of daysArray) {
+//       const dayId = day.dayNumber.toString().trim().replace(/\s+/g, ''); // Genera un UUID per la giornata
 
-      // Verifica se questa giornata è quella attuale confrontando `dayNumber` con `currentRound`
-      const isCurrentDay = day.dayNumber === currentRound;
+//       // Verifica se questa giornata è quella attuale confrontando `dayNumber` con `currentRound`
+//       const isCurrentDay = day.dayNumber === currentRound;
 
-      // Struttura della giornata da caricare su Firebase
-      const dayData = {
-        dayId,
-        dayNumber: day.dayNumber,
-        matches: day.matches,
-        startDate: moment.tz(day.startDate, "Europe/Rome").format('YYYY-MM-DDTHH:mm:ss+00:00'),   // Prima partita della giornata
-        endDate: moment.tz(day.endDate, "Europe/Rome").format('YYYY-MM-DDTHH:mm:ss+00:00'),       // Ultima partita della giornata
-        isCurrentDay               // Booleano per indicare se è la giornata attuale
-      };
+//       // Struttura della giornata da caricare su Firebase
+//       const dayData = {
+//         dayId,
+//         dayNumber: day.dayNumber,
+//         matches: day.matches,
+//         startDate: moment.tz(day.startDate, "Europe/Rome").format('YYYY-MM-DDTHH:mm:ss+00:00'),   // Prima partita della giornata
+//         endDate: moment.tz(day.endDate, "Europe/Rome").format('YYYY-MM-DDTHH:mm:ss+00:00'),       // Ultima partita della giornata
+//         isCurrentDay               // Booleano per indicare se è la giornata attuale
+//       };
 
-      try {
-        // Carica la giornata su Firestore
-        await firestore.collection('days').doc(dayId).set(dayData);
-        console.log(`Giornata ${day.dayNumber} caricata con successo!`);
-      } catch (error) {
-        console.error(`Errore durante il caricamento della giornata ${day.dayNumber}:`, error);
-      }
-    }
+//       try {
+//         // Carica la giornata su Firestore
+//         await firestore.collection('days').doc(dayId).set(dayData);
+//         console.log(`Giornata ${day.dayNumber} caricata con successo!`);
+//       } catch (error) {
+//         console.error(`Errore durante il caricamento della giornata ${day.dayNumber}:`, error);
+//       }
+//     }
 
-    res.status(200).send('Le giornate sono state caricate con successo.');
-  } catch (error) {
-    console.error('Errore durante il caricamento delle giornate:', error);
-    res.status(500).send('Errore durante il caricamento delle giornate.');
-  }
-});
+//     res.status(200).send('Le giornate sono state caricate con successo.');
+//   } catch (error) {
+//     console.error('Errore durante il caricamento delle giornate:', error);
+//     res.status(500).send('Errore durante il caricamento delle giornate.');
+//   }
+// });
 
 
 // Route per caricare le partite su Firestore usando gli stessi matchId presenti in 'days'
-router.post('/leagues/upload-matches', async (req, res) => {
-  try {
-    const fixtures = await fetchSerieAFixtures();  // Ottieni i fixture dalla RapidAPI
+// router.post('/leagues/upload-matches', async (req, res) => {
+//   try {
+//     const fixtures = await fetchSerieAFixtures();  // Ottieni i fixture dalla RapidAPI
 
-    for (const fixture of fixtures) {
-      let matchId = fixture.fixture.id.toString(); // Converti in stringa se necessario
-      // Verifica che matchId sia valido (non vuoto o undefined)
-      if (!matchId || typeof matchId !== 'string') {
-        // console.error('Match ID non valido:', matchId);
-        continue; // Salta questa partita se il matchId non è valido
-      }
+//     for (const fixture of fixtures) {
+//       let matchId = fixture.fixture.id.toString(); // Converti in stringa se necessario
+//       // Verifica che matchId sia valido (non vuoto o undefined)
+//       if (!matchId || typeof matchId !== 'string') {
+//         // console.error('Match ID non valido:', matchId);
+//         continue; // Salta questa partita se il matchId non è valido
+//       }
 
-      // Controlla se la partita è terminata, se sì, determina il risultato
-      const result = fixture.fixture.status.short === "FT"
-        ? determineResult(fixture.goals.home, fixture.goals.away)
-        : null;  // Se la partita non è terminata, il risultato sarà `null`
+//       // Controlla se la partita è terminata, se sì, determina il risultato
+//       const result = fixture.fixture.status.short === "FT"
+//         ? determineResult(fixture.goals.home, fixture.goals.away)
+//         : null;  // Se la partita non è terminata, il risultato sarà `null`
 
-      const matchData = {
-        matchId,  // Usa il matchId esistente
-        homeTeam: fixture.teams.home.name,  // Squadra di casa
-        awayTeam: fixture.teams.away.name,  // Squadra ospite
-        homeLogo: fixture.teams.home.logo,
-        awayLogo: fixture.teams.away.logo,
-        stadio: fixture.fixture.venue.name,
-        result,  // Risultato, `null` se la partita non è ancora finita
-        dayId: fixture.league.round.toString().trim().replace(/\s+/g, ''),  // Giornata a cui appartiene la partita (stesso valore usato per la giornata)
-        startTime: moment.tz(fixture.fixture.date, "Europe/Rome").format('YYYY-MM-DDTHH:mm:ss+00:00')  // Data e ora di inizio della partita
-      };
+//       const matchData = {
+//         matchId,  // Usa il matchId esistente
+//         homeTeam: fixture.teams.home.name,  // Squadra di casa
+//         awayTeam: fixture.teams.away.name,  // Squadra ospite
+//         homeLogo: fixture.teams.home.logo,
+//         awayLogo: fixture.teams.away.logo,
+//         stadio: fixture.fixture.venue.name,
+//         result,  // Risultato, `null` se la partita non è ancora finita
+//         dayId: fixture.league.round.toString().trim().replace(/\s+/g, ''),  // Giornata a cui appartiene la partita (stesso valore usato per la giornata)
+//         startTime: moment.tz(fixture.fixture.date, "Europe/Rome").format('YYYY-MM-DDTHH:mm:ss+00:00')  // Data e ora di inizio della partita
+//       };
 
-      // Carica il match su Firestore usando lo stesso matchId già presente nella collezione 'days'
-      await firestore.collection('matches').doc(matchId).set(matchData);
-      console.log(`Partita ${matchData.homeTeam} vs ${matchData.awayTeam} caricata con successo!`);
-    }
+//       // Carica il match su Firestore usando lo stesso matchId già presente nella collezione 'days'
+//       await firestore.collection('matches').doc(matchId).set(matchData);
+//       console.log(`Partita ${matchData.homeTeam} vs ${matchData.awayTeam} caricata con successo!`);
+//     }
 
-    res.status(200).send('Le partite sono state caricate con successo.');
-  } catch (error) {
-    console.error('Errore durante il caricamento delle partite:', error);
-    res.status(500).send('Errore durante il caricamento delle partite.');
-  }
-});
+//     res.status(200).send('Le partite sono state caricate con successo.');
+//   } catch (error) {
+//     console.error('Errore durante il caricamento delle partite:', error);
+//     res.status(500).send('Errore durante il caricamento delle partite.');
+//   }
+// });
 
 async function getDayDetails(p_dayid) {
   let { data, error } = await supabase

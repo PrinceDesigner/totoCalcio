@@ -23,6 +23,8 @@ export default function UserHistoryScreen({ route, navigation }) {
     const userSelectName = useSelector((state) => state.storicoPerUtenteSelezionato.user.displayName); // Seleziona la lista delle giornate dallo stato
     const inizioGiornata = useSelector((state) => state.infogiornataAttuale.startDate);
     const matches = useSelector((state) => state.infogiornataAttuale.matches);
+    const isPast = useSelector((state) => state.liveStatus.isLive);
+
 
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const giornataAttuale = useSelector((state) => state.giornataAttuale?.giornataAttuale);
@@ -70,12 +72,19 @@ export default function UserHistoryScreen({ route, navigation }) {
     const renderStoricoTab = () => (
         <>
             {/* Avviso in alto */}
-            <View style={styles.warningContainer}>
+            {isPast ? <View style={styles.warningContainer}>
                 <MaterialIcons name="info-outline" size={24} color="yellow" />
                 <Text style={styles.warningText}>
                     I punti
                     <Text style={{ color: 'red' }}> LIVE </Text>
                     non sono visibili in classifica
+                </Text>
+            </View> : ''}
+
+            <View style={styles.warningContainer}>
+                <MaterialIcons name="info-outline" size={24} color="yellow" />
+                <Text style={styles.warningText}>
+                    I punti delle giornate passate non calcolate possono apparire come 0 e non sono visibili in classifica
                 </Text>
             </View>
 

@@ -22,7 +22,6 @@ import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeabl
 import Reanimated, { useAnimatedStyle } from 'react-native-reanimated';
 import { registerForPushNotificationsAsync } from '../services/pushNotifications';
 import { savePushToken, verifyPushToken } from '../services/authServices';
-import { getMembersInfoForLeague } from '../services/leagueService';
 
 
 // React.memo per ottimizzare il rendering di HomeScreen

@@ -81,7 +81,7 @@ export default function InsertResultsScreen({ navigation }) {
         if (checked) {
             stringOfId = myLeagues.map(el => el.id).join(',');
             console.log(stringOfId);
-        } 
+        }
 
         const predictionData = {
             legaSelezionata: leagueId,
@@ -110,10 +110,11 @@ export default function InsertResultsScreen({ navigation }) {
             // let insertSchedinaResult = predictionData.map(el => el.leagueId === leagueId) ;
             setModalVisible(false); // Chiudi la modale
             dispatch(showLoading()); // Mostra lo stato di caricamento
-            await dispatch(savePrediction({predictionData, leagueId})).unwrap(); // Attendi che il thunk termini
+            await dispatch(savePrediction({ predictionData, leagueId })).unwrap(); // Attendi che il thunk termini
 
             // Se tutto va bene, mostra il toast di successo e naviga
             showToast('success', 'Esiti caricati con successo!');
+            // dispatch(triggerRefresh())
             navigation.navigate('LeagueDetails'); // Naviga alla schermata LeagueDetails
         } catch (error) {
             console.error('Errore durante il salvataggio delle predizioni:', error);
@@ -125,6 +126,7 @@ export default function InsertResultsScreen({ navigation }) {
                 navigation.navigate('LeagueDetails'); // Sostituisci la schermata per evitare duplicazioni
 
             } else {
+                dispatch(triggerRefresh())
                 showToast('error', 'Errore durante il salvataggio delle predizioni');
             }
 
