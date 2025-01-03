@@ -24,7 +24,7 @@ BEGIN
     IF v_earliest_starttime IS NULL THEN
         RETURN jsonb_build_object(
             'status', 'error',
-            'message', 'Errore imprevisto',
+            'message', 'Errore imprevisto'
         );
     END IF;
 
@@ -32,7 +32,7 @@ BEGIN
     IF CURRENT_TIMESTAMP AT TIME ZONE 'Europe/Rome' > v_earliest_starttime::timestamptz THEN
         RETURN jsonb_build_object(
             'status', 'error',
-            'message', 'Giornata già iniziata',
+            'message', 'Giornata già iniziata'
         );
     END IF;
 
@@ -43,8 +43,8 @@ BEGIN
         INTO v_predictionid
         FROM predictions
         WHERE id_league = v_id_league
-          AND dayid = p_dayid
-          AND userid = p_userid
+            AND dayid = p_dayid
+            AND userid = p_userid
         LIMIT 1;
 
         -- Se esiste, aggiorna schedina per prediction_id
@@ -77,12 +77,12 @@ BEGIN
                     NULL AS result
                 FROM JSONB_ARRAY_ELEMENTS(p_schedina) AS schedina_Insert(value)
                 WHERE schedina_Insert.value->>'matchId' IS NOT NULL
-                  AND schedina_Insert.value->>'esitoGiocato' IS NOT NULL
-                  AND NOT EXISTS (
-                      SELECT 1 FROM schedina s
-                      WHERE s.prediction_id = v_predictionid
+                    AND schedina_Insert.value->>'esitoGiocato' IS NOT NULL
+                    AND NOT EXISTS (
+                        SELECT 1 FROM schedina s
+                        WHERE s.prediction_id = v_predictionid
                         AND s.matchid = schedina_Insert.value->>'matchId'
-                  );
+                    );
             END IF;
         END IF;
     END LOOP;
