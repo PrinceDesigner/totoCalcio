@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { RefreshControl } from 'react-native-gesture-handler';
 import { Card, useTheme, Avatar, Button } from 'react-native-paper';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; // Importa l'icona del cestino
 import { useDispatch, useSelector } from 'react-redux';
@@ -19,6 +20,7 @@ export default function ParticipantsListScreen({ navigation }) {
     const { colors } = useTheme();
     const [modalVisible, setModalVisible] = useState(false); // Stato per la visibilità della modale
     const [selectedParticipant, setSelectedParticipant] = useState(null); // Partecipante selezionato per l'eliminazione
+    const [refreshing, setRefreshing] = useState(false);
 
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const userId = useSelector((state) => state.auth.user.user.userId);
@@ -135,7 +137,15 @@ export default function ParticipantsListScreen({ navigation }) {
 
     return (
         <View style={{ flex: 1 }}>
-            <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}>
+            <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}
+            refreshControl={
+                <RefreshControl
+                tintColor={colors.primary}
+                colors={[colors.primary]}
+                refreshing={refreshing}
+                onRefresh={() => fetchLeagueById(leagueId)} />
+            }
+            >
                 <Wrapper>
                     {participants.map((participant, index) => (
                         <TouchableOpacity
