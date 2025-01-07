@@ -14,7 +14,7 @@ const { migrateLeaguesAndMembers } = require('./migr_League_memersInfo');
 const {migrationPredictionsAndSchedina } = require('./migr_Predictions_Schedina');
 const { migrateGiornateCalcolate } = require('./migr_Giornate_Calcolate');
 const {calcolaPuntiGiornataTest,calcolaPuntiGiornataTest2 } = require('./calcoloGiornata');
-const {updateMatchesSupa,updateDateMatchSupa,scheduleDayUpdateTasks_Supa } = require('./updateMatch');
+const {updateMatchesSupa,updateDateMatchSupa,scheduleDayUpdateTasks_Supa,updateSingleMatchIdSupa } = require('./updateMatch');
 const {sendWeeklyNotificationSupa} = require('./notifche');
 const {exportAllTables} = require('./backupTable');
 
@@ -871,6 +871,7 @@ exports.calcolaPuntiGiornataTest2            = calcolaPuntiGiornataTest2; //*
 exports.updateMatchesSupa                    = updateMatchesSupa;
 exports.updateDateMatchSupa                  = updateDateMatchSupa;
 exports.scheduleDayUpdateTasks_Supa          = scheduleDayUpdateTasks_Supa;
+exports.updateSingleMatchIdSupa              = updateSingleMatchIdSupa;
 
 exports.sendWeeklyNotificationSupa           = sendWeeklyNotificationSupa;
 exports.exportAllTables                      = exportAllTables;

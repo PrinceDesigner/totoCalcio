@@ -83,7 +83,10 @@ exports.updateMatchesSupa = functions.https.onRequest(async (req, res) => {
             id_league: prediction.id_league,
         }));
 
-        const { error: insertError } = await supabase.from('giornatecalcolate').upsert(giornateCalcolate);
+        const { error: insertError } = await supabase
+        .from('giornatecalcolate')
+        .upsert(giornateCalcolate, { onConflict: 'idgiornatecalcolate',ignoreDuplicates: true });
+
         if (insertError){
             console.log('giornateCalcolate',giornateCalcolate);
             console.error('Errore durante insert  giornateCalcolate ', insertError);
@@ -217,7 +220,7 @@ async function updateCurrentGiornata(noStep) {
             schedule: `${scheduleTime.minutes()} ${scheduleTime.hours()} ${scheduleTime.date()} ${scheduleTime.month() + 1} *`,
             timeZone: 'Europe/Rome',
             httpTarget: {
-                uri: `https://us-central1-totocalcioreact.cloudfunctions.net/updateSingleMatchId?matchId=${singleMatch.matchid}`,
+                uri: `https://us-central1-totocalcioreact.cloudfunctions.net/updateSingleMatchIdSupa?matchId=${singleMatch.matchid}`,
                 httpMethod: 'POST',
                 headers: { 'Content-Type': 'application/json' },
             },
@@ -333,4 +336,65 @@ try {
     console.error('Errore durante la pianificazione dei task:', error);
     return res.status(500).send({ success: false, message: 'Errore durante la pianificazione dei task' });
 }
+});
+
+exports.updateSingleMatchIdSupa = functions.https.onRequest(async (req, res) => {
+    console.info('Start updateSingleMatchIdSupa');
+    // Prendi il matchId dai query string parameters
+    const { matchId } = req.query;
+
+    if (!matchId) {
+        console.error('Match ID non fornito.');
+        return res.status(400).send('Match ID non fornito.');
+    }
+
+    const strMatchId = matchId.toString();
+    console.info('updateSingleMatchIdSupa - matchId', strMatchId);
+
+    try {
+        // Chiamata all'API di football
+        const response = await axios.get(`https://api-football-v1.p.rapidapi.com/v3/fixtures?id=${strMatchId}`, {
+            headers: {
+                'x-rapidapi-key': 'db73c3daeamshce50eba84993c27p1ebcadjsnb14d87bc676d',
+                'x-rapidapi-host': 'api-football-v1.p.rapidapi.com',
+            },
+        });
+
+        // Verifica che la risposta contenga dati
+        if (response.data && response.data.response && response.data.response.length > 0) {
+            const matchData = response.data.response[0];
+            const fulltimeScore = {
+                home: matchData.goals.home,
+                away: matchData.goals.away,
+                status: matchData.fixture.status.short,
+            };
+
+            console.info('updateSingleMatchIdSupa - fulltimeScore', fulltimeScore);
+
+            // Determina il risultato
+            const result = determineResult(fulltimeScore.home, fulltimeScore.away, fulltimeScore.status);
+
+            // Aggiorna la tabella matches in Supabase
+            const { data, error } = await supabase
+                .from('matches')
+                .update({
+                    result,
+                    status: fulltimeScore.status,
+                })
+                .eq('matchid', strMatchId);
+
+            if (error) {
+                console.error('Errore durante l\'aggiornamento della tabella matches in Supabase', error);
+                return res.status(500).send({ success: false, message: error });
+            }
+
+            console.info('Finish updateSingleMatchIdSupa');
+            return res.status(200).send('Finish updateSingleMatchIdSupa successfully');
+        } else {
+            return res.status(500).send({ success: false, message: 'response vuota' });
+        }
+    } catch (error) {
+        console.error('Error fetching match data or updating Supabase table', error);
+        return res.status(500).send('Error fetching match data or updating Supabase table');
+    }
 });
