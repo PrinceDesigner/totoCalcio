@@ -213,7 +213,7 @@ async function updateCurrentGiornata(noStep) {
     }
 
     const promises = matches.map(singleMatch => {
-        const scheduleTime = moment(singleMatch.starttime).add(30, 'minutes');
+        const scheduleTime = moment(singleMatch.starttime).add(3, 'hours');
 
         const job = {
             name: `projects/totocalcioreact/locations/us-central1/jobs/Supa-update-Match-After-Finish-${singleMatch.matchid}`,
