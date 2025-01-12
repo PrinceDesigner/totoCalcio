@@ -29,7 +29,7 @@ const rtdb = admin.database();
 exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
 
     // Step di inizializzazione e verifica lock
-    console.time("Inizializzazione e verifica lock");
+
     const { leagueId, dayId } = data;
     const documentId = `${leagueId}_${dayId}`;
     const lockRef = rtdb.ref(`locks/${leagueId}/${dayId}`);
@@ -61,19 +61,15 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
     }
     await lockRef.set(true); // Blocca il documento
 
-    console.timeEnd("Inizializzazione e verifica lock");
     try {
         // Caricamento dei dati
-        console.time("Caricamento dati (matches, predictions, leagueDoc)");
         const [matchesSnapshot, predictionsSnapshot, leagueDoc] = await Promise.all([
             firestore.collection('matches').where('dayId', '==', dayId).select('matchId', 'result').get(),
             firestore.collection('predictions').where('leagueId', '==', leagueId).where('daysId', '==', dayId).select('userId', 'schedina').get(),
             firestore.collection('leagues').doc(leagueId).get()
         ]);
-        console.timeEnd("Caricamento dati (matches, predictions, leagueDoc)");
 
         // Creazione batch e calcolo punti
-        console.time("Calcolo punti e creazione batch");
         const batchArray = [firestore.batch()];
         let batchIndex = 0;
         let batchCount = 0;
@@ -112,7 +108,6 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
                 batchCount = 0;
             }
         });
-        console.timeEnd("Calcolo punti e creazione batch");
 
         // Preparazione aggiornamenti per leagueDoc e calcolateRef nell'ultimo batch
         const leagueData = leagueDoc.data();
@@ -132,14 +127,11 @@ exports.calcolaPuntiGiornata = functions.https.onCall(async (data, context) => {
         batchArray[batchIndex].update(firestore.collection('giornateCalcolate').doc(documentId), { calcolate: true });
 
         // Commit di tutti i batch
-        console.time("Commit batch");
         /*for (const batch of batchArray) {
             await batch.commit();
         }*/
         await Promise.all(batchArray.map(batch => batch.commit()));//fa più batch in parallelo - LIMITE 500 scritture per secondo
-        console.timeEnd("Commit batch");
 
-        console.timeEnd("Tempo totale calcolaPuntiGiornata");
         return { success: true, message: "Calcolo punti completato con successo." };
 
     } catch (error) {

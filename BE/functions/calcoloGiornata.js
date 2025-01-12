@@ -128,7 +128,7 @@ exports.calcolaPuntiGiornataTest = functions.https.onCall(async (data, context) 
 
             for (const { userid, punti, id_members,id_league } of members) {
                 const currentPoints = userPointsMap.get(userid) || 0;
-                log('userid ','userid');
+                log('userid ',userid);
                 log('currentPoints',currentPoints);
                 const updatedPoints = currentPoints + punti;
 
@@ -139,7 +139,7 @@ exports.calcolaPuntiGiornataTest = functions.https.onCall(async (data, context) 
                     id_members
                 });
             }
-
+            log('calcolaPuntiGiornataTest - updatesMemeberInfo',updatesMemeberInfo)
             const { data: membersInfoData, error: membersInfoError } = await supabase
                 .from('members_info')
                 .upsert(updatesMemeberInfo,{conflict_target: 'userid'})
@@ -295,7 +295,7 @@ exports.calcolaPuntiGiornataTest2 = functions.https.onRequest(async (data, conte
 
             for (const { userid, punti, id_members,id_league } of members) {
                 const currentPoints = userPointsMap.get(userid) || 0;
-                log('userid ','userid');
+                log('userid ',userid);
                 log('currentPoints',currentPoints);
                 const updatedPoints = currentPoints + punti;
 
