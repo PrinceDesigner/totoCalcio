@@ -84,9 +84,11 @@ exports.updateMatchesSupa = functions.https.onRequest(async (req, res) => {
         }));
 
         const { error: insertError } = await supabase
-        .from('giornatecalcolate')
-        .upsert(giornateCalcolate, { onConflict: 'idgiornatecalcolate',ignoreDuplicates: true });
-
+            .from('giornatecalcolate')
+            .insert(giornateCalcolate, {
+                onConflict: 'idgiornatecalcolate', // Specifica la colonna per gestire i conflitti
+                ignoreDuplicates: true,           // Non aggiorna i record esistenti
+        });
         if (insertError){
             console.log('giornateCalcolate',giornateCalcolate);
             console.error('Errore durante insert  giornateCalcolate ', insertError);

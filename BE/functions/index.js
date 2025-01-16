@@ -336,7 +336,7 @@ exports.updateMatches = functions.https.onRequest(async (req, res) => {
         //const leaguesSnapshot = await firestore.collection('leagues').get();
         const leagueIds = leaguesSnapshot.docs.map(doc => doc.id);
         const leagueMap = leagueIds.reduce((acc, leagueId) => {
-            acc[leagueId] = { calcolata: false };
+            acc[leagueId] = { calcolata: leagueId.calcolata || false };
             return acc;
         }, {});
 
@@ -830,7 +830,7 @@ exports.scheduleJobOnUpdateSupa = functions.https.onRequest(async (req, res) => 
                 schedule: `${scheduleMinute} ${scheduleHour} ${scheduleDay} ${scheduleMonth} *`, // Formato cron
                 timeZone: 'Europe/Rome',
                 httpTarget: {
-                    uri: `https://us-central1-${projectId}.cloudfunctions.net/updateMatches`,
+                    uri: `https://us-central1-${projectId}.cloudfunctions.net/updateMatchesSupa`,
                     httpMethod: 'POST',
                     body: Buffer.from(JSON.stringify({ dayId: dayId, noStep: true })).toString('base64'),//Aggiorno tutta la giornata di quel match
                     headers: { 'Content-Type': 'application/json' },
