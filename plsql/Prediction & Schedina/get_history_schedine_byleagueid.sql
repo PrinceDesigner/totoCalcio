@@ -18,7 +18,7 @@ SELECT
     p.punti,
     json_agg(jsonb_build_object(
     'esitoGiocato', s.esitogiocato,
-    'result', m.result,
+    'result', s.result,
     'matchId', s.matchid,
     'startTime', m.starttime,
     'awayTeam', m.awayteam,
