@@ -15,7 +15,8 @@ exports.migrationUser = functions.https.onRequest(async (req, res) => {
         const mappedData = usersData.map(user => ({
             userid:      user.uid,
             displayname: user.displayName,
-            email:       user.email
+            email:       user.email,
+            tokenNotification: user.tokenNotification
         }));
         // Inserire o aggiornare i dati su Supabase
         const { data, errorSupaUser } = await supabase.from('users').upsert(mappedData);
