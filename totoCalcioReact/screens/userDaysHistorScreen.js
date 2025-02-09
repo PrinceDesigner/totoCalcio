@@ -32,11 +32,6 @@ export default function UserHistoryScreen({ route, navigation }) {
     // UTENTE LOGGATO
     const userIdLogged = useSelector((state) => state.auth.user && state.auth.user.user.userId);
     const dayId = useSelector((state) => state.infogiornataAttuale.dayId);
-    let allPointOfUser = 0
-    let sumOfPoints = 0
-    let numberOfPredictions = 0
-    let totalPredictions = 0
-    let percentage = 0;
     const [selectedTab, setSelectedTab] = useState('Storico'); // Stato per selezionare il tab attivo
     const userSelect = useSelector(selectUser);
     const [isModalVisible, setIsModalVisible] = useState(false);
