@@ -86,6 +86,7 @@ async function saveToStorage(data, storagePath) {
         const { data: storageData, error } = await supabase.storage
             .from('backupTable')
             .upload(filePath, bufferContent, {
+                upsert: true, // Abilita la sovrascrittura dei file esistenti
                 headers: {
                     Authorization: `Bearer ${supabase.supabaseKey}`
                 }
