@@ -45,6 +45,10 @@ export default function FullParticipantsRankingScreen({ navigation }) {
         }] : []),
     ];
 
+    if (isLive) {
+        tabs.push({ label: 'Classifica Live', onPress: () => setSelectedTab('Live') });
+    }
+
     useEffect(() => {
         if (selectedTab === 'Giornate') {
             // handleGiornataChange(selectedGiornata);
@@ -96,6 +100,12 @@ export default function FullParticipantsRankingScreen({ navigation }) {
         </ScrollView>
     );
 
+    const renderLiveTab = () => (
+        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+            <RankingList ranking={liveParticipants} />
+        </ScrollView>
+    );
+
     const renderGiornateTab = () => (
         <View>
             <DropDownPicker
@@ -114,12 +124,6 @@ export default function FullParticipantsRankingScreen({ navigation }) {
                 <RankingList ranking={updatedParticipants.sort((a, b) => b.punti - a.punti)} />
             </ScrollView>
         </View>
-    );
-
-    const renderLiveTab = () => (
-        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-            <RankingList ranking={liveMembers.sort((a, b) => b.punti - a.punti)} />
-        </ScrollView>
     );
 
     const renderFooter = () => {

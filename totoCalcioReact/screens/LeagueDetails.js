@@ -16,7 +16,6 @@ import { clearRefresh } from '../redux/slice/refreshSlice';
 import RankingList from './componentScreen/RankingList';
 import fontStyle from '../theme/fontStyle';
 // import { BannerAdComponent } from '../components/Adv/AdvBanner';
-import DailyQuestion from './componentScreen/quiz/DailyQuestions';
 import Wrapper from './componentScreen/Container';
 import { fetchGiornateCalcolateThunk } from '../redux/slice/giornateDaCalcolareSlice';
 import GiornateDaCalcolareItemList from './componentScreen/GiornateDaCalcolareItemList';
@@ -56,6 +55,8 @@ export default function LeagueDetails({ navigation }) {
     const refreshRequired = useSelector((state) => state.refresh.refreshRequired);
 
     const matches = [...infogiornataAttuale.matches].sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+
+    const [updatedParticipants, setUpdatedParticipants] = useState([]);
 
     const matchdayNumber = infogiornataAttuale.dayId && infogiornataAttuale.dayId.replace('RegularSeason-', '') || 0;
     const startDate = infogiornataAttuale && infogiornataAttuale.startDate;

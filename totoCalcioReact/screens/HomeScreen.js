@@ -36,7 +36,6 @@ const HomeScreen = React.memo(() => {
     const userId = useSelector((state) => state.auth.user && state.auth.user.user.userId); // Recupera l'ID utente dallo stato
     const userName = useSelector((state) => state.auth.user && state.auth.user.user.fullName); // Recupera l'ID utente dallo stato
     const photoProfile = useSelector((state) => state.auth.photoUri); // Stato delle leghe
-
     const giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale);
     const [refreshing, setRefreshing] = useState(false);
     const [selectedLeague, setSelectedLeague] = useState(null); // Stato per la lega selezionata per l'eliminazione

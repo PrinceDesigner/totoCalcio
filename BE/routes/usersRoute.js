@@ -59,6 +59,7 @@ async function saveUserToken(p_uid, p_tokennotify) {
   }
 }
 
+
 // Endpoint per salvare il token di notifica push dell'utente
 router.post('/save-push-token', async (req, res) => {
   const { userId, expoPushToken } = req.body;
