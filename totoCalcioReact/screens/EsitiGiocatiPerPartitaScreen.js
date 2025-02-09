@@ -1,18 +1,37 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { useSelector } from 'react-redux';
-import { selectParticipantAndMatchByMatchId } from '../redux/slice/partecipantsSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { getResultOfUserForMatch } from '../services/predictionsService';
 import fontStyle from '../theme/fontStyle';
 import { COLORJS } from '../theme/themeColor';
 import Wrapper from './componentScreen/Container';
+import { showLoading, hideLoading } from '../redux/slice/uiSlice';
+
 
 const EsitiGiocatiPerPartitaScreen = ({ route }) => {
     const { fixtureId } = route.params;
-    const participantsWithMatch = useSelector((state) =>
-        selectParticipantAndMatchByMatchId(state, fixtureId)
-    ) || [];
+    const [participantsWithMatch, setParticipantsWithMatch] = useState([]);
+    const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
+    const dispatch = useDispatch();
 
 
+    useEffect(() => {
+        const fetchResult = async () => {
+            dispatch(showLoading()); // Mostra lo stato di caricamento
+            try {
+                const result = await getResultOfUserForMatch(leagueId, fixtureId);
+                setParticipantsWithMatch(result)
+            } catch (error) {
+                console.error("Errore durante il fetch del risultato:", error);
+            } finally {
+                dispatch(hideLoading()); // Mostra lo stato di caricamento
+            }
+        };
+
+        if (fixtureId) {
+            fetchResult(); // Chiamata della funzione
+        }
+    }, [leagueId, fixtureId]); // Aggiungi tutte le dipendenze necessarie
 
 
     return (
@@ -20,7 +39,7 @@ const EsitiGiocatiPerPartitaScreen = ({ route }) => {
             <Text style={{ ...styles.sectionTitle, color: COLORJS.primary }}>Esiti inseriti per questa partita </Text>
 
             <ScrollView>
-                {participantsWithMatch.map(({ displayName, match }, index) => (
+                {participantsWithMatch.map(({ displayName, esito_giocato }, index) => (
                     <View
                         key={index}
                         style={[
@@ -32,7 +51,7 @@ const EsitiGiocatiPerPartitaScreen = ({ route }) => {
                             {displayName}
                         </Text>
                         <View style={styles.resultContainer}>
-                            <Text style={styles.resultText}>{match.esitoGiocato}</Text>
+                            <Text style={styles.resultText}>{esito_giocato}</Text>
                         </View>
                     </View>
                 ))}

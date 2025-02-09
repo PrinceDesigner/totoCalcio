@@ -4,12 +4,16 @@ import { checkPrediction, createPrediction } from '../../services/predictionsSer
 // Thunk per salvare la predizione
 export const savePrediction = createAsyncThunk(
   'predictions/savePrediction',
-  async ({predictionData, leagueId}, { rejectWithValue }) => {
+  async ({ predictionData, leagueId }, { rejectWithValue }) => {
     try {
       const response = await createPrediction(predictionData);
-      return response.find(el => el.leagueId === leagueId);
+      return { schedina: response.schedina };
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue({
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
     }
   }
 );
@@ -17,10 +21,10 @@ export const savePrediction = createAsyncThunk(
 // Thunk per controllare se una predizione esiste
 export const fetchPrediction = createAsyncThunk(
   'predictions/fetchPrediction',
-  async ({ dayId, leagueId, userId }, { rejectWithValue }) => {
+  async ({ giornataAttuale, leagueId, userId }, { rejectWithValue }) => {
     try {
-      const prediction = await checkPrediction(dayId, leagueId, userId);
-      return prediction;
+      const prediction = await checkPrediction(giornataAttuale, leagueId, userId);
+      return { schedina: prediction.schedina };
     } catch (error) {
       return rejectWithValue(error.response?.data || 'Errore durante il controllo della predizione');
     }
@@ -48,7 +52,7 @@ const predictionsSlice = createSlice({
       })
       .addCase(savePrediction.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || 'Errore nel salvataggio della predizione';
+        state.error = 'Errore nel salvataggio della predizione';
       })
 
       // Gestione dello stato di caricamento e popolamento per fetchPrediction

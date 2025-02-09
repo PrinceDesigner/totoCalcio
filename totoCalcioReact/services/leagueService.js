@@ -45,16 +45,45 @@ export const getUserLeagueById = async (leagueId) => {
   }
 };
 
-// Recupera la classifica di una lega
-export const getLeagueStandings = async (leagueId) => {
+// Recupera info membri
+export const getMembersInfoForLeague = async (leagueId) => {
   try {
-    const response = await axiosInstance.get(`/leagues/${leagueId}/standings`);
-    return response.data.standings;
+    const response = await axiosInstance.get(`/leagues/${leagueId}/members-info`);
+    // {membersInfo,members}
+    const membersInfo = response.data.response.map(member => ({
+      userId: member.id_user_ret,
+      punti: member.punti_ret,
+      displayName: member.displayname_ret,
+      photoURL: member.photoUrl
+  }));
+
+    console.log('MembersInfo', response.data);
+    return membersInfo;
   } catch (error) {
-    console.error('Errore durante il recupero della classifica:', error);
+    console.error('Errore durante dei membri MembersInfo', error);
     throw error;
   }
 };
+
+export const getMembersInfoForLeagueLive = async (leagueId, dayId) => {
+  try {
+    const response = await axiosInstance.get(`/leagues/${leagueId}/${dayId}/members-info-live`);
+    // {membersInfo,members}
+    const membersInfo = response.data.response.map(member => ({
+      userId: member.id_user_ret,
+      punti: member.punti_live_ret,
+      displayName: member.displayname_ret,
+      photoURL: member.photoUrl
+  }));
+
+    console.log('MembersInfo', response.data);
+    return membersInfo;
+  } catch (error) {
+    console.error('Errore durante dei membri MembersInfo', error);
+    throw error;
+  }
+};
+
 
 // Elimina una lega
 export const deleteLeague = async (leagueId) => {

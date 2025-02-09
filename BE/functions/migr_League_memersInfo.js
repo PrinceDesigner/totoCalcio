@@ -68,7 +68,7 @@ exports.migrateLeaguesAndMembers = functions.https.onRequest(async (req, res) =>
         res.status(500).send(`Errore durante la migrazione: ${errorExc.message}`);
     }
 });
-
+/*
 exports.migrateLeaguesAndMembersByCreate = functions.firestore.document('leagues/{leagueId}').onCreate(async (snap, context) => {
     try {
         const league = snap.data();
@@ -237,4 +237,4 @@ exports.onLeagueDeleted = functions.firestore.document('leagues/{leagueId}').onD
     } catch (errorExc) {
         error(`Errore durante l'eliminazione: ${errorExc.message}`);
     }
-});
+});*/

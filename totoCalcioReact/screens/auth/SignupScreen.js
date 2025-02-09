@@ -6,10 +6,10 @@ import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { signupFailure, signupSuccess } from '../../redux/slice/authSlice';
 import { hideLoading, showLoading } from '../../redux/slice/uiSlice';
 import { saveToken } from '../../AsyncStorage/AsyncStorage';
-import { auth, firestore } from '../../firebaseConfig'; // Importa la configurazione di Firebase
+import { auth} from '../../firebaseConfig'; // Importa la configurazione di Firebase
 import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth'; // Firebase Auth SDK
-import { doc, setDoc } from 'firebase/firestore'; // Firebase Firestore SDK
 import AuthErrors from '../../AuthErrorFirebase';
+import { signup } from '../../services/authServices';
 
 
 export default function SignupScreen({ navigation }) {
@@ -86,16 +86,11 @@ export default function SignupScreen({ navigation }) {
                 // Invia l'email di verifica
                 await sendEmailVerificationMethod(user); // Funzione che invia l'email di verifica
 
-
                 // Ottieni il token JWT generato da Firebase
                 const token = await user.getIdToken();
 
-                // Salva l'utente in Firestore
-                await setDoc(doc(firestore, 'users', user.uid), {
-                    uid: user.uid,
-                    email: user.email,
-                    displayName: fullName,
-                });
+    
+                await signup(user.email,user.uid, fullName);
 
                 // Salva il token JWT in AsyncStorage
                 await saveToken(token);
@@ -111,8 +106,8 @@ export default function SignupScreen({ navigation }) {
                 }));
 
                 // Naviga alla schermata principale
-                // navigation.navigate('Home');
-                navigation.navigate('EmailVerificationScreen'); // Naviga alla nuova schermata di verifica email
+                navigation.navigate('Home');
+                // navigation.navigate('EmailVerificationScreen'); // Naviga alla nuova schermata di verifica email
 
             } catch (error) {
                 console.error('Errore durante la registrazione:', error.code);

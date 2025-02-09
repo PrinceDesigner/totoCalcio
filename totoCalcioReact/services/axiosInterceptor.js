@@ -16,7 +16,8 @@ export const configureAxios = (dispatch, navigationRef) => {
 
 // Configura l'istanza di Axios
 const axiosInstance = axios.create({
-  baseURL: 'https://totocalcioreact.uc.r.appspot.com/api', // Imposta il tuo URL backend // testata e funzionante
+  baseURL: 'https://test-dot-totocalcioreact.uc.r.appspot.com/api', // Imposta il tuo URL backend // testata e funzionante
+  // baseURL: 'https://totocalcioreact.uc.r.appspot.com/api', // Imposta il tuo URL backend // testata e funzionante
   // baseURL: 'http://192.168.1.5:5001/api', // Imposta il tuo URL backend
 });
 

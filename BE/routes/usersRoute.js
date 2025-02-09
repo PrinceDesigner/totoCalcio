@@ -2,8 +2,23 @@ const express = require('express');
 const { getAuth } = require('firebase-admin/auth'); // Firebase Admin SDK per aggiornare l'utente
 const { firestore } = require('../firebaseAdmin'); // Assicurati di aver configurato Firebase Admin SDK
 const authMiddleware = require('../middlewares/authMiddleware'); // Middleware di autenticazione
+const supabase = require('../superBaseConnect');
 
 const router = express.Router();
+
+async function update_user(uuid, displaName, email) {
+  const { data, error } = await supabase
+    .rpc('update_user', { p_uid: uuid, p_displayname: displaName, p_email: email })
+
+
+  if (error) {
+    console.error('Error fetching data:', error);
+    throw new Error(error); // Lancia un'eccezione con il messaggio dell'errore
+  } else {
+    console.log('tutto ok', data)
+    return data
+  }
+}
 
 // Route per aggiornare email e displayName
 router.put('/update-user', authMiddleware, async (req, res) => {
@@ -12,116 +27,37 @@ router.put('/update-user', authMiddleware, async (req, res) => {
   if (!email || !displayName) {
     return res.status(400).json({ message: 'Email e displayName sono obbligatori.' });
   }
-
   try {
     // 1. Aggiorna Firebase Authentication
     const auth = getAuth(); // Ottieni l'istanza di Firebase Auth
     await auth.updateUser(userId, { email, displayName });
 
-    // 2. Aggiorna la raccolta `users` su Firestore
-    const userRef = firestore.collection('users').doc(userId); // Referenza al documento utente su Firestore
-    await userRef.update({ email, displayName });
+    const response = await update_user(userId, displayName, email);
 
-    // 3. Recupera il documento aggiornato
-    const updatedUserDoc = await userRef.get();
-
-    if (!updatedUserDoc.exists) {
-      return res.status(404).json({ message: 'Utente non trovato.' });
-    }
-
-    // Restituisci il documento aggiornato
-    const updatedUserData = updatedUserDoc.data();
-    res.status(200).json({ message: 'Email e displayName aggiornati con successo!', user: updatedUserData });
+    res.status(200).json({ message: 'Email e displayName aggiornati con successo!', user: response });
   } catch (error) {
     console.error('Errore durante l\'aggiornamento dell\'utente:', error);
     return res.status(500).json({ message: 'Errore durante l\'aggiornamento dell\'utente.' });
   }
+
 });
 
 
-router.post('/users-info', async (req, res) => {
-  const { userIds, leagueId, dayId } = req.body;
+async function saveUserToken(p_uid, p_tokennotify) {
+  let { data, error } = await supabase
+    .rpc('user_notify', {
+      p_tokennotify,
+      p_uid
+    })
 
-  if (!userIds || !Array.isArray(userIds) || userIds.length === 0 || !leagueId) {
-    return res.status(400).json({ message: 'Devi fornire un array di userId e un leagueId.' });
+  if (error) {
+    console.error('Error fetching data:', error);
+    throw new Error(error); // Lancia un'eccezione con il messaggio dell'errore
+  } else {
+    console.log('tutto ok', data)
+    return data
   }
-
-  try {
-    // Recupera il documento della lega e controlla l'esistenza
-    const leagueDoc = await firestore.collection('leagues').doc(leagueId).get();
-    if (!leagueDoc.exists) {
-      return res.status(404).json({ message: 'Lega non trovata.' });
-    }
-
-    const leagueData = leagueDoc.data();
-    const memberInfo = leagueData.membersInfo || [];
-
-    // Pre-processa memberInfo in una Map per accesso rapido
-    const memberMap = new Map(memberInfo.map(member => [member.id, member]));
-
-    // Prepara le promesse per ottenere i dati
-    const auth = getAuth();
-
-    const [userSnapshots, userRecords, schedineSnapshot] = await Promise.all([
-      // Batch query per i documenti degli utenti
-      Promise.all(
-        userIds.map(userId =>
-          firestore.collection('users').doc(userId).get().catch(() => null)
-        )
-      ),
-      // Batch query per i dati di Firebase Authentication
-      Promise.all(
-        userIds.map(userId => auth.getUser(userId).catch(() => null))
-      ),
-      // Query unica per ottenere tutte le schedine
-      firestore
-        .collection('predictions')
-        .where('daysId', '==', dayId)
-        .where('leagueId', '==', leagueId)
-        .get(),
-    ]);
-
-    // Crea una mappa userId -> schedina per accesso rapido
-    const schedineMap = new Map();
-    schedineSnapshot.forEach(doc => {
-      const data = doc.data();
-      schedineMap.set(data.userId, data);
-    });
-
-    // Genera l'array delle informazioni degli utenti
-    const usersInfo = userIds.map((userId, index) => {
-      const userSnapshot = userSnapshots[index];
-      const authUser = userRecords[index];
-      const schedina = schedineMap.get(userId);
-
-      if (userSnapshot && userSnapshot.exists) {
-        const data = userSnapshot.data();
-
-        // Recupera il membro dalla Map invece di usare find
-        const member = memberMap.get(userId);
-        const punti = member ? member.punti : 0;
-
-        return {
-          userId,
-          displayName: data.displayName || 'Nome non disponibile',
-          photoURL: authUser?.photoURL || null,
-          punti,
-          leagueId,
-          schedina: schedina?.schedina || null,
-        };
-      }
-
-      return null; // Se snapshot è nullo, saltiamo l'utente
-    }).filter(Boolean); // Filtra utenti nulli
-
-    res.status(200).json({ leagueId, users: usersInfo });
-  } catch (error) {
-    console.error('Errore durante il recupero delle informazioni degli utenti:', error);
-    res.status(500).json({ message: 'Errore durante il recupero delle informazioni degli utenti.' });
-  }
-});
-
-
+}
 
 
 // Endpoint per salvare il token di notifica push dell'utente
@@ -134,13 +70,8 @@ router.post('/save-push-token', async (req, res) => {
   }
 
   try {
-    // Ottieni la referenza al documento utente su Firestore
-    const userRef = firestore.collection('users').doc(userId);
 
-    // Aggiorna il campo `tokenNotification` con il token push
-    await userRef.update({
-      tokenNotification: expoPushToken,
-    });
+    await saveUserToken(userId,expoPushToken);
 
     return res.status(200).json({ message: 'Token salvato correttamente nel database.' });
   } catch (error) {
@@ -149,6 +80,21 @@ router.post('/save-push-token', async (req, res) => {
   }
 });
 
+
+async function getUserToken(p_uid) {
+  let { data, error } = await supabase
+    .rpc('get_user_token', {
+      p_uid
+    })
+
+  if (error) {
+    console.error('Error fetching data:', error);
+    throw new Error(error); // Lancia un'eccezione con il messaggio dell'errore
+  } else {
+    console.log('tutto ok', data)
+    return data
+  }
+}
 
 // Endpoint per verificare se il token di notifica push dell'utente è già salvato
 router.post('/verify-push-token', async (req, res) => {
@@ -160,17 +106,10 @@ router.post('/verify-push-token', async (req, res) => {
   }
 
   try {
-    // Ottieni la referenza al documento utente su Firestore
-    const userRef = firestore.collection('users').doc(userId);
-    const userDoc = await userRef.get();
 
-    if (!userDoc.exists) {
-      return res.status(404).json({ error: 'Utente non trovato.' });
-    }
-
+    const result = await getUserToken(userId)
     // Controlla se il token coincide
-    const userData = userDoc.data();
-    const savedToken = userData?.tokenNotification;
+    const savedToken = result?.tokenNotification;
 
     if (savedToken === expoPushToken) {
       return res.status(200).json({ isTokenValid: true });

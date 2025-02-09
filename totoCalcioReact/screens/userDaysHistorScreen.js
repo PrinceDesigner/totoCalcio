@@ -23,6 +23,8 @@ export default function UserHistoryScreen({ route, navigation }) {
     const userSelectName = useSelector((state) => state.storicoPerUtenteSelezionato.user.displayName); // Seleziona la lista delle giornate dallo stato
     const inizioGiornata = useSelector((state) => state.infogiornataAttuale.startDate);
     const matches = useSelector((state) => state.infogiornataAttuale.matches);
+    const isPast = useSelector((state) => state.liveStatus.isLive);
+
 
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const giornataAttuale = useSelector((state) => state.giornataAttuale?.giornataAttuale);
@@ -30,23 +32,11 @@ export default function UserHistoryScreen({ route, navigation }) {
     // UTENTE LOGGATO
     const userIdLogged = useSelector((state) => state.auth.user && state.auth.user.user.userId);
     const dayId = useSelector((state) => state.infogiornataAttuale.dayId);
-    let allPointOfUser = 0
-    let sumOfPoints = 0
-    let numberOfPredictions = 0
-    let totalPredictions = 0
-    let percentage = 0;
     const [selectedTab, setSelectedTab] = useState('Storico'); // Stato per selezionare il tab attivo
     const userSelect = useSelector(selectUser);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isModalVisibleRemove, setIsModalVisibleRemove] = useState(false);
 
-    if (userHistory.length >= 1) {
-        allPointOfUser = userHistory.filter(el => el.daysId !== dayId).map(el => el.punti);
-        sumOfPoints = allPointOfUser.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
-        numberOfPredictions = allPointOfUser.length;
-        totalPredictions = allPointOfUser.length * 10;
-        percentage = ((sumOfPoints / totalPredictions) * 100) || 0;
-    }
 
     const dispatch = useDispatch();
 
@@ -77,12 +67,19 @@ export default function UserHistoryScreen({ route, navigation }) {
     const renderStoricoTab = () => (
         <>
             {/* Avviso in alto */}
-            <View style={styles.warningContainer}>
+            {isPast ? <View style={styles.warningContainer}>
                 <MaterialIcons name="info-outline" size={24} color="yellow" />
                 <Text style={styles.warningText}>
                     I punti
                     <Text style={{ color: 'red' }}> LIVE </Text>
                     non sono visibili in classifica
+                </Text>
+            </View> : ''}
+
+            <View style={styles.warningContainer}>
+                <MaterialIcons name="info-outline" size={24} color="yellow" />
+                <Text style={styles.warningText}>
+                    I punti delle giornate passate non calcolate possono apparire come 0 e non sono visibili in classifica
                 </Text>
             </View>
 
@@ -170,32 +167,14 @@ export default function UserHistoryScreen({ route, navigation }) {
         }
     }
 
-    const PercentageCard = (percentage) => {
-        return (
-            <View style={styles.cardPercentualeContainer}>
-                <View style={styles.cardPercentuale}>
-                    <View style={styles.cardContent}>
-                        <Text style={styles.title}>Precisione 1X2</Text>
-                        <Text style={styles.percentage}>{percentage.toFixed(2)}%</Text>
-                    </View>
-                    <ProgressBar
-                        progress={(percentage || 0) / 100}
-                        color={COLORJS.primary}
-                        style={styles.progressBar}
-                    />
-                    <Text style={styles.schedineText}>Schedine giocate: {numberOfPredictions}</Text>
-                </View>
-            </View>
-        );
-    };
 
     const renderProfiloTab = () => (
         <>
             <ProfileCard fullName={userSelect.displayName} photoProfile={userSelect.photoURL} />
             {buttonMakeRemoveAdmin()}
-            <View style={{ display: 'flex', flexDirection: 'row' }}>
+            {/* <View style={{ display: 'flex', flexDirection: 'row' }}>
                 {PercentageCard(percentage)}
-            </View>
+            </View> */}
         </>
     );
 

@@ -79,7 +79,7 @@ exports.migrateGiornateCalcolate = functions.https.onRequest(async (req, res) =>
     }
 });
 
-
+/* non servono
 exports.syncGiornateCalcolateOnCreate = functions.firestore
     .document("giornateCalcolate/{giornataId}")
     .onCreate(async (snap, context) => {
@@ -139,4 +139,4 @@ exports.syncGiornateCalcolateOnUpdate = functions.firestore
         } catch (errorExc) {
             error(`Errore durante il trigger onUpdate: ${errorExc.message}`);
         }
-    });
+    });*/

@@ -1,0 +1,22 @@
+# Escludi node_modules
+node_modules/
+
+# Escludi directory di cache o build
+.expo/
+.cache/
+dist/
+build/
+coverage/
+.git/
+
+# File di sistema
+.DS_Store
+Thumbs.db
+
+# File di log
+*.log
+
+# Escludi configurazioni locali
+*.local
+.env.local
+.env.development

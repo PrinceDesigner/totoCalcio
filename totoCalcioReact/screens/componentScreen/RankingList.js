@@ -18,8 +18,6 @@ const RankingList = ({ ranking, showAvatar = true, size = 40 }) => {
   const userId = useSelector((state) => state.auth.user && state.auth.user.user.userId);
 
 
-
-
   const handleParticipantPress = async (participant) => {
     try {
       // Mostra lo stato di caricamento
@@ -50,7 +48,6 @@ const RankingList = ({ ranking, showAvatar = true, size = 40 }) => {
   return (
     <>
       {[...ranking]
-        .sort((a, b) => b.punti - a.punti)
         .map((player, index) => (
           <TouchableOpacity key={index + 1} onPress={() => handleParticipantPress(player)}>
             <View style={[

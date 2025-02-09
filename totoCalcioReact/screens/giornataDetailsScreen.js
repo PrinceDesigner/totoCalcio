@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTheme, Card, Avatar } from 'react-native-paper';
@@ -8,21 +8,38 @@ import { checkPrediction } from '../services/predictionsService';
 import { useNavigation } from '@react-navigation/native';
 import PredictionComponent from './componentScreen/SchedinaInserita';
 import fontStyle from '../theme/fontStyle';
+import { getMembersInfoForLeague } from '../services/leagueService';
 
-export default function GiornataDetailsScreen({ route }) {
+export default function GiornataDetailsScreen() {
     const { colors } = useTheme();
     const dispatch = useDispatch();
+    const [members, setMembers] = useState([]);  // Stato che indica se la giornata è passata
 
     const navigation = useNavigation(); // Inizializza la navigazione
 
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const dayId = useSelector((state) => state.giornataAttuale.giornataAttuale);
-    const matches = useSelector((state) => state.infogiornataAttuale.matches);
-    const participants = useSelector((state) => state.partecipantiLegaCorrente.participants);
     const prediction = useSelector((state) => state.insertPredictions.schedinaInserita);
     const loading = useSelector((state) => state.ui.loading);
-
     const matchdayNumber = dayId.replace('RegularSeason-', '') || 0;
+
+
+    const fetchLeagueById = async (leagueId) => {
+        try {
+            dispatch(showLoading()); // Mostra lo stato di caricamento
+            const membersResult = await getMembersInfoForLeague(leagueId);
+            setMembers(membersResult)
+        } catch (error) {
+            console.error('Errore durante il recupero della lega:', error);
+        } finally {
+            dispatch(hideLoading()); // Nascondi lo stato di caricamento
+        }
+    };
+
+    useEffect(() => {
+        fetchLeagueById(leagueId)
+    }, [])
+    
 
     // Funzione per gestire il click su un partecipante
     const handleParticipantPress = async (participant) => {
@@ -65,7 +82,7 @@ export default function GiornataDetailsScreen({ route }) {
         <View style={styles.sectionContainer}>
             <Text style={{ ...styles.sectionTitle, color: colors.primary }}>Vedi gli esiti degli avversari</Text>
             <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>
-                {participants.map((participant, index) => (
+                {members.map((participant, index) => (
                     <TouchableOpacity
                         key={index + 1}
                         onPress={() => handleParticipantPress(participant)} // Funzione per gestire il click

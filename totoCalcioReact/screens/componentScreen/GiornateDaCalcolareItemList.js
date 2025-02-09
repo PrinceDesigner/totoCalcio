@@ -95,7 +95,8 @@ const GiornateDaCalcolareItemList = ({ giornateCalcolate, leagueId }) => {
     const handleCalculatePoints = async (giornata) => {
         try {
             dispatch(showLoading());
-            const calcolaPuntiGiornata = httpsCallable(functions, 'calcolaPuntiGiornata');
+            const calcolaPuntiGiornata = httpsCallable(functions, 'calcolaPuntiGiornataTest');
+            // const calcolaPuntiGiornata = httpsCallable(functions, 'calcolaPuntiGiornata');
             const result = await calcolaPuntiGiornata({ leagueId, dayId: giornata.dayId });
 
             if (result.data.success) {

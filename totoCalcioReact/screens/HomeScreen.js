@@ -3,7 +3,7 @@ import { View, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl, Ac
 import { Button, useTheme, Card, Text } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { deleteLeagueThunk, getUserLeaguesThunk } from '../redux/slice/leaguesSlice';
+import { deleteLeagueThunk, getUserLeaguesThunk, membersInfoForLeagueNameThunk } from '../redux/slice/leaguesSlice';
 import { showLoading, hideLoading } from '../redux/slice/uiSlice';
 import { MaterialIcons } from '@expo/vector-icons';
 import { setSelectedGiornata, setSelectedLeagueGiornata } from '../redux/slice/selectedLeagueSlice';
@@ -33,7 +33,6 @@ const HomeScreen = React.memo(() => {
 
     const leaguesState = useSelector((state) => state.leagues); // Stato delle leghe
     const leaguesStateLoading = useSelector((state) => state.leagues.loading); // Stato delle leghe
-    const loadingState = useSelector((state) => state.ui.loading); // Stato di caricamento
     const userId = useSelector((state) => state.auth.user && state.auth.user.user.userId); // Recupera l'ID utente dallo stato
     const userName = useSelector((state) => state.auth.user && state.auth.user.user.fullName); // Recupera l'ID utente dallo stato
     const photoProfile = useSelector((state) => state.auth.photoUri); // Stato delle leghe
@@ -143,11 +142,21 @@ const HomeScreen = React.memo(() => {
     };
 
     // Funzione per gestire il click su una lega
-    const handleLeaguePress = (league) => {
-        dispatch(setSelectedLeagueGiornata({ giornataAttuale: giornataAttuale, legaSelezionata: league.id }));
-        navigation.navigate('LeagueDetailsStack'); // Naviga alla schermata dei dettagli della lega
-    };
+    const handleLeaguePress = async (league) => {
+        try {
+            dispatch(showLoading()); // Mostra lo stato di caricamento
+            
+            // Dispatch del thunk e attendi la sua risoluzione
+            dispatch(setSelectedLeagueGiornata({ giornataAttuale: giornataAttuale, legaSelezionata: league.id }));
+            navigation.navigate('LeagueDetailsStack');
 
+        } catch (error) {
+            showToast('error', 'Qualcosa è andato storto');
+            console.error('Errore durante il click sulla lega:', error);
+        } finally {
+            dispatch(hideLoading()); // Nascondi lo stato di caricamento
+        }
+    };
     // Funzione per eliminare una lega
     const handleDeleteLeague = async (leagueId) => {
         try {
@@ -185,7 +194,7 @@ const HomeScreen = React.memo(() => {
                         <Card.Title
                             title={`${item.name}`}
                             // subtitle={`${item.members.length} Partecipanti`}
-                            subtitle={`${item.members.length} Partecipanti`}
+                            subtitle={`${item.numeroPartecipanti} Partecipanti`}
                             left={(props) => <Avatar.Icon  {...props} icon="soccer" />}
                         />
                     </Card>
@@ -229,7 +238,6 @@ const HomeScreen = React.memo(() => {
         <SafeAreaView style={[{ backgroundColor: colors.background, flex: 1 }]}>
             <Wrapper>
 
-                {/* Intestazione con "Le mie leghe" e "Crea Lega" */}
                 <View style={styles.containerProfile}>
                     {/* Icona Profilo */}
                     <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>

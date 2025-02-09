@@ -16,11 +16,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 // import { BannerAdComponent } from '../components/Adv/AdvBanner';
 import Wrapper from './componentScreen/Container';
 
-
-
-
-
-
 export default function InsertResultsScreen({ navigation }) {
     moment.locale('it');
 
@@ -86,9 +81,10 @@ export default function InsertResultsScreen({ navigation }) {
         if (checked) {
             stringOfId = myLeagues.map(el => el.id).join(',');
             console.log(stringOfId);
-        } 
+        }
 
         const predictionData = {
+            legaSelezionata: leagueId,
             userId: userId,
             leagueId: !checked ? leagueId : stringOfId,
             daysId: giornataAttuale,
@@ -110,21 +106,23 @@ export default function InsertResultsScreen({ navigation }) {
 
     const insert = async (predictionData) => {
         try {
+
             // let insertSchedinaResult = predictionData.map(el => el.leagueId === leagueId) ;
             setModalVisible(false); // Chiudi la modale
             dispatch(showLoading()); // Mostra lo stato di caricamento
-            await dispatch(savePrediction({predictionData, leagueId})).unwrap(); // Attendi che il thunk termini
+            await dispatch(savePrediction({ predictionData, leagueId })).unwrap(); // Attendi che il thunk termini
 
             // Se tutto va bene, mostra il toast di successo e naviga
             showToast('success', 'Esiti caricati con successo!');
+            // dispatch(triggerRefresh())
             navigation.navigate('LeagueDetails'); // Naviga alla schermata LeagueDetails
         } catch (error) {
             console.error('Errore durante il salvataggio delle predizioni:', error);
-            if (error.message === 'La giornata è già iniziata.') {
+            if (error.data.message === 'Giornata già iniziata') {
 
                 showToast('error', 'La giornata è già iniziata. Aggiorna la pagina' + error.data);
                 dispatch(updateStartDate({ startDate: error.data }));
-
+                dispatch(triggerRefresh())
                 navigation.navigate('LeagueDetails'); // Sostituisci la schermata per evitare duplicazioni
 
             } else {

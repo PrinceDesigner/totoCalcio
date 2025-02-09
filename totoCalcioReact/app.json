@@ -2,7 +2,7 @@
   "expo": {
     "name": "Soccer Challenge",
     "slug": "soccer-challenge",
-    "version": "1.0.2",
+    "version": "1.0.5",
     "orientation": "portrait",
     "newArchEnabled": true,
     "icon": "./assets/icon.png",
@@ -29,6 +29,7 @@
       "infoPlist": {
         "NSFaceIDUsageDescription": "Questa app utilizza Face ID per autenticare l'utente.",
         "NSUserTrackingUsageDescription": "Questa identificazione verrà utilizzata per fornire annunci personalizzati.",
+        "NSPhotoLibraryUsageDescription": "L'app utilizza la tua libreria fotografica per permetterti di selezionare immagini e personalizzare il tuo profilo.",
         "UIBackgroundModes": ["remote-notification"]
       },
       "bundleIdentifier": "com.anonymous.soccerChallenge"

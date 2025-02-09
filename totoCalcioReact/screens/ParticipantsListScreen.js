@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { RefreshControl } from 'react-native-gesture-handler';
 import { Card, useTheme, Avatar, Button } from 'react-native-paper';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; // Importa l'icona del cestino
 import { useDispatch, useSelector } from 'react-redux';
-import { removeUserFromLeagueReducer, selectLeagueById } from '../redux/slice/leaguesSlice';
-import { removeParticipant } from '../redux/slice/partecipantsSlice';
+import { selectLeagueById } from '../redux/slice/leaguesSlice';
+import { triggerRefresh } from '../redux/slice/refreshSlice';
 import { fetchStoricoPerUtenteSelezionato, setUser } from '../redux/slice/storicoPerUtenteSelezionatoSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
-import { removeUserFromLeague } from '../services/leagueService';
+import { getMembersInfoForLeague, removeUserFromLeague } from '../services/leagueService';
 import fontStyle from '../theme/fontStyle';
 import { COLORJS } from '../theme/themeColor';
 import { showToast } from '../ToastContainer';
@@ -19,12 +20,15 @@ export default function ParticipantsListScreen({ navigation }) {
     const { colors } = useTheme();
     const [modalVisible, setModalVisible] = useState(false); // Stato per la visibilità della modale
     const [selectedParticipant, setSelectedParticipant] = useState(null); // Partecipante selezionato per l'eliminazione
+    const [refreshing, setRefreshing] = useState(false);
 
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
     const userId = useSelector((state) => state.auth.user.user.userId);
     const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
-    const participants = useSelector((state) => state.partecipantiLegaCorrente.participants);
 
+    const [members, setMembers] = useState([]);  // Stato che indica se la giornata è passata
+
+    const participants = members;
 
     // Funzione per mostrare la modale
     const handleDeleteParticipant = (participant) => {
@@ -33,14 +37,13 @@ export default function ParticipantsListScreen({ navigation }) {
     };
 
     // Funzione per confermare l'eliminazione del partecipante
-    // Funzione per confermare l'eliminazione del partecipante
     const confirmDeleteParticipant = async () => {
         if (!selectedParticipant) {
             console.error('Nessun partecipante selezionato');
             return;
         }
 
-        const { leagueId, userId } = selectedParticipant;
+        const { userId } = selectedParticipant;
 
         // Chiudi la modale prima di procedere con l'operazione di rimozione
         setModalVisible(false);
@@ -64,6 +67,22 @@ export default function ParticipantsListScreen({ navigation }) {
         }
 
     };
+
+    const fetchLeagueById = async (leagueId) => {
+        try {
+            dispatch(showLoading()); // Mostra lo stato di caricamento
+            const membersResult = await getMembersInfoForLeague(leagueId);
+            setMembers(membersResult)
+        } catch (error) {
+            console.error('Errore durante il recupero della lega:', error);
+        } finally {
+            dispatch(hideLoading()); // Nascondi lo stato di caricamento
+        }
+    };
+
+    useEffect(() => {
+        fetchLeagueById(leagueId)
+    }, []);
 
     // Funzione per chiudere la modale
     const closeModal = () => {
@@ -103,10 +122,10 @@ export default function ParticipantsListScreen({ navigation }) {
 
     const handleRemoveUser = async (leagueId, userId) => {
         try {
+            console.log(leagueId, userId);
             const response = await removeUserFromLeague(leagueId, userId);
             showToast('success', 'Utente rimosso con successo');
-            dispatch(removeParticipant(userId));
-            dispatch(removeUserFromLeagueReducer({ leagueId, userId }));
+            dispatch(triggerRefresh())
 
             navigation.navigate('LeagueDetails', { screen: 'Home Lega' }); // Sostituisci la schermata per evitare duplicazioni
         } catch (error) {
@@ -118,7 +137,15 @@ export default function ParticipantsListScreen({ navigation }) {
 
     return (
         <View style={{ flex: 1 }}>
-            <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}>
+            <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 60 }}
+            refreshControl={
+                <RefreshControl
+                tintColor={colors.primary}
+                colors={[colors.primary]}
+                refreshing={refreshing}
+                onRefresh={() => fetchLeagueById(leagueId)} />
+            }
+            >
                 <Wrapper>
                     {participants.map((participant, index) => (
                         <TouchableOpacity

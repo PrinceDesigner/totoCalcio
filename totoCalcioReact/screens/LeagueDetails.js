@@ -7,8 +7,7 @@ import { fetchDayDetails } from '../redux/slice/infogiornataAttualeSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { COLORJS } from '../theme/themeColor';
 import { fetchPrediction } from '../redux/slice/predictionsSlice';
-import { fetchParticipantsThunk } from '../redux/slice/partecipantsSlice';
-import { getUserLeaguesByIdThunk, selectLeagueById } from '../redux/slice/leaguesSlice';
+import { membersInfoForLeagueNameThunk, selectLeagueById } from '../redux/slice/leaguesSlice';
 import * as Clipboard from 'expo-clipboard'; // Importa Clipboard
 import { Share } from 'react-native';
 import { getGiornataAttuale } from '../services/infoGiornataService';
@@ -22,6 +21,8 @@ import { fetchGiornateCalcolateThunk } from '../redux/slice/giornateDaCalcolareS
 import GiornateDaCalcolareItemList from './componentScreen/GiornateDaCalcolareItemList';
 import { setSelectedGiornata, setSelectedLeagueGiornata } from '../redux/slice/selectedLeagueSlice';
 import CustomDropdownSelectLeague from '../components/DropDownSelectLeague/DropDownSelectLeague';
+import { getMembersInfoForLeague, getMembersInfoForLeagueLive } from '../services/leagueService';
+import { setLiveStatus } from '../redux/slice/isLiveSlice';
 
 export default function LeagueDetails({ navigation }) {
     const { colors } = useTheme();
@@ -32,7 +33,9 @@ export default function LeagueDetails({ navigation }) {
     const [refreshing, setRefreshing] = useState(false);
     const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
     const [loading, setLoading] = useState(true); // Stato di loading per il cambiamento di isPast
-    const [isPast, setIsPast] = useState(false);  // Stato che indica se la giornata è passata
+    const isPast = useSelector((state) => state.liveStatus.isLive);
+
+    const [members, setMembers] = useState([]);  // Stato che indica se la giornata è passata
 
     const giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale);
     const infogiornataAttuale = useSelector((state) => state.infogiornataAttuale);
@@ -43,10 +46,7 @@ export default function LeagueDetails({ navigation }) {
     // Selettori per ottenere le informazioni necessarie
     const userId = useSelector((state) => state.auth.user && state.auth.user.user.userId);
     const leagueId = useSelector((state) => state.giornataAttuale.legaSelezionata);
-    const dayId = useSelector((state) => state.giornataAttuale.giornataAttuale);
     const selectedLeague = useSelector(state => selectLeagueById(leagueId)(state));
-    const provisionalRanking = useSelector((state) => state.partecipantiLegaCorrente.participants);
-    const provisionalRankingLoading = useSelector((state) => state.partecipantiLegaCorrente.loading);
 
     const giornateCalcolate = useSelector((state) => state.giornateDaCalcolareReducer.giornate);
     const giornateCalcolateLoading = useSelector((state) => state.giornateDaCalcolareReducer.loading);
@@ -54,19 +54,32 @@ export default function LeagueDetails({ navigation }) {
     // selettore di refreshdata
     const refreshRequired = useSelector((state) => state.refresh.refreshRequired);
 
-    // id Partecipanti
-    const userIds = selectedLeague?.members;
-    const matches = infogiornataAttuale.matches;
+    const matches = [...infogiornataAttuale.matches].sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
 
     const [updatedParticipants, setUpdatedParticipants] = useState([]);
 
     const matchdayNumber = infogiornataAttuale.dayId && infogiornataAttuale.dayId.replace('RegularSeason-', '') || 0;
     const startDate = infogiornataAttuale && infogiornataAttuale.startDate;
 
-    const sortedMatches = [...matches].sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
-
     // controllo per evidenziare la tua posizione
-    const sortedRanking = [...provisionalRanking].sort((a, b) => b.punti - a.punti).slice(0, 6);
+    const sortedRanking = [...members].sort((a, b) => b.punti - a.punti).slice(0, 6);
+
+
+    useEffect(() => {
+        if (giornataAttuale) {
+            fetchDataInParallel();
+        }
+    }, [giornataAttuale, leagueId]);
+
+    useEffect(() => {
+        fetchLeagueById(leagueId);
+    }, [isPast, leagueId]); // Effettua il fetch quando isPast cambia a true
+
+    useEffect(() => {
+        if (selectedLeague.ownerId.includes(userId)) {
+            fetchGiornateDaCalcolare(leagueId)
+        }
+    }, [dispatch, leagueId]);
 
     // Funzione per copiare l'ID della lega
     const copyToClipboard = async () => {
@@ -95,27 +108,18 @@ export default function LeagueDetails({ navigation }) {
     };
 
     useEffect(() => {
-        const checkUserMembership = () => {
-            const userIds = selectedLeague?.members;
-            if (!userIds.includes(userId)) {
-                navigation.navigate('Home1', { refresh: true });
-            }
-        };
-
-        if (selectedLeague) {
-            checkUserMembership();
-        }
-    }, [selectedLeague]);
-
-    useEffect(() => {
         if (refreshRequired) {
             // Effettua la chiamata per aggiornare i dati
-            if (giornataAttuale && dayId && leagueId && userId && userIds.length) {
+            if (giornataAttuale && leagueId && userId) {
+                dispatch(fetchPrediction({ giornataAttuale, leagueId, userId })).unwrap()// Controlla la predizione
                 // Se sono disponibili, esegui fetchDataInParallel
-                fetchLeagueById(leagueId)
-                fetchGiornateDaCalcolare(leagueId)
-                fetchGiornataAttuale()
-                fetchDataInParallel()
+                if (selectedLeague.ownerId.includes(userId)) {
+                    fetchGiornateDaCalcolare(leagueId)
+                }
+                fetchGiornataAttuale().then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
+                dispatch(fetchDayDetails(giornataAttuale)).unwrap(), // Recupera i dettagli della giornata
+                    fetchLeagueById(leagueId).then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
+
             }
             // Una volta ricaricati i dati, ripristina il flag di refresh
             dispatch(clearRefresh());
@@ -131,7 +135,12 @@ export default function LeagueDetails({ navigation }) {
                 // Calcola se la data è passata
                 const result = isDatePast(startDate);
                 // Aggiorna lo stato isPast con il risultato calcolato
-                setIsPast(result);
+                console.log('pastResult', result);
+                if (result !== null) {
+                    // setIsPast(result);
+                    dispatch(setLiveStatus(result))
+                }
+
             } catch (error) {
                 console.error('Errore durante il controllo della data:', error);
             } finally {
@@ -141,14 +150,6 @@ export default function LeagueDetails({ navigation }) {
 
         checkIsPast();
     }, [startDate]); // Ogni volta che cambia startDate, ricontrolla isPast
-
-    useEffect(() => {
-        // Verifica che tutti i valori siano disponibili prima di effettuare le chiamate
-        if (giornataAttuale && dayId && leagueId && userId && userIds.length) {
-            // Se sono disponibili, esegui fetchDataInParallel
-            fetchDataInParallel();
-        }
-    }, [giornataAttuale, dayId, leagueId]);
 
     useEffect(() => {
         if (!startDate) return; // Assicurati che startDate sia definito prima di avviare il countdown.
@@ -171,8 +172,8 @@ export default function LeagueDetails({ navigation }) {
             const minutes = Math.floor(duration.minutes());
 
             if (days === 0 && hours === 0 && minutes === 0) {
-                setIsPast(true)
-
+                // setIsPast(true)
+                dispatch(setLiveStatus(true))
             }
 
             setCountdown({
@@ -213,8 +214,15 @@ export default function LeagueDetails({ navigation }) {
     // Fetch specific league by ID
     const fetchLeagueById = async (leagueId) => {
         try {
+            let membersResult;
             dispatch(showLoading()); // Mostra lo stato di caricamento
-            await dispatch(getUserLeaguesByIdThunk(leagueId)).unwrap(); // Attendi che il thunk termini
+            if (isPast) {
+                membersResult = await getMembersInfoForLeagueLive(leagueId, giornataAttuale);
+            }
+            if (isPast === false) {
+                membersResult = await getMembersInfoForLeague(leagueId);
+            }
+            setMembers(membersResult)
         } catch (error) {
             console.error('Errore durante il recupero della lega:', error);
         } finally {
@@ -227,17 +235,10 @@ export default function LeagueDetails({ navigation }) {
         try {
             const giornata = await getGiornataAttuale();
             dispatch(setSelectedGiornata({ giornataAttuale: giornata }));
-
         } catch (error) {
             console.error('Errore durante il recupero della giornata attuale:', error);
         }
     };
-
-    useEffect(() => {
-        if (selectedLeague.ownerId.includes(userId)) {
-            fetchGiornateDaCalcolare(leagueId)
-        }
-    }, [dispatch, leagueId]);
 
     const fetchGiornateDaCalcolare = async (leagueId) => {
         try {
@@ -247,32 +248,6 @@ export default function LeagueDetails({ navigation }) {
         }
     };
 
-
-    useEffect(() => {
-        if (isPast) {
-            // Crea una mappa dei risultati dei match per accesso rapido
-            const matchResultsMap = new Map(matches.map(el => [el.matchId, el.result]));
-
-            // Calcola i punti aggiornati per ogni partecipante
-            const updatedCopy = provisionalRanking.map(participant => {
-                if (!participant.schedina) return participant; // Se non c'è schedina, ritorna il partecipante invariato
-
-                const punti = participant.schedina.reduce((totalPoints, { matchId, esitoGiocato }) => {
-                    // Confronta il risultato con l'esito giocato
-                    const matchResult = matchResultsMap.get(matchId);
-                    return matchResult === esitoGiocato ? totalPoints + 1 : totalPoints;
-                }, participant.punti);
-
-                // Ritorna il partecipante con i punti aggiornati
-                return { ...participant, punti };
-            });
-
-            // Aggiorna lo stato locale
-            setUpdatedParticipants(updatedCopy);
-        }
-    }, [provisionalRanking, isPast, matches]);
-
-
     const fetchDataInParallel = async () => {
         try {
             dispatch(showLoading()); // Mostra lo stato di caricamento
@@ -280,8 +255,7 @@ export default function LeagueDetails({ navigation }) {
             // Esegui entrambe le chiamate in parallelo con Promise.all
             await Promise.all([
                 dispatch(fetchDayDetails(giornataAttuale)).unwrap(), // Recupera i dettagli della giornata
-                dispatch(fetchPrediction({ dayId, leagueId, userId })).unwrap(),// Controlla la predizione
-                dispatch(fetchParticipantsThunk({ userIds, leagueId, dayId })).unwrap(),
+                dispatch(fetchPrediction({ giornataAttuale, leagueId, userId })).unwrap(),// Controlla la predizione
             ]);
 
 
@@ -293,18 +267,16 @@ export default function LeagueDetails({ navigation }) {
         }
     };
 
-    const changeLeague = (idLega) => {
-        dispatch(setSelectedLeagueGiornata({ giornataAttuale: giornataAttuale, legaSelezionata: idLega }));
-    }
-
     // Funzione per gestire il refresh
     const onRefresh = () => {
-
-        fetchLeagueById(leagueId).then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
-        fetchGiornateDaCalcolare(leagueId).then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
         fetchGiornataAttuale().then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
-        fetchDataInParallel();
+        dispatch(fetchDayDetails(giornataAttuale)).unwrap(), // Recupera i dettagli della giornata
+            fetchLeagueById(leagueId).then(() => setRefreshing(false)); // Ricarica le leghe e disabilita il refresh
     };
+
+    const changeLeague = async (idLega) => {
+        dispatch(setSelectedLeagueGiornata({ giornataAttuale: giornataAttuale, legaSelezionata: idLega }));
+    }
 
     const renderConuntDown = () => {
         if (loading) {
@@ -349,7 +321,7 @@ export default function LeagueDetails({ navigation }) {
             <Text style={{ textAlign: 'center', color: 'red', fontSize: 30, ...fontStyle.textMedium }}>LIVE</Text>
             <Button
                 mode="contained"
-                onPress={() => navigation.navigate('EsitiInseriti')}
+                onPress={() => navigation.navigate('EsitiInseriti', { members: members })}
                 style={styles.insertButton}
                 labelStyle={{
                     ...fontStyle.textBold
@@ -436,39 +408,31 @@ export default function LeagueDetails({ navigation }) {
                         <BannerAdComponent />
                     </View> */}
                     {/* Classifica Provvisoria */}
-                    <View style={[
-                        { ...styles.section, marginBottom: 0 },
-                        isPast ? styles.isLive : null
+                    <View style={[{ ...styles.section, marginBottom: 0 },
+                    isPast ? styles.activeStyle : {}  // Aggiunge activeStyle quando isActive è true
                     ]}>
                         <View style={styles.rowHeaderRanking}>
-                            <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica {isPast ? <Text style={{ color: 'red' }}>LIVE 🔴</Text> : null}</Text>
-                            <Text style={{ color: COLORJS.primary }}>{provisionalRanking.length} Partecipanti</Text>
+                            <Text style={{ ...styles.sectionTitle, color: 'white' }}>Classifica
+                                {isPast ? <Text style={{ color: 'red', ...fontStyle.textBoldItalic }}> LIVE</Text> : null}
+                            </Text>
+                            <Text style={{ color: COLORJS.primary }}>{members.length} Partecipanti</Text>
                         </View>
+                        <>
+                            <RankingList ranking={sortedRanking} size={20} />
 
-                        {provisionalRankingLoading ? (
-                            <ActivityIndicator size="large" color={colors.primary} />
-                        ) : (
-                            <>
-                                <RankingList ranking={!isPast ? sortedRanking : [...updatedParticipants].sort((a, b) => b.punti - a.punti).slice(0, 6)} size={20} />
-
-                                {/* Bottone per vedere la classifica completa */}
-                                <Button
-                                    mode="outlined"
-                                    icon={'format-list-bulleted'}
-                                    onPress={() =>
-                                        navigation.navigate('FullParticipantsRankingScreen', {
-                                            isLive: isPast,
-                                            liveParticipants: isPast ? [...updatedParticipants].sort((a, b) => b.punti - a.punti) : [], // Passa l'array dei partecipanti live
-                                        })
-                                    } style={styles.fullRankingButton}
-                                    labelStyle={{
-                                        ...fontStyle.textBold
-                                    }}
-                                >
-                                    Classifica Completa
-                                </Button>
-                            </>
-                        )}
+                            {/* Bottone per vedere la classifica completa */}
+                            <Button
+                                mode="outlined"
+                                icon={'format-list-bulleted'}
+                                onPress={() => navigation.navigate('FullParticipantsRankingScreen')}
+                                style={styles.fullRankingButton}
+                                labelStyle={{
+                                    ...fontStyle.textBold
+                                }}
+                            >
+                                Classifica Completa
+                            </Button>
+                        </>
                     </View>
                     <View style={styles.shareAction}>
                         <View style={{ paddingRight: 10 }}>
@@ -494,9 +458,9 @@ export default function LeagueDetails({ navigation }) {
 
                     {/* Schema delle Partite */}
                     <View style={{ ...styles.section, backgroundColor: 'transparent', padding: 0, marginBottom: 10 }}>
-                        <Text style={{ color: 'white', ...fontStyle.textLight, fontSize: 20, marginBottom: 10 }}>{`Giornata ${dayId}`.replace('RegularSeason-', '') || 0}</Text>
+                        <Text style={{ color: 'white', ...fontStyle.textLight, fontSize: 20, marginBottom: 10 }}>{`Giornata ${giornataAttuale}`.replace('RegularSeason-', '') || 0}</Text>
 
-                        {sortedMatches.map((match, i) => {
+                        {matches.map((match, i) => {
                             if (i === 5) {
                                 return (
                                     <React.Fragment key={`match-${match.matchId}`}>
@@ -621,8 +585,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center'
     },
-    isLive: {
-        borderWidth: 1, borderColor: 'red'
-    }
+    activeStyle: {
+        borderWidth: 3,
+        borderColor: 'red'
+    },
 });
 

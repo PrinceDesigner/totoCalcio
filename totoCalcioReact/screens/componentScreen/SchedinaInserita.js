@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: COLORJS.secondaryBackGroud,
         paddingBottom: 10,
-        paddingTop: 10
+        paddingTop: 10,
     },
     matchInfo: {
         flexDirection: 'row',

@@ -48,11 +48,9 @@ const infogiornataAttualeSlice = createSlice({
           ...state,
           loading: false,
           dayId: action.payload.dayId,
-          dayNumber: action.payload.dayNumber,
-          startDate: action.payload.startDate,
           endDate: action.payload.endDate,
-          isCurrentDay: action.payload.isCurrentDay,
           matches: action.payload.matches,
+          startDate: action.payload.startDate,
         };
       })
       .addCase(fetchDayDetails.rejected, (state, action) => {
