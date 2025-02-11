@@ -363,10 +363,10 @@ async function upsertSchedulerJob(projectId, location, jobId, schedule, timeZone
                 requestBody: jobConfig,
                 auth: authClient,
             });
-        } /*else {
-            //console.error(`❌ Errore nel controllo del job ${jobId}:`, error);
+        } else {
+            console.error(`❌ Errore nel controllo del job ${jobId}:`, error);
             //throw error;
-        }*/
+        }
     }
 }
 
