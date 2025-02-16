@@ -17,6 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // import { BannerAdComponent } from '../components/Adv/AdvBanner';
 import Wrapper from './componentScreen/Container';
+import ProfileHeader from '../components/ProfileHeader';
 
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, { useAnimatedStyle } from 'react-native-reanimated';
@@ -237,34 +238,11 @@ const HomeScreen = React.memo(() => {
     return (
         <SafeAreaView style={[{ backgroundColor: colors.background, flex: 1 }]}>
             <Wrapper>
-
-                <View style={styles.containerProfile}>
-                    {/* Icona Profilo */}
-                    <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
-                        <Avatar.Image
-                            source={{ uri: photoProfile || 'https://via.placeholder.com/150' }}
-                            size={40}
-                        />
-                        {/* Testo Nome e Sottotitolo */}
-                    </TouchableOpacity>
-
-                    <View style={styles.textContainer}>
-                        <Text style={styles.name}>{userName}</Text>
-                        <Text style={styles.subtitle}>Clicca sull'immagine per il profilo</Text>
-                    </View>
-
-                    {/* Icona Menu */}
-                    <TouchableOpacity
-                        onPress={() => navigation.toggleDrawer()}
-                    >
-                        <MaterialIcons
-                            name="menu"
-                            size={30}
-                            color="#FFFFFF" // Colore dell'icona hamburger (bianco)
-
-                        />
-                    </TouchableOpacity>
-                </View>
+                <ProfileHeader
+                    navigation={navigation}
+                    photoProfile={photoProfile}
+                    userName={userName}
+                />
 
                 <View style={styles.headerContainer}>
                     <Text style={styles.headerText}>Le mie leghe</Text>
@@ -405,27 +383,7 @@ const styles = StyleSheet.create({
     modalButton: {
         flex: 1,
         marginHorizontal: 10,
-    },
-    containerProfile: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 30
-    },
-    textContainer: {
-        flex: 1, // Occupa lo spazio rimanente
-        marginLeft: 10
-    },
-    name: {
-        color: COLORJS.primary, // Colore viola per il nome
-        fontWeight: 'bold',
-        fontSize: 18,
-        ...fontStyle.textBold,
-    },
-    subtitle: {
-        ...fontStyle.textLight,
-        color: '#cccccc', // Colore grigio chiaro per il sottotitolo
-        fontSize: 14,
-    },
+    }
 });
 
 export default HomeScreen;

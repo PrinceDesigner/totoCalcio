@@ -12,6 +12,7 @@ import EditLeagueScreen from '../screens/EditLeagueScreen';
 import FormazioneScreen from '../screens/FormazioneScreen';
 import { useSelector } from 'react-redux';
 import EsitiGiocatiPerPartitaScreen from '../screens/EsitiGiocatiPerPartitaScreen';
+import { CalendarScreen } from '../screens/CalendarScreen';
 
 const Stack = createStackNavigator();
 
@@ -33,6 +34,15 @@ export default function LeagueStackNavigator() {
                 component={InsertResultsScreen}
                 options={({ navigation }) => ({
                     title: 'Inserisci esiti',
+                    headerShown: true, // Mostra l'header solo per questa schermata
+                    ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
+                })}
+            />
+            <Stack.Screen
+                name="CalendarScreen"
+                component={CalendarScreen}
+                options={({ navigation }) => ({
+                    title: 'Calendario Serie A',
                     headerShown: true, // Mostra l'header solo per questa schermata
                     ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
                 })}

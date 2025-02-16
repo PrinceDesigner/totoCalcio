@@ -371,6 +371,9 @@ export default function LeagueDetails({ navigation }) {
                             <Avatar.Icon backgroundColor={'transparent'} color={COLORJS.primary} size={35} icon="cog" />
                         </TouchableOpacity> : null
                     }
+                    <TouchableOpacity onPress={() => navigation.navigate('CalendarScreen')} >
+                        <Avatar.Icon backgroundColor={'transparent'} color={COLORJS.primary} size={35} icon="calendar" />
+                    </TouchableOpacity>
                 </View>
             </View>
             {/* Countdown Section */}
