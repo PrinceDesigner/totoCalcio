@@ -6,6 +6,7 @@ import fontStyle from '../theme/fontStyle';
 import { COLORJS } from '../theme/themeColor';
 import Wrapper from './componentScreen/Container';
 import { showLoading, hideLoading } from '../redux/slice/uiSlice';
+import { useTheme } from 'react-native-paper';
 
 
 const EsitiGiocatiPerPartitaScreen = ({ route }) => {
@@ -39,7 +40,7 @@ const EsitiGiocatiPerPartitaScreen = ({ route }) => {
             <Text style={{ ...styles.sectionTitle, color: COLORJS.primary }}>Esiti inseriti per questa partita </Text>
 
             <ScrollView>
-                {participantsWithMatch.map(({ displayName, esito_giocato }, index) => (
+                {participantsWithMatch.map(({ displayName, esito_giocato, result }, index) => (
                     <View
                         key={index}
                         style={[
@@ -51,6 +52,18 @@ const EsitiGiocatiPerPartitaScreen = ({ route }) => {
                             {displayName}
                         </Text>
                         <View style={styles.resultContainer}>
+                            <View
+                                style={[
+                                    styles.circle,
+                                    {
+                                        backgroundColor:
+                                            result === null ? 
+                                            index % 2 === 0 ? COLORJS.secondaryBackGroud : 
+                                            COLORJS.surface : esito_giocato === result ? 'green' : 'red',
+                                    },
+                                ]}
+                            >
+                            </View>
                             <Text style={styles.resultText}>{esito_giocato}</Text>
                         </View>
                     </View>
@@ -93,6 +106,15 @@ const styles = StyleSheet.create({
         fontSize: 18,
         paddingBottom: 10,
         ...fontStyle.textMedium,
+    },
+    circle: {
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 6
     },
 });
 
