@@ -106,8 +106,8 @@ export default function SignupScreen({ navigation }) {
                 }));
 
                 // Naviga alla schermata principale
-                navigation.navigate('Home');
-                // navigation.navigate('EmailVerificationScreen'); // Naviga alla nuova schermata di verifica email
+                // navigation.navigate('Home');
+                navigation.navigate('EmailVerificationScreen'); // Naviga alla nuova schermata di verifica email
 
             } catch (error) {
                 console.error('Errore durante la registrazione:', error.code);
