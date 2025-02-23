@@ -20,7 +20,7 @@ export default function FullParticipantsRankingScreen({ navigation }) {
     const [members, setMembers] = useState([]);
     const [liveMembers, setLiveMembers] = useState([]);
     const dispatch = useDispatch();
-    const [selectedTab, setSelectedTab] = useState('Generale');
+    const [selectedTab, setSelectedTab] = useState(isLive ? 'Live' : 'Generale');
     const [selectedGiornata, setSelectedGiornata] = useState('1');
     const [updatedParticipants, setUpdatedParticipants] = useState([]);
     const dayId = useSelector((state) => state.giornataAttuale.giornataAttuale);
@@ -128,7 +128,7 @@ export default function FullParticipantsRankingScreen({ navigation }) {
 
     return (
         <View style={{ flex: 1 }}>
-            <TabContainer tabs={tabs} />
+            <TabContainer tabs={tabs} selectedTab={selectedTab} />
             <Wrapper>
                 {selectedTab === 'Generale' && renderGeneraleTab()}
                 {selectedTab === 'Giornate' && renderGiornateTab()}

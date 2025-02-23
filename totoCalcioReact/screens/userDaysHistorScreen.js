@@ -223,7 +223,7 @@ export default function UserHistoryScreen({ route, navigation }) {
     return (
         <View style={{ flex: 1, backgroundColor: colors.background }}>
             {/* Tab Custom */}
-            <TabContainer tabs={tabs} />
+            <TabContainer tabs={tabs} selectedTab={selectedTab} />
             <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>
                 <Wrapper>
 
