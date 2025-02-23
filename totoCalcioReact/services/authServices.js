@@ -4,8 +4,8 @@ import axios from 'axios'; // Usa axios per fare le richieste HTTP
 import axiosInstance from './axiosInterceptor'; // Importa il tuo axiosInterceptor
 
 // const API_URL = 'http://169.254.201.170:5001/api/auth'; // Imposta il tuo URL API
-// const API_URL = 'https://totocalcioreact.uc.r.appspot.com/api/auth';
-const API_URL = 'https://test-dot-totocalcioreact.uc.r.appspot.com/api/auth';
+const API_URL = 'https://totocalcioreact.uc.r.appspot.com/api/auth';
+// const API_URL = 'https://test-dot-totocalcioreact.uc.r.appspot.com/api/auth';
 export const signup = async (email, id, displayName) => {
   try {
     const response = await axios.post(`${API_URL}/signup`, {
