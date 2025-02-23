@@ -12,6 +12,7 @@ export const CalendarScreen = () => {
     const infogiornataAttuale = useSelector((state) => state.infogiornataAttuale);
     const matchdayNumber = (infogiornataAttuale.dayId && infogiornataAttuale.dayId.replace('RegularSeason-', '') || 0);
     const matchdayNumberAdjusted = (parseInt(matchdayNumber) - 1).toString();
+    const isLive = useSelector((state) => state.liveStatus.isLive);
 
     // colors theme
     const { colors } = useTheme();
@@ -38,7 +39,8 @@ export const CalendarScreen = () => {
             const data = await getDayDetails(infogiornataAttuale.dayId);
 
             setSelectedId(matchdayNumberAdjusted)
-            setMatches(data.matches);
+            setMatches(data.matches.sort((a, b) => new Date(a.startTime) - new Date(b.startTime)));
+
             dispatch(hideLoading()); // Imposta lo stato di caricamento su true
 
             // Scorri automaticamente fino alla giornata attuale
@@ -87,7 +89,7 @@ export const CalendarScreen = () => {
                 />
             </View>
             <ScrollView style={styles.containerCalendar}>
-                {matches?.map((match, i) => <MatchItem key={`match-${match.matchId}`} match={match} />)}
+                {matches?.map((match, i) => <MatchItem key={`match-${match.matchId}`} match={match} isPast={selectedId < matchdayNumberAdjusted || isLive } />)}
             </ScrollView>
 
         </SafeAreaView>
