@@ -33,6 +33,16 @@ export const CalendarScreen = () => {
     }));
 
 
+    const handleScrollFailed = (info) => {
+        setTimeout(() => {
+            flatListRef.current?.scrollToIndex({
+                index: info.index,
+                animated: true,
+                viewPosition: 0.5
+            });
+        }, 500);
+    };
+
     useEffect(() => {
         const fetchData = async () => {
             dispatch(showLoading()); // Imposta lo stato di caricamento su true
@@ -44,12 +54,14 @@ export const CalendarScreen = () => {
             dispatch(hideLoading()); // Imposta lo stato di caricamento su true
 
             // Scorri automaticamente fino alla giornata attuale
-            flatListRef.current?.scrollToIndex({
-                index: matchdayNumberAdjusted,
-                animated: true,
-                viewPosition: 0.5 // 0 = sinistra, 1 = destra, 0.5 = centro
-            });
-        }
+            setTimeout(() => {
+                flatListRef.current?.scrollToIndex({
+                    index: parseInt(matchdayNumberAdjusted), // Assicurati che sia un numero
+                    animated: true,
+                    viewPosition: 0.5
+                });
+            }, 500);
+        };
         fetchData();
     }, [infogiornataAttuale.dayId]);
 
@@ -72,6 +84,7 @@ export const CalendarScreen = () => {
                     keyExtractor={(item) => item.id}
                     horizontal
                     showsHorizontalScrollIndicator={false}
+                    onScrollToIndexFailed={handleScrollFailed}
                     renderItem={({ item }) => {
                         const isSelected = item.id === selectedId;
                         return (
@@ -89,7 +102,7 @@ export const CalendarScreen = () => {
                 />
             </View>
             <ScrollView style={styles.containerCalendar}>
-                {matches?.map((match, i) => <MatchItem key={`match-${match.matchId}`} match={match} isPast={selectedId < matchdayNumberAdjusted || isLive } />)}
+                {matches?.map((match, i) => <MatchItem key={`match-${match.matchId}`} match={match} isPast={selectedId < matchdayNumberAdjusted || isLive} />)}
             </ScrollView>
 
         </SafeAreaView>
