@@ -10,6 +10,7 @@ const initialState = {
   user: null, // Dati utente come email, username, ecc.
   photoUri: null, // URI della foto del profilo utente
   error: null, // Per gestire eventuali errori di autenticazione o signup
+  xp: 10, // Punti esperienza dell'utente
 };
 
 
@@ -111,7 +112,9 @@ const authSlice = createSlice({
       state.photoUri = null; // Reset dell'URI della foto
       state.error = null;
     },
-  },
+    updateXp: (state, action) => {
+      state.xp = action.payload  // Aggiorna i punti esperienza dell'utente
+  }},
   extraReducers: (builder) => {
     builder
       // Gestione dell'aggiornamento del profilo
@@ -134,7 +137,7 @@ const authSlice = createSlice({
 });
 
 // Esporta le azioni generate automaticamente
-export const { loginSuccess, loginFailure, signupSuccess, signupFailure, updatePhotoUri, logout } = authSlice.actions;
+export const { loginSuccess, loginFailure, signupSuccess, signupFailure, updatePhotoUri, logout, updateXp } = authSlice.actions;
 
 // Esporta il reducer per essere usato nel Redux store
 export default authSlice.reducer;

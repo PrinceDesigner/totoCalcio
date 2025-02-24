@@ -3,9 +3,13 @@ import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { Button, Card, useTheme } from 'react-native-paper';
 import { showToast } from '../ToastContainer'; // Toast per messaggi di successo
 import fontStyle from '../theme/fontStyle';
+import XPBar from '../components/XPBar';
+import { useDispatch } from 'react-redux';
+import { updateXp } from '../redux/slice/authSlice';
 
 export default function MissionsScreen() {
   const { colors } = useTheme();
+  dispatch = useDispatch();
 
   // Mock delle missioni con XP
   const [missions, setMissions] = useState([
@@ -20,7 +24,7 @@ export default function MissionsScreen() {
       id: 2,
       title: 'Vinci una partita',
       description: 'Partecipa a una partita e vincila.',
-      xp: 100,
+      xp: 9990,
       completed: false,
     },
     {
@@ -32,7 +36,7 @@ export default function MissionsScreen() {
     },
   ]);
 
-  const handleCompleteMission = (missionId) => {
+  const handleCompleteMission = (missionId, xp) => {
     // Simula il completamento della missione
     setMissions((prevMissions) =>
       prevMissions.map((mission) =>
@@ -42,6 +46,7 @@ export default function MissionsScreen() {
       )
     );
 
+    dispatch(updateXp(xp));
     // Mostra un messaggio di successo
     showToast('success', 'Missione completata!');
   };
@@ -56,7 +61,7 @@ export default function MissionsScreen() {
 
         <Button
           mode="contained"
-          onPress={() => handleCompleteMission(item.id)}
+          onPress={() => handleCompleteMission(item.id, item.xp)}
           style={styles.completeButton}
           disabled={item.completed} // Disabilita il bottone se la missione è già completata
         >
@@ -69,12 +74,15 @@ export default function MissionsScreen() {
   return (
     <View style={{ ...styles.container, backgroundColor: colors.background }}>
       {/* FlatList per le missioni */}
-      <FlatList
-        data={missions}
-        renderItem={renderMissionItem}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.flatListContainer}
-      />
+      <>
+        <XPBar />
+        <FlatList
+          data={missions}
+          renderItem={renderMissionItem}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.flatListContainer}
+        />
+      </>
     </View>
   );
 }
