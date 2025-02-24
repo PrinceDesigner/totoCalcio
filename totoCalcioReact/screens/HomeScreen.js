@@ -23,6 +23,8 @@ import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeabl
 import Reanimated, { useAnimatedStyle } from 'react-native-reanimated';
 import { registerForPushNotificationsAsync } from '../services/pushNotifications';
 import { savePushToken, verifyPushToken } from '../services/authServices';
+import XPBar from '../components/XPBar';
+import LevelUpAnimation from '../components/AnimationComponent/LevelUpAnimation';
 
 
 // React.memo per ottimizzare il rendering di HomeScreen
@@ -42,6 +44,7 @@ const HomeScreen = React.memo(() => {
     const [selectedLeague, setSelectedLeague] = useState(null); // Stato per la lega selezionata per l'eliminazione
     const [isModalVisible, setModalVisible] = useState(false); // Stato per la visibilità della modale
     const [expoPushToken, setExpoPushToken] = useState('');
+    const [animationFlag, setAnimationFlag] = useState(false); // Stato per l'animazione
 
 
     //gestione notifiche
@@ -146,7 +149,7 @@ const HomeScreen = React.memo(() => {
     const handleLeaguePress = async (league) => {
         try {
             dispatch(showLoading()); // Mostra lo stato di caricamento
-            
+
             // Dispatch del thunk e attendi la sua risoluzione
             dispatch(setSelectedLeagueGiornata({ giornataAttuale: giornataAttuale, legaSelezionata: league.id }));
             navigation.navigate('LeagueDetailsStack');
@@ -238,17 +241,26 @@ const HomeScreen = React.memo(() => {
     return (
         <SafeAreaView style={[{ backgroundColor: colors.background, flex: 1 }]}>
             <Wrapper>
+                {/* { animationFlag ? <LevelUpAnimation /> : null} */}
+                <TouchableOpacity onPress={() => navigation.navigate('MissionScreen')}>
+                    <XPBar />
+                </TouchableOpacity>
                 <ProfileHeader
                     navigation={navigation}
                     photoProfile={photoProfile}
                     userName={userName}
                 />
 
+
+
+
                 <View style={styles.headerContainer}>
                     <Text style={styles.headerText}>Le mie leghe</Text>
                     <Button mode="contained"
                         labelStyle={{ fontSize: 12 }}
-                        onPress={() => navigation.navigate('CreateLeague')}>Crea Lega</Button>
+                        onPress={() => navigation.navigate('CreateLeague')}
+                    >
+                        Crea Lega</Button>
                 </View>
 
                 {/* <View style={{ marginBottom: 20, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>

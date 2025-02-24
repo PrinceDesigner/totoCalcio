@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     containerProfile: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 30
+        marginVertical: 20
     },
     textContainer: {
         flex: 1,

@@ -37,6 +37,8 @@ import NetInfo from '@react-native-community/netinfo'; // Per monitorare la conn
 import TutorialAccordion from './screens/comegiocare/tutorialAccordion';
 import ContactPage from './screens/contatti/contattiScreen';
 import NotificationSettings from './screens/NotificationSettingsScreen';
+import LevelUpAnimation from './components/AnimationComponent/LevelUpAnimation';
+import MissionsScreen from './screens/MissionScreen';
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator(); // Crea un Drawer Navigator
@@ -204,7 +206,7 @@ export default function App() {
 
 
 
-  
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <PaperProvider theme={theme}>
@@ -238,6 +240,15 @@ export default function App() {
                   options={{ headerShown: false }}
                 />
                 <Stack.Screen
+                  name="MissionScreen"
+                  component={MissionsScreen}
+                  options={({ navigation }) => ({
+                    title: 'Missioni',
+                    headerShown: true, // Mostra l'header solo per questa schermata
+                    ...CustomHeaderBackArrow({ navigation }), // Applica l'header personalizzato con Go Back
+                  })}
+                />
+                <Stack.Screen
                   name="ForgotPasswordScreen"
                   component={ForgotPasswordScreen}
                   options={({ navigation }) => ({
@@ -260,6 +271,7 @@ export default function App() {
 
               </Stack.Navigator>
               <GlobalLoadingIndicator />
+              {/* <LevelUpAnimation /> */}
             </View>
           </NavigationContainer>
           <ToastContainer />
