@@ -24,7 +24,7 @@ export default function MissionsScreen() {
       id: 2,
       title: 'Vinci una partita',
       description: 'Partecipa a una partita e vincila.',
-      xp: 9990,
+      xp: 100,
       completed: false,
     },
     {

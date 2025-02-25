@@ -23,7 +23,6 @@ import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeabl
 import Reanimated, { useAnimatedStyle } from 'react-native-reanimated';
 import { registerForPushNotificationsAsync } from '../services/pushNotifications';
 import { savePushToken, verifyPushToken } from '../services/authServices';
-import XPBar from '../components/XPBar';
 import LevelUpAnimation from '../components/AnimationComponent/LevelUpAnimation';
 
 
@@ -242,17 +241,11 @@ const HomeScreen = React.memo(() => {
         <SafeAreaView style={[{ backgroundColor: colors.background, flex: 1 }]}>
             <Wrapper>
                 {/* { animationFlag ? <LevelUpAnimation /> : null} */}
-                <TouchableOpacity onPress={() => navigation.navigate('MissionScreen')}>
-                    <XPBar />
-                </TouchableOpacity>
                 <ProfileHeader
                     navigation={navigation}
                     photoProfile={photoProfile}
                     userName={userName}
                 />
-
-
-
 
                 <View style={styles.headerContainer}>
                     <Text style={styles.headerText}>Le mie leghe</Text>

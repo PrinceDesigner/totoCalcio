@@ -113,7 +113,7 @@ const authSlice = createSlice({
       state.error = null;
     },
     updateXp: (state, action) => {
-      state.xp = action.payload  // Aggiorna i punti esperienza dell'utente
+      state.xp =state.xp + action.payload  // Aggiorna i punti esperienza dell'utente
   }},
   extraReducers: (builder) => {
     builder
