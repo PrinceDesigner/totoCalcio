@@ -23,6 +23,9 @@ import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeabl
 import Reanimated, { useAnimatedStyle } from 'react-native-reanimated';
 import { registerForPushNotificationsAsync } from '../services/pushNotifications';
 import { savePushToken, verifyPushToken } from '../services/authServices';
+import { fetchDayDetails } from '../redux/slice/infogiornataAttualeSlice';
+import { isDatePast } from '../navigation/helpers/dateHelper';
+import { setLiveStatus } from '../redux/slice/isLiveSlice';
 
 
 // React.memo per ottimizzare il rendering di HomeScreen
@@ -38,9 +41,13 @@ const HomeScreen = React.memo(() => {
     const userName = useSelector((state) => state.auth.user && state.auth.user.user.fullName); // Recupera l'ID utente dallo stato
     const photoProfile = useSelector((state) => state.auth.photoUri); // Stato delle leghe
     const giornataAttuale = useSelector((state) => state.giornataAttuale.giornataAttuale);
+    const infogiornataAttuale = useSelector((state) => state.infogiornataAttuale);
+
     const [refreshing, setRefreshing] = useState(false);
     const [selectedLeague, setSelectedLeague] = useState(null); // Stato per la lega selezionata per l'eliminazione
     const [isModalVisible, setModalVisible] = useState(false); // Stato per la visibilità della modale
+    const startDate = infogiornataAttuale && infogiornataAttuale.startDate;
+
     const [expoPushToken, setExpoPushToken] = useState('');
     const [animationFlag, setAnimationFlag] = useState(false); // Stato per l'animazione
 
@@ -51,6 +58,34 @@ const HomeScreen = React.memo(() => {
         // Controlla se c'è già un token salvato e se è valido
         checkAndRegisterToken();
     }, []);
+
+
+
+    useEffect(() => {
+        if (startDate === null || startDate === undefined || startDate === '') {
+            return;
+        }
+        const checkIsPast = async () => {
+            try {
+                showLoading();
+                // Calcola se la data è passata
+                const result = isDatePast(startDate);
+                // Aggiorna lo stato isPast con il risultato calcolato
+                console.log('pastResult', result);
+                if (result !== null) {
+                    // setIsPast(result);
+                    dispatch(setLiveStatus(result))
+                }
+
+            } catch (error) {
+                console.error('Errore durante il controllo della data:', error);
+            } finally {
+                hideLoading()
+            }
+        };
+
+        checkIsPast();
+    }, [startDate]); // Ogni volta che cambia startDate, ricontrolla isPast
 
 
     const checkAndRegisterToken = async () => {
@@ -114,19 +149,19 @@ const HomeScreen = React.memo(() => {
     const fetchAllData = async () => {
         try {
             dispatch(showLoading()); // Mostra lo stato di caricamento
-    
+
             // Esegui fetchLeagues in parallelo con il recupero della giornata
             const [userLeagues, giornata] = await Promise.all([
                 dispatch(getUserLeaguesThunk()).unwrap(), // Recupera le leghe
                 getGiornataAttuale() // Recupera la giornata attuale
             ]);
-    
+
             // Dispatcia i risultati delle chiamate precedenti
             dispatch(setSelectedGiornata({ giornataAttuale: giornata }));
-    
+
             // Dopo aver recuperato la giornata, esegui il fetch dei dettagli della giornata
-            // await dispatch(fetchDayDetails(giornata)).unwrap(); // Recupera i dettagli della giornata
-    
+            await dispatch(fetchDayDetails(giornata)).unwrap(); // Recupera i dettagli della giornata
+
         } catch (error) {
             if (error.status === 401 || error.status === 403 || error.status === 500) {
                 dispatch(logout());

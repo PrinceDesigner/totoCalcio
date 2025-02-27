@@ -7,7 +7,7 @@ import { fetchDayDetails } from '../redux/slice/infogiornataAttualeSlice';
 import { hideLoading, showLoading } from '../redux/slice/uiSlice';
 import { COLORJS } from '../theme/themeColor';
 import { fetchPrediction } from '../redux/slice/predictionsSlice';
-import { membersInfoForLeagueNameThunk, selectLeagueById } from '../redux/slice/leaguesSlice';
+import { selectLeagueById } from '../redux/slice/leaguesSlice';
 import * as Clipboard from 'expo-clipboard'; // Importa Clipboard
 import { Share } from 'react-native';
 import { getGiornataAttuale } from '../services/infoGiornataService';
@@ -128,30 +128,6 @@ export default function LeagueDetails({ navigation }) {
     }, [refreshRequired, dispatch]);
 
     useEffect(() => {
-        const checkIsPast = async () => {
-            try {
-                setLoading(true);  // Imposta loading su true mentre si calcola
-
-                // Calcola se la data è passata
-                const result = isDatePast(startDate);
-                // Aggiorna lo stato isPast con il risultato calcolato
-                console.log('pastResult', result);
-                if (result !== null) {
-                    // setIsPast(result);
-                    dispatch(setLiveStatus(result))
-                }
-
-            } catch (error) {
-                console.error('Errore durante il controllo della data:', error);
-            } finally {
-                setLoading(false); // Imposta loading su false una volta terminato
-            }
-        };
-
-        checkIsPast();
-    }, [startDate]); // Ogni volta che cambia startDate, ricontrolla isPast
-
-    useEffect(() => {
         if (!startDate) return; // Assicurati che startDate sia definito prima di avviare il countdown.
 
         // Definisci una funzione per calcolare il countdown rimanente
@@ -237,7 +213,7 @@ export default function LeagueDetails({ navigation }) {
 
             // Esegui entrambe le chiamate in parallelo con Promise.all
             await Promise.all([
-                dispatch(fetchDayDetails(giornataAttuale)).unwrap(), // Recupera i dettagli della giornata
+                // dispatch(fetchDayDetails(giornataAttuale)).unwrap(), // Recupera i dettagli della giornata
                 dispatch(fetchPrediction({ giornataAttuale, leagueId, userId })).unwrap(),// Controlla la predizione
             ]);
 
@@ -262,11 +238,6 @@ export default function LeagueDetails({ navigation }) {
     }
 
     const renderConuntDown = () => {
-        if (loading) {
-            // Mostra un indicatore di caricamento mentre si sta calcolando `isPast`
-            return <ActivityIndicator size="large" color={colors.primary} />;
-        }
-
         if (isPast === null) {
             // Se `isPast` è null (cioè non c'è una data valida), puoi mostrare qualcosa come un placeholder o un messaggio
             return <ActivityIndicator size="large" color={colors.primary} />;
