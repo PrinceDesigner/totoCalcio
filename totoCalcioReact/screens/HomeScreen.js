@@ -23,7 +23,6 @@ import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeabl
 import Reanimated, { useAnimatedStyle } from 'react-native-reanimated';
 import { registerForPushNotificationsAsync } from '../services/pushNotifications';
 import { savePushToken, verifyPushToken } from '../services/authServices';
-import LevelUpAnimation from '../components/AnimationComponent/LevelUpAnimation';
 
 
 // React.memo per ottimizzare il rendering di HomeScreen
@@ -112,16 +111,22 @@ const HomeScreen = React.memo(() => {
     }, [route.params?.refresh]);
 
 
-    // Funzione per recuperare entrambe le informazioni in parallelo
     const fetchAllData = async () => {
         try {
             dispatch(showLoading()); // Mostra lo stato di caricamento
-
-            // Esegui fetchLeagues e fetchGiornataAttuale in parallelo
-            await Promise.all([
+    
+            // Esegui fetchLeagues in parallelo con il recupero della giornata
+            const [userLeagues, giornata] = await Promise.all([
                 dispatch(getUserLeaguesThunk()).unwrap(), // Recupera le leghe
-                getGiornataAttuale().then((giornata) => dispatch(setSelectedGiornata({ giornataAttuale: giornata }))) // Recupera la giornata attuale
+                getGiornataAttuale() // Recupera la giornata attuale
             ]);
+    
+            // Dispatcia i risultati delle chiamate precedenti
+            dispatch(setSelectedGiornata({ giornataAttuale: giornata }));
+    
+            // Dopo aver recuperato la giornata, esegui il fetch dei dettagli della giornata
+            // await dispatch(fetchDayDetails(giornata)).unwrap(); // Recupera i dettagli della giornata
+    
         } catch (error) {
             if (error.status === 401 || error.status === 403 || error.status === 500) {
                 dispatch(logout());

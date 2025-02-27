@@ -23,6 +23,7 @@ import { setSelectedGiornata, setSelectedLeagueGiornata } from '../redux/slice/s
 import CustomDropdownSelectLeague from '../components/DropDownSelectLeague/DropDownSelectLeague';
 import { getMembersInfoForLeague, getMembersInfoForLeagueLive } from '../services/leagueService';
 import { setLiveStatus } from '../redux/slice/isLiveSlice';
+import { isDatePast } from '../navigation/helpers/dateHelper';
 
 export default function LeagueDetails({ navigation }) {
     const { colors } = useTheme();
@@ -127,7 +128,6 @@ export default function LeagueDetails({ navigation }) {
     }, [refreshRequired, dispatch]);
 
     useEffect(() => {
-        // Simuliamo un delay per aggiornare isPast, ad esempio quando startDate cambia
         const checkIsPast = async () => {
             try {
                 setLoading(true);  // Imposta loading su true mentre si calcola
@@ -193,23 +193,6 @@ export default function LeagueDetails({ navigation }) {
 
         return () => clearInterval(interval); // Pulisci l'interval quando il componente viene smontato
     }, [startDate]);
-
-    const isDatePast = (inputDate) => {
-        if (!inputDate) {
-            // Se la data di input non è valida, restituisci null
-            return null;
-        }
-
-        // Configura la data di input usando moment e imposta il fuso orario a "Europe/Rome"
-        const date = moment.tz(inputDate, "Europe/Rome");
-
-        // Ottieni l'orario attuale e imposta il fuso orario a "Europe/Rome"
-        const currentDate = moment().utc(true).tz("Europe/Rome");
-
-        // Confronta le date e restituisci true se la data di input è minore dell'orario attuale
-        return date.isBefore(currentDate);
-    };
-
 
     // Fetch specific league by ID
     const fetchLeagueById = async (leagueId) => {
